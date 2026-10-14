@@ -3,6 +3,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<!-- PWA / installazione su iPhone (Safari → Condividi → Aggiungi alla schermata Home) -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#1b1f25">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RZ Flight">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
   /* Layout concept: aviation-instrument dashboard — tab bar, KPI tile row, one large chart card, auto-verdict panel */
@@ -22,7 +31,8 @@
   *{box-sizing:border-box}
   [hidden]{display:none !important}   /* rende affidabile l'attributo hidden anche su elementi con display impostato da CSS */
   body{background:var(--bg);color:var(--fg);font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5}
-  .wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px}
+  .wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+    padding-top:max(18px,env(safe-area-inset-top,0px));padding-bottom:max(18px,env(safe-area-inset-bottom,0px))}
   h1,h2,h3{font-family:"Barlow Semi Condensed",system-ui,sans-serif;text-wrap:balance;margin:0}
   .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 
@@ -218,7 +228,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.5</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.6</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -1522,6 +1532,14 @@ $("#logoFile").addEventListener("change",e=>{ const f=e.target.files[0]; if(!f)r
 
 /* boot */
 (function(){ const nj=document.getElementById("nojs"); if(nj) nj.remove(); })();   // JS is running → hide the fallback notice
+// iOS: il selettore File disattiva le estensioni che non conosce (.nmea, a volte .log) → niente filtro su iPhone/iPad
+if(/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1)){
+  ["#file","#fileSM"].forEach(s=>{ const el=$(s); if(el) el.removeAttribute("accept"); });
+}
+// PWA: service worker per l'uso offline (solo se servita via http/https, non da file locale)
+if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
+}
 captureThemeDefaults(); applyTheme(); renderThemeControls();
 renderLogo();
 DATA=makeDemo(); isDemo=true; renderAll();

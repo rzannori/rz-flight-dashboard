@@ -1,9 +1,11 @@
 # RZ Flight Dashboard
 
 Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radiocomandati.
-Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox).
+Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
+È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.5**
+- Versione corrente: **v1.6**
+- Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
 
@@ -30,11 +32,25 @@ Interfaccia **trilingue IT / EN / FR**, tema scuro antracite con colori personal
 3. Schede: **Panoramica · Giudizio · Grafico · Tabella**, più **Set up** (ingranaggio) e guida **?**.
 4. Lingua con le bandierine 🇮🇹 🇬🇧 🇫🇷; logo cliccabile in alto a sinistra.
 
+### Installazione su iPhone / iPad
+1. Apri https://rzannori.github.io/rz-flight-dashboard/ con **Safari**.
+2. **Condividi** (quadrato con freccia) → **Aggiungi alla schermata Home** → **Aggiungi**.
+3. L'app si apre a schermo intero e funziona anche offline. I log si caricano dall'app **File** (iCloud Drive, AirDrop, …).
+
+Note: report salvati, colori e logo dell'app installata sono separati da quelli di Safari.
+Gli aggiornamenti pubblicati su GitHub arrivano da soli: l'app scarica la nuova versione in background e la usa all'apertura successiva.
+
 ---
 
-## 3. Architettura del file
+## 3. Architettura
 
-Un solo `.html` con, nell'ordine:
+File del repository:
+- `index.html` — l'intera app (vedi sotto);
+- `manifest.json` — nome, colori e icone della PWA;
+- `sw.js` — service worker per l'offline (cache *stale-while-revalidate*; **cambiare `CACHE` a ogni versione**);
+- `icons/` — icone generate dal logo RZ (180 apple-touch, 192, 512, 512 maskable, favicon 32).
+
+`index.html` contiene, nell'ordine:
 - `<!doctype html>`, `<meta charset="utf-8">`, `<meta viewport>`, `<title>`, `<style>` (con `@import` dei Google Font in testa ; tutto il CSS, token-based, tema unico scuro);
 - avviso `#nojs` (visibile solo se JavaScript non gira, es. anteprima WhatsApp; rimosso al boot);
 - markup: **header** (logo / titolo+versione / loaders+lingua+guida), **barra tab**, le **sezioni** (`<section data-page="ov|ju|gr|tb|re">`), l'**overlay guida**;
@@ -200,7 +216,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - Zoom rotella anche in Panoramica (coesistendo col brushing).
 - Eventuale **merge GPS+Jeti** con allineamento manuale (es. istante di lancio).
 - Altre derivate: quota/densità aria, accelerazione verticale.
-- Packaging **PWA** (installabile/offline) o Tauri (.exe) se serve "vera app".
+- ~~Packaging PWA~~ (fatto in v1.6); eventuale Tauri (.exe) se serve una "vera app" desktop.
 - Refactor opzionale in più file (html/css/js) una volta sotto git.
 
 ---
@@ -212,6 +228,8 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.6** — **PWA** installabile su iPhone: manifest, icone, service worker offline (anche font), safe-area per notch,
+  selettore File senza filtro estensioni su iOS (altrimenti `.nmea` risulta non selezionabile).
 - **v1.5** — bugfix: nomi canali in francese (prima `undefined`); `@import` dei font spostato in testa (prima ignorato);
   KPI coerenti col Focus dopo resize/cambio lingua; `<!doctype>` + `charset utf-8` + viewport (apertura locale e mobile);
   regola CSS `[hidden]`; nome report predefinito localizzato; rimosso codice morto nel loader Jeti.
