@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.8**
+- Versione corrente: **v1.9**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -29,7 +29,7 @@ Interfaccia **trilingue IT / EN / FR**, tema scuro antracite con colori personal
    - **SM Modellbau** → file GPS `.nmea`;
    - **RZ GPS** → *placeholder, non ancora implementato*;
    - **Demo** → carica dati fittizi + 2 grafici d'esempio.
-3. Schede: **Panoramica · Giudizio · Grafico · Tabella · Polare · Archivio**, più **Set up** (ingranaggio) e guida **?**.
+3. Schede: **Panoramica · Giudizio · Grafico · Tabella · Polare · Traiettoria · Archivio**, più **Set up** (ingranaggio) e guida **?**.
 4. Lingua con le bandierine 🇮🇹 🇬🇧 🇫🇷; logo cliccabile in alto a sinistra.
 
 ### Installazione su iPhone / iPad
@@ -98,7 +98,7 @@ Ogni log, dopo il parsing, diventa un oggetto `frame`:
 
 Tutti producono il frame via `frameFromSeries(seriesRaw, model, dur)` → ricampiona a `DT=0.2 s` con forward-fill, poi chiama `computeDerived()` e `detectClimbs()`.
 
-**Canali da NMEA (SM Modellbau):** `Speed`(km/h, da VTG/RMC), `Alt. MSL`, `Rel. altit`, `Vario`, `Pressione`, `VRx`, `Dist.`, `Course`, `Sat`, `HDOP`, `Acc X/Y/Z`(g), `ENL` (rumore motore → usato per rilevare salite quando manca la corrente).
+**Canali da NMEA (SM Modellbau):** `Lat`/`Lon`(°, da RMC con fix valido), `Speed`(km/h, da VTG/RMC), `Alt. MSL`, `Rel. altit`, `Vario`, `Pressione`, `VRx`, `Dist.`, `Course`, `Sat`, `HDOP`, `Acc X/Y/Z`(g), `ENL` (rumore motore → usato per rilevare salite quando manca la corrente).
 
 ---
 
@@ -137,6 +137,17 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 
 **Tabella (`tb`)**
 - Tutti i dati (`VF()`), selettore risoluzione, **Copia CSV** (`;` + virgola decimale; il download diretto è bloccato negli artifact, quindi si usa la copia).
+
+**Traiettoria (`tr`)** — richiede `Lat`/`Lon` (GPS SM Modellbau)
+- Traiettoria 3D su canvas con proiezione ortografica propria (nessuna libreria, nessuna mappa). `Lat`/`Lon` (gradi decimali) sono
+  ora canali normali del frame, quindi compaiono anche in tabella/report e si salvano in archivio.
+- Posizione convertita in metri locali (est/nord) dal primo punto; quota = `Rel. altit`. Griglia al suolo con passo "tondo" (10…5000 m),
+  ombra della traccia, asse della quota, partenza (○) e fine (□).
+- **Colore dal vario** (`varioOf`, media ±2 campioni): scala asimmetrica con lo zero al centro (giallo);
+  la discesa satura il **rosso** all'80° percentile del sink (min 0,5 m/s), la salita il **verde** al 95° percentile (min 1 m/s).
+- Interazione: trascina = ruota, rotella = zoom, doppio clic = reset; pulsanti *Dall'alto / Laterale / 3D*; **Quota ×1/2/3/5** per esagerare la
+  scala verticale; cursore + ▶ (riproduzione 10×) con marker e lettura di tempo, quota, vario e velocità. Rispetta il **Focus**.
+- Funzioni: `trackData`, `renderTrack`, `drawTrack`, `trVarioCol`. Solo log GPS: con Jeti (senza posizione) compare un messaggio.
 
 **Polare (`po`)** — richiede un log con `Speed` (GPS SM Modellbau)
 - Grafico velocità [km/h] / vario TE [m/s] dei soli tratti di **planata a motore spento** (come in `glideStats`: dalla 1ª salita
@@ -256,7 +267,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - Eventuale **merge GPS+Jeti** con allineamento manuale (es. istante di lancio).
 - Altre derivate: quota/densità aria, accelerazione verticale.
 - Polare: sovrapposizione di più voli dall'archivio (zavorra/baricentro), correzione del vento, esportazione dei punti.
-- Traccia GPS su mappa con riproduzione (lat/lon oggi non salvate da `parseNMEA`).
+- Traiettoria: sfondo mappa (richiede rete/servizio di tile), colore per altra variabile (velocità, quota), confronto di due voli.
 - Archivio: confronto salita-per-salita (non solo medie), andamento nel tempo per pacco (grafico), export CSV del confronto.
 - ~~Packaging PWA~~ (fatto in v1.6); eventuale Tauri (.exe) se serve una "vera app" desktop.
 - Refactor opzionale in più file (html/css/js) una volta sotto git.
@@ -270,6 +281,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.9** — scheda **Traiettoria 3D** colorata dal vario; `parseNMEA` ora salva `Lat`/`Lon` (conversione ddmm.mmmm → gradi decimali, solo fix validi).
 - **v1.8** — scheda **Polare di velocità** (sink minimo, finesse massima, curva e tangente); hook `cfg.after` in `drawChart`.
 - **v1.7** — **Archivio voli** su cartella del PC (Chrome/Edge) con modello, pacco e note; **confronto** di 2–4 voli
   (curve sovrapposte su scala comune, allineamento a salita/planata, tabella salite e planate); riepilogo per pacco;
