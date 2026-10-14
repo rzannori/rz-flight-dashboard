@@ -3,8 +3,8 @@
 Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radiocomandati.
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox).
 
-- Versione corrente: **v1.3**
-- File di riferimento: `RZ-Flight-Dashboard-v1.3.html`
+- Versione corrente: **v1.5**
+- File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
 
 ---
@@ -35,12 +35,14 @@ Interfaccia **trilingue IT / EN / FR**, tema scuro antracite con colori personal
 ## 3. Architettura del file
 
 Un solo `.html` con, nell'ordine:
-- `<title>`, `<meta viewport-fit>`, `<style>` (tutto il CSS, token-based, tema unico scuro);
+- `<!doctype html>`, `<meta charset="utf-8">`, `<meta viewport>`, `<title>`, `<style>` (con `@import` dei Google Font in testa ; tutto il CSS, token-based, tema unico scuro);
+- avviso `#nojs` (visibile solo se JavaScript non gira, es. anteprima WhatsApp; rimosso al boot);
 - markup: **header** (logo / titolo+versione / loaders+lingua+guida), **barra tab**, le **sezioni** (`<section data-page="ov|ju|gr|tb|re">`), l'**overlay guida**;
 - `<script>` (IIFE, tutto il JS inline).
 
-> Nota runtime: l'attributo HTML `hidden` **non nasconde in modo affidabile** in questo ambiente.
-> Per mostrare/nascondere elementi custom usare sempre una **classe** (`.show`) o `style.display`, mai `el.hidden`.
+> Nota runtime: l'attributo `hidden` da solo perde contro un `display` impostato dal CSS (es. `.focusbar{display:flex}`).
+> Dalla v1.5 il CSS include `[hidden]{display:none !important}`, quindi `hidden` è affidabile; per gli elementi
+> con stato visibile/nascosto resta comunque preferibile una **classe** (`.show`/`.open`).
 
 ---
 
@@ -96,7 +98,7 @@ Cinematiche (se presente `Speed`; più ricche con `Vario`):
 - **VarioTE** vario compensato in energia totale `vario + (V/g)·dV/dt` [m/s]
 - **Glide** efficienza di planata `V_oriz / caduta` (solo in planata, V>3 e vario<−0.2)
 
-Nomi bilingui in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ** (`isDeriv()`, `derivBadge()`). Display localizzato via `dispName()` (`DERIV_NAMES` + `DISP_NAMES`).
+Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ** (`isDeriv()`, `derivBadge()`). Display localizzato via `dispName()` (`DERIV_NAMES` + `DISP_NAMES`).
 
 ---
 
@@ -188,7 +190,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 
 - Badge in alto: `vX.Y`. File consegnato: `RZ-Flight-Dashboard-vX.Y.html` (stesso numero).
 - Convenzione: **minor** (x.Y) per ritocchi/aggiunte piccole, **major** (X.0) per cambiamenti sostanziali.
-- In Claude Code conviene usare **git** (tag `v1.3`, storia, diff) al posto del versioning per nome file.
+- Il progetto è sotto **git**: il file è `index.html` e ogni versione ha un tag (`v1.4`, `v1.5`, …).
 
 ---
 
@@ -209,21 +211,20 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.1** — drill-through (KPI cliccabili, brushing/focus, popup salita).
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
+- **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.5** — bugfix: nomi canali in francese (prima `undefined`); `@import` dei font spostato in testa (prima ignorato);
+  KPI coerenti col Focus dopo resize/cambio lingua; `<!doctype>` + `charset utf-8` + viewport (apertura locale e mobile);
+  regola CSS `[hidden]`; nome report predefinito localizzato; rimosso codice morto nel loader Jeti.
 
 *(Prima della v1.0: parser Jeti raw/CSV e NMEA SM, variabili derivate, multilingua IT/EN/FR, tema antracite + color picker, logo, Demo, tabella + Copia CSV, assi multipli, guida.)*
 
 ---
 
-## 16. Come riprendere in Claude Code
+## 16. Sviluppo
 
 ```bash
-mkdir rz-flight-dashboard && cd rz-flight-dashboard
-# copia qui RZ-Flight-Dashboard-v1.3.html  (es. come index.html)
-cp RZ-Flight-Dashboard-v1.3.html index.html
-git init && git add . && git commit -m "RZ Flight Dashboard v1.3"
-git tag v1.3
-# per provarlo in locale:
+git clone <url-del-repo> && cd <repo>
 python3 -m http.server 8000   # poi apri http://localhost:8000
 ```
 
-Da lì puoi chiedere a Claude Code di: implementare il loader RZ GPS, aggiungere test, impacchettare come PWA, o splittare in moduli.
+Oppure apri direttamente `index.html` con doppio clic (funziona offline; senza rete si usano i font di sistema).

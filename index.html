@@ -1,6 +1,10 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
   /* Layout concept: aviation-instrument dashboard — tab bar, KPI tile row, one large chart card, auto-verdict panel */
   /* committed dark theme — fondo grigio antracite, colori strumentali vividi */
   :root{
@@ -14,9 +18,9 @@
     --hero1:#203139; --hero2:#242931;
     color-scheme:dark;
   }
-  @import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
   *{box-sizing:border-box}
+  [hidden]{display:none !important}   /* rende affidabile l'attributo hidden anche su elementi con display impostato da CSS */
   body{background:var(--bg);color:var(--fg);font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5}
   .wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px}
   h1,h2,h3{font-family:"Barlow Semi Condensed",system-ui,sans-serif;text-wrap:balance;margin:0}
@@ -214,7 +218,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.4</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.5</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -502,16 +506,16 @@ const T = {
 };
 /* derived channels: stable keys, bilingual display names */
 const DERIV_NAMES={
-  Power:{it:"Potenza",en:"Power"}, Energy:{it:"Energia",en:"Energy"}, Rint:{it:"Resistenza interna",en:"Internal resistance"},
-  Accel:{it:"Accelerazione",en:"Acceleration"}, VarioTE:{it:"Vario TE",en:"TE vario"}, Glide:{it:"Efficienza",en:"Glide ratio"}
+  Power:{it:"Potenza",en:"Power",fr:"Puissance"}, Energy:{it:"Energia",en:"Energy",fr:"Énergie"}, Rint:{it:"Resistenza interna",en:"Internal resistance",fr:"Résistance interne"},
+  Accel:{it:"Accelerazione",en:"Acceleration",fr:"Accélération"}, VarioTE:{it:"Vario TE",en:"TE vario",fr:"Vario TE"}, Glide:{it:"Efficienza",en:"Glide ratio",fr:"Finesse"}
 };
 const DISP_NAMES={
-  Speed:{it:"Velocità",en:"Speed"}, "Alt. MSL":{it:"Quota GPS",en:"GPS altitude"}, "Rel. altit":{it:"Quota rel.",en:"Rel. altitude"},
-  "Alt. rel":{it:"Quota rel. (SM)",en:"Rel. alt (SM)"}, "Dist.":{it:"Distanza",en:"Distance"}, Course:{it:"Rotta",en:"Course"},
-  Sat:{it:"Satelliti",en:"Satellites"}, Vario:{it:"Vario",en:"Vario"}, Pressione:{it:"Pressione",en:"Pressure"}
+  Speed:{it:"Velocità",en:"Speed",fr:"Vitesse"}, "Alt. MSL":{it:"Quota GPS",en:"GPS altitude",fr:"Altitude GPS"}, "Rel. altit":{it:"Quota rel.",en:"Rel. altitude",fr:"Alt. rel."},
+  "Alt. rel":{it:"Quota rel. (SM)",en:"Rel. alt (SM)",fr:"Alt. rel. (SM)"}, "Dist.":{it:"Distanza",en:"Distance",fr:"Distance"}, Course:{it:"Rotta",en:"Course",fr:"Cap"},
+  Sat:{it:"Satelliti",en:"Satellites",fr:"Satellites"}, Vario:{it:"Vario",en:"Vario",fr:"Vario"}, Pressione:{it:"Pressione",en:"Pressure",fr:"Pression"}
 };
 function isDeriv(lbl){ return !!DERIV_NAMES[lbl]; }
-function dispName(lbl){ const m=DERIV_NAMES[lbl]||DISP_NAMES[lbl]; return m?m[lang]:lbl; }
+function dispName(lbl){ const m=DERIV_NAMES[lbl]||DISP_NAMES[lbl]; return m?(m[lang]||m.en||lbl):lbl; }
 function derivBadge(lbl){ return isDeriv(lbl)?`<span class="fx" title="${t("derived")}">ƒ</span>`:""; }
 function loadLang(){ try{ const l=localStorage.getItem("fd_lang"); if(l==="it"||l==="en"||l==="fr") return l; }catch(e){} return "it"; }
 let lang = loadLang();
@@ -529,7 +533,7 @@ function setLang(l){
   const fi=$("#flagIt"), fe=$("#flagEn"), fr=$("#flagFr");
   if(fi) fi.classList.toggle("active",lang==="it"); if(fe) fe.classList.toggle("active",lang==="en"); if(fr) fr.classList.toggle("active",lang==="fr");
   applyI18n();
-  if(typeof DATA!=="undefined" && DATA){ renderFlightHead(DATA); renderKpis(DATA); renderVerdict(DATA); renderMain(); refreshReportSel(); refreshBuilder(); renderTable(); renderThemeControls(); }
+  if(typeof DATA!=="undefined" && DATA){ renderFlightHead(DATA); renderKpis(VF()); renderVerdict(DATA); renderMain(); refreshReportSel(); refreshBuilder(); renderTable(); renderThemeControls(); }
 }
 
 /* ---------- state ---------- */
@@ -1429,7 +1433,6 @@ $("#file").addEventListener("change",e=>{
   rd.onload=()=>{
     const txt=String(rd.result);
     let f=null;
-    try{ f = /^\s*JetiAdapter|;\d+;\d+;\d+;/.test(txt)&&!/^#|;0000000000;/.test(txt.slice(0,2000))&&/\[.*\]/.test(txt.split(/\r?\n/)[1]||"") ? null : null; }catch(e){}
     // decide: raw has "000000000;" definition lines; csv starts with JetiAdapter / header with [unit]
     try{
       if(/\n000000000;|\b000000000;/.test(txt) || /^#/.test(txt)) f=parseRaw(txt);
@@ -1450,7 +1453,7 @@ $("#addBtn").addEventListener("click",()=>{
   const y=checked.map(c=>c.value);
   if(!y.length){ alert(t("alert_y")); return; }
   const colors=checked.map(c=>{ const col=c.parentElement.querySelector('input[type=color]'); return col?col.value:null; });
-  const name=$("#nameInp").value.trim() || (y.join(", ")+" vs "+(x==="__t__"?"tempo":x));
+  const name=$("#nameInp").value.trim() || (y.map(dispName).join(", ")+" vs "+(x==="__t__"?t("time_word"):dispName(x)));
   reports.push({name,x,y,type:$("#typeSel").value,colors});
   saveReports(); $("#nameInp").value=""; renderSaved(); refreshReportSel();
 });
@@ -1484,7 +1487,7 @@ $("#copyCsv").addEventListener("click",async()=>{
   const old=btn.textContent; btn.textContent=ok?t("copied"):t("copyfail"); setTimeout(()=>{btn.textContent=old;},1500);
 });
 
-function redrawAll(){ if(!DATA)return; renderKpis(DATA); renderMain(); renderView(); }
+function redrawAll(){ if(!DATA)return; renderKpis(VF()); renderMain(); renderView(); }
 let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(redrawAll,120);});
 const mo=new MutationObserver(redrawAll); mo.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 if(window.matchMedia) matchMedia("(prefers-color-scheme:dark)").addEventListener("change",redrawAll);
