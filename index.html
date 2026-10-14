@@ -215,6 +215,24 @@
   .saved .item button{background:none;border:none;color:var(--crit);cursor:pointer;font-size:.8rem;font-weight:600}
   .hint{color:var(--muted);font-size:.8rem;margin-top:8px}
   .empty{color:var(--muted);font-size:.9rem;padding:30px 10px;text-align:center}
+
+  /* archivio voli + confronto */
+  .arfolder{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:.88rem}
+  .arfolder .hint{margin:0;flex-basis:100%}
+  .btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+  #arList td,#arList th{padding:5px 7px}
+  #arList td.note{max-width:150px;overflow:hidden;text-overflow:ellipsis;color:var(--muted);text-align:left}
+  #arList td.txt{text-align:left}
+  #arList td.act button{background:none;border:1px solid var(--line);border-radius:6px;color:var(--accent);cursor:pointer;
+    font:600 .74rem "IBM Plex Sans",sans-serif;padding:2px 8px;margin-left:6px}
+  #arList td.act button:hover{border-color:currentColor}
+  #arList td.act button.del{color:var(--crit)}
+  #arList tr.sel td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  #arList tr.cur td:nth-child(2){box-shadow:inset 3px 0 0 var(--accent)}
+  #arList input[type=checkbox]{accent-color:var(--accent);cursor:pointer;width:15px;height:15px}
+  .cmptbl td.best{color:var(--good);font-weight:600}
+  .cmptbl tr.grp th{text-align:left;color:var(--accent);padding-top:14px}
+  .cmptbl th .swatch{display:inline-block;margin-right:6px;vertical-align:-1px}
 </style>
 
 <div id="nojs" style="margin:16px;padding:14px 16px;font:14px system-ui,-apple-system,sans-serif;color:#eef3f9;background:#242931;border:1px solid #3a434f;border-radius:10px;line-height:1.5">
@@ -228,7 +246,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.6</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.7</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -267,6 +285,7 @@
     <button class="tab" role="tab" aria-selected="false" data-p="ju" data-i18n="tab_ju">Giudizio</button>
     <button class="tab" role="tab" aria-selected="false" data-p="gr" data-i18n="tab_gr">Grafico</button>
     <button class="tab" role="tab" aria-selected="false" data-p="tb" data-i18n="tab_tb">Tabella</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="ar" data-i18n="tab_ar">Archivio</button>
   </div>
 
   <!-- PAGE 1 -->
@@ -347,6 +366,52 @@
       </div>
       <p class="hint" id="tblInfo"></p>
       <div class="tablewrap" id="tblWrap"></div>
+    </div>
+  </section>
+
+  <!-- PAGE: ARCHIVIO (cartella sul PC, File System Access API) -->
+  <section data-page="ar" hidden>
+    <div class="card">
+      <h2><span data-i18n="ar_h2">Archivio voli</span> <span class="tag">FOLDER</span></h2>
+      <div class="arfolder" id="arFolder"></div>
+    </div>
+    <div class="card" id="arSaveCard">
+      <h2><span data-i18n="ar_save_h">Salva il volo corrente</span></h2>
+      <div class="row">
+        <div class="fieldl"><label for="arModel" data-i18n="ar_model">Modello</label><input type="text" id="arModel" list="arModels" autocomplete="off"></div>
+        <div class="fieldl"><label for="arPack" data-i18n="ar_pack">Pacco</label><input type="text" id="arPack" list="arPacks" autocomplete="off"></div>
+        <div class="fieldl" style="flex:1;min-width:200px"><label for="arNote" data-i18n="ar_note">Note</label><input type="text" id="arNote" autocomplete="off"></div>
+        <div class="fieldl"><label>&nbsp;</label><button class="btn" id="arSave">Salva</button></div>
+      </div>
+      <datalist id="arModels"></datalist><datalist id="arPacks"></datalist>
+      <p class="hint" id="arMsg"></p>
+    </div>
+    <div class="card">
+      <h2><span data-i18n="ar_list_h">Voli in archivio</span>
+        <span class="resctl"><span data-i18n="ar_model">Modello</span><select id="arFModel" class="resSel"></select>
+          <span data-i18n="ar_pack">Pacco</span><select id="arFPack" class="resSel"></select></span>
+      </h2>
+      <p class="hint" style="margin-top:-4px" data-i18n="ar_sel_hint">Seleziona da 2 a 4 voli per confrontarli.</p>
+      <div class="tablewrap" id="arList"></div>
+    </div>
+    <div class="card" id="cmpCard" hidden>
+      <h2><span data-i18n="cmp_h2">Confronto voli</span> <span class="tag">COMPARE</span></h2>
+      <div class="row" style="margin-bottom:12px">
+        <div class="fieldl"><label for="cmpVar" data-i18n="cmp_var">Variabile</label><select id="cmpVar"></select></div>
+        <div class="fieldl"><label for="cmpAlign" data-i18n="cmp_align">Allinea a</label>
+          <select id="cmpAlign"><option value="climb" data-i18n="al_climb">1ª salita</option><option value="glide" data-i18n="al_glide">1ª planata</option><option value="start" data-i18n="al_start">Inizio volo</option></select></div>
+        <div class="fieldl"><label for="cmpWin" data-i18n="cmp_win">Finestra</label>
+          <select id="cmpWin"><option value="0" data-i18n="win_all">Tutto</option><option value="60">1 min</option><option value="120">2 min</option><option value="300">5 min</option></select></div>
+        <div class="fieldl"><label>&nbsp;</label><button class="btn ghost" id="cmpClear" data-i18n="cmp_clear">Deseleziona</button></div>
+      </div>
+      <div class="chart-wrap"><canvas id="cmpChart"></canvas><div class="tip" id="tipCmp"></div></div>
+      <div class="legend" id="cmpLegend"></div>
+      <div class="scroll-x" id="cmpTable" style="margin-top:14px"></div>
+      <p class="hint" data-i18n="best_note">In verde il valore migliore di ogni riga.</p>
+    </div>
+    <div class="card" id="pkCard" hidden>
+      <h2><span data-i18n="pk_h2">Riepilogo per pacco</span> <span class="tag">PACK</span></h2>
+      <div class="scroll-x" id="pkTable"></div>
     </div>
   </section>
 
@@ -443,7 +508,7 @@ const T = {
     focus:"Focus", back:"Indietro", drill_isolate:"Isola questa variabile nel grafico",
     drill_hint:"Trascina sul grafico per analizzare un tratto; clic su una salita per il riepilogo; clic su una KPI per aprirla nel grafico.",
     help:"Guida",
-    help_html:`<h3>Come usare RZ Flight Dashboard</h3><ul><li><b>Scheda Set up</b>: consente di creare i tuoi report (le variabili con <span class="fx">ƒ</span> sono derivate, calcolate dai dati reali) e di personalizzare i colori della dashboard.</li><li><b>In alto</b>: bandierine per la lingua, logo cliccabile a sinistra.</li><li><b>Scheda Panoramica</b>: dati chiave, grafico quota con le salite a motore evidenziate; passa il cursore sul grafico per leggere i valori. <b>Drill-through</b>: trascina sul grafico per focalizzare un intervallo (KPI e tabella si ricalcolano, ✕ per azzerare), clic su una salita per il riepilogo, clic su una KPI per aprirla nel Grafico.</li><li><b>Scheda Giudizio</b>: analisi automatica del volo.</li><li><b>Scheda Grafico</b>: scegli un report dal menu a tendina. Il pulsante <b>Dettaglio</b> alza o abbassa la risoluzione; i quadratini colorati accanto alle variabili cambiano il colore; ogni variabile ha la sua scala laterale. <b>Zoom</b> con la rotella del mouse e scorrimento con la barra sotto il grafico (⟲ per azzerare); clic su una curva per isolarla (← Indietro per tornare alla vista precedente).</li><li><b>Scheda Tabella</b>: include tutti i dati, risoluzione regolabile e <b>Copia CSV</b>.</li></ul>`
+    help_html:`<h3>Come usare RZ Flight Dashboard</h3><ul><li><b>Scheda Set up</b>: consente di creare i tuoi report (le variabili con <span class="fx">ƒ</span> sono derivate, calcolate dai dati reali) e di personalizzare i colori della dashboard.</li><li><b>In alto</b>: bandierine per la lingua, logo cliccabile a sinistra.</li><li><b>Scheda Panoramica</b>: dati chiave, grafico quota con le salite a motore evidenziate; passa il cursore sul grafico per leggere i valori. <b>Drill-through</b>: trascina sul grafico per focalizzare un intervallo (KPI e tabella si ricalcolano, ✕ per azzerare), clic su una salita per il riepilogo, clic su una KPI per aprirla nel Grafico.</li><li><b>Scheda Giudizio</b>: analisi automatica del volo.</li><li><b>Scheda Grafico</b>: scegli un report dal menu a tendina. Il pulsante <b>Dettaglio</b> alza o abbassa la risoluzione; i quadratini colorati accanto alle variabili cambiano il colore; ogni variabile ha la sua scala laterale. <b>Zoom</b> con la rotella del mouse e scorrimento con la barra sotto il grafico (⟲ per azzerare); clic su una curva per isolarla (← Indietro per tornare alla vista precedente).</li><li><b>Scheda Tabella</b>: include tutti i dati, risoluzione regolabile e <b>Copia CSV</b>.</li><li><b>Scheda Archivio</b> (Chrome/Edge su PC): scegli una cartella, salva i voli con modello, pacco e note; spunta 2–4 voli per confrontare curve sovrapposte, salite e planate; in fondo il riepilogo per pacco.</li></ul>`
   },
   en:{
     sub_demo:"sample data", sub_loaded:"log loaded", tagline:"flight log analysis",
@@ -477,7 +542,7 @@ const T = {
     focus:"Focus", back:"Back", drill_isolate:"Isolate this variable in the chart",
     drill_hint:"Drag on the chart to analyse a segment; click a climb for its summary; click a KPI to open it in the chart.",
     help:"Guide",
-    help_html:`<h3>How to use RZ Flight Dashboard</h3><ul><li><b>Set up tab</b>: lets you create your reports (variables marked <span class="fx">ƒ</span> are derived, computed from the real data) and customise the dashboard colours.</li><li><b>Top</b>: flags for the language, clickable logo on the left.</li><li><b>Overview tab</b>: key figures, altitude chart with motor climbs highlighted; hover over the chart to read values. <b>Drill-through</b>: drag on the chart to focus a window (KPIs and table recompute, ✕ to reset), click a climb for its summary, click a KPI to open it in the Chart.</li><li><b>Assessment tab</b>: automatic flight analysis.</li><li><b>Chart tab</b>: pick a report from the drop-down. The <b>Detail</b> button raises or lowers the resolution; the colour chips next to the variables change their colour; every variable has its own side axis. <b>Zoom</b> with the mouse wheel and pan with the bar below the chart (⟲ to reset); click a curve to isolate it (← Back to return to the previous view).</li><li><b>Table tab</b>: includes all the data, adjustable resolution and <b>Copy CSV</b>.</li></ul>`
+    help_html:`<h3>How to use RZ Flight Dashboard</h3><ul><li><b>Set up tab</b>: lets you create your reports (variables marked <span class="fx">ƒ</span> are derived, computed from the real data) and customise the dashboard colours.</li><li><b>Top</b>: flags for the language, clickable logo on the left.</li><li><b>Overview tab</b>: key figures, altitude chart with motor climbs highlighted; hover over the chart to read values. <b>Drill-through</b>: drag on the chart to focus a window (KPIs and table recompute, ✕ to reset), click a climb for its summary, click a KPI to open it in the Chart.</li><li><b>Assessment tab</b>: automatic flight analysis.</li><li><b>Chart tab</b>: pick a report from the drop-down. The <b>Detail</b> button raises or lowers the resolution; the colour chips next to the variables change their colour; every variable has its own side axis. <b>Zoom</b> with the mouse wheel and pan with the bar below the chart (⟲ to reset); click a curve to isolate it (← Back to return to the previous view).</li><li><b>Table tab</b>: includes all the data, adjustable resolution and <b>Copy CSV</b>.</li><li><b>Archive tab</b> (Chrome/Edge on a computer): choose a folder, save flights with model, pack and notes; tick 2–4 flights to compare overlaid curves, climbs and glides; summary by pack at the bottom.</li></ul>`
   },
   fr:{
     sub_demo:"données d'exemple", sub_loaded:"log chargé", tagline:"analyse de logs de vol",
@@ -511,9 +576,54 @@ const T = {
     focus:"Focus", back:"Retour", drill_isolate:"Isoler cette variable dans le graphe",
     drill_hint:"Faites glisser sur le graphe pour analyser une portion ; cliquez sur une montée pour son résumé ; cliquez sur une KPI pour l'ouvrir dans le graphe.",
     help:"Guide",
-    help_html:`<h3>Comment utiliser RZ Flight Dashboard</h3><ul><li><b>Onglet Set up</b> : permet de créer vos rapports (les variables marquées <span class="fx">ƒ</span> sont dérivées, calculées à partir des données réelles) et de personnaliser les couleurs du tableau de bord.</li><li><b>En haut</b> : drapeaux pour la langue, logo cliquable à gauche.</li><li><b>Onglet Aperçu</b> : données clés, graphe d'altitude avec les montées moteur mises en évidence ; survolez le graphe pour lire les valeurs. <b>Drill-through</b> : faites glisser sur le graphe pour focaliser une plage (les KPI et le tableau se recalculent, ✕ pour réinitialiser), cliquez sur une montée pour son résumé, cliquez sur une KPI pour l'ouvrir dans le Graphique.</li><li><b>Onglet Évaluation</b> : analyse automatique du vol.</li><li><b>Onglet Graphique</b> : choisissez un rapport dans le menu déroulant. Le bouton <b>Détail</b> augmente ou diminue la résolution ; les pastilles de couleur à côté des variables changent la couleur ; chaque variable a son propre axe latéral. <b>Zoom</b> avec la molette et défilement avec la barre sous le graphe (⟲ pour réinitialiser) ; cliquez sur une courbe pour l'isoler (← Retour pour revenir à la vue précédente).</li><li><b>Onglet Tableau</b> : inclut toutes les données, résolution réglable et <b>Copier CSV</b>.</li></ul>`
+    help_html:`<h3>Comment utiliser RZ Flight Dashboard</h3><ul><li><b>Onglet Set up</b> : permet de créer vos rapports (les variables marquées <span class="fx">ƒ</span> sont dérivées, calculées à partir des données réelles) et de personnaliser les couleurs du tableau de bord.</li><li><b>En haut</b> : drapeaux pour la langue, logo cliquable à gauche.</li><li><b>Onglet Aperçu</b> : données clés, graphe d'altitude avec les montées moteur mises en évidence ; survolez le graphe pour lire les valeurs. <b>Drill-through</b> : faites glisser sur le graphe pour focaliser une plage (les KPI et le tableau se recalculent, ✕ pour réinitialiser), cliquez sur une montée pour son résumé, cliquez sur une KPI pour l'ouvrir dans le Graphique.</li><li><b>Onglet Évaluation</b> : analyse automatique du vol.</li><li><b>Onglet Graphique</b> : choisissez un rapport dans le menu déroulant. Le bouton <b>Détail</b> augmente ou diminue la résolution ; les pastilles de couleur à côté des variables changent la couleur ; chaque variable a son propre axe latéral. <b>Zoom</b> avec la molette et défilement avec la barre sous le graphe (⟲ pour réinitialiser) ; cliquez sur une courbe pour l'isoler (← Retour pour revenir à la vue précédente).</li><li><b>Onglet Tableau</b> : inclut toutes les données, résolution réglable et <b>Copier CSV</b>.</li><li><b>Onglet Archives</b> (Chrome/Edge sur ordinateur) : choisissez un dossier, enregistrez les vols avec modèle, accu et notes ; cochez 2 à 4 vols pour comparer courbes superposées, montées et planés ; récapitulatif par accu en bas.</li></ul>`
   }
 };
+/* archivio + confronto: [it, en, fr] */
+const T_AR={
+  tab_ar:["Archivio","Archive","Archives"],
+  ar_h2:["Archivio voli","Flight archive","Archives de vols"],
+  ar_folder:["Cartella","Folder","Dossier"],
+  ar_pick:["Scegli cartella","Choose folder","Choisir le dossier"],
+  ar_change:["Cambia cartella","Change folder","Changer de dossier"],
+  ar_reconnect:["Riconnetti cartella","Reconnect folder","Reconnecter le dossier"],
+  ar_nofolder:["Nessuna cartella scelta. Scegli (o crea) una cartella sul PC dove salvare i voli: se è dentro Google Drive per desktop hai anche il backup automatico.","No folder chosen yet. Choose (or create) a folder on your computer to store flights: if it's inside Google Drive for desktop you also get automatic backup.","Aucun dossier choisi. Choisissez (ou créez) un dossier sur l'ordinateur pour enregistrer les vols : s'il est dans Google Drive pour ordinateur, la sauvegarde est automatique."],
+  ar_unsupported:["L'archivio su cartella funziona con Chrome o Edge su PC.","The folder archive works with Chrome or Edge on a computer.","L'archive dans un dossier fonctionne avec Chrome ou Edge sur ordinateur."],
+  ar_perm:["Il browser chiede di confermare l'accesso alla cartella (scegli \"Consenti a ogni visita\" per non doverlo rifare).","The browser asks you to confirm access to the folder (pick \"Allow on every visit\" to avoid repeating it).","Le navigateur demande de confirmer l'accès au dossier (choisissez « Autoriser à chaque visite » pour ne plus le refaire)."],
+  ar_loading:["Lettura archivio…","Reading archive…","Lecture des archives…"],
+  ar_save_h:["Salva il volo corrente","Save current flight","Enregistrer le vol actuel"],
+  ar_model:["Modello","Model","Modèle"], ar_pack:["Pacco","Pack","Accu"], ar_note:["Note","Notes","Notes"],
+  ar_save:["Salva nell'archivio","Save to archive","Enregistrer"],
+  ar_update:["Aggiorna in archivio","Update in archive","Mettre à jour"],
+  ar_in_arch:["In archivio come","Archived as","Archivé sous"],
+  ar_demo:["I dati Demo non si archiviano: carica un log vero.","Demo data can't be archived: load a real log.","Les données de démo ne s'archivent pas : chargez un vrai log."],
+  ar_needfolder:["Scegli prima la cartella dell'archivio (in alto).","Choose the archive folder first (above).","Choisissez d'abord le dossier d'archive (en haut)."],
+  ar_saved:["Volo salvato","Flight saved","Vol enregistré"], ar_updated:["Volo aggiornato","Flight updated","Vol mis à jour"],
+  ar_err:["Errore","Error","Erreur"],
+  ar_list_h:["Voli in archivio","Archived flights","Vols archivés"],
+  ar_all:["Tutti","All","Tous"],
+  ar_empty:["Nessun volo in archivio. Carica un log e salvalo qui sopra.","No flights archived yet. Load a log and save it above.","Aucun vol archivé. Chargez un log et enregistrez-le ci-dessus."],
+  ar_open:["Apri","Open","Ouvrir"], ar_del:["Elimina","Delete","Supprimer"],
+  ar_del_q:["Eliminare definitivamente questo volo dalla cartella?","Permanently delete this flight from the folder?","Supprimer définitivement ce vol du dossier ?"],
+  ar_sel_hint:["Spunta da 2 a 4 voli per confrontarli; \"Apri\" carica un volo nelle altre schede.","Tick 2 to 4 flights to compare them; \"Open\" loads a flight into the other tabs.","Cochez 2 à 4 vols pour les comparer ; « Ouvrir » charge un vol dans les autres onglets."],
+  ar_max4:["Puoi confrontare al massimo 4 voli.","You can compare at most 4 flights.","Vous pouvez comparer au maximum 4 vols."],
+  cmp_h2:["Confronto voli","Flight comparison","Comparaison de vols"],
+  cmp_var:["Variabile","Variable","Variable"], cmp_align:["Allinea a","Align to","Aligner sur"],
+  al_start:["Inizio volo","Flight start","Début du vol"], al_climb:["1ª salita","1st climb","1re montée"], al_glide:["1ª planata","1st glide","1er plané"],
+  cmp_win:["Finestra","Window","Fenêtre"], win_all:["Tutto","All","Tout"],
+  cmp_clear:["Deseleziona","Clear selection","Désélectionner"],
+  best_note:["In verde il valore migliore di ogni riga. Salite: Δquota misurata fino a 10 s dopo lo spegnimento. Planate: solo motore spento, dalla 1ª salita all'atterraggio.","Best value of each row in green. Climbs: Δalt measured up to 10 s after motor cut. Glides: motor off only, from the 1st climb to landing.","Meilleure valeur de chaque ligne en vert. Montées : Δalt mesuré jusqu'à 10 s après coupure moteur. Planés : moteur coupé seulement, de la 1re montée à l'atterrissage."],
+  grp_gen:["Volo","Flight","Vol"], grp_climb:["Salite","Climbs","Montées"], grp_glide:["Planate","Glides","Planés"],
+  m_date:["Data","Date","Date"], m_dur:["Durata","Duration","Durée"], m_altmax:["Quota max","Max altitude","Altitude max"],
+  m_nclimb:["N. salite","Climbs","Montées"], m_dalt:["Δquota media","Avg Δalt","Δalt moy."], m_rate:["Rateo salita","Climb rate","Taux de montée"],
+  m_ipk:["I picco","I peak","I crête"], m_imean:["I media","I avg","I moy."], m_vcell:["V/cella min","Min V/cell","V/cell. min"],
+  m_rint:["Rint mediana","Median Rint","Rint médiane"], m_gtime:["Tempo motore spento","Motor-off time","Temps moteur coupé"],
+  m_net:["Vario netto","Net vario","Vario net"], m_sink:["Sink medio","Avg sink","Chute moy."],
+  m_lift:["Tempo in termica","Time in lift","Temps en ascendance"], m_glide:["Efficienza mediana","Median glide ratio","Finesse médiane"],
+  pk_h2:["Riepilogo per pacco","Summary by pack","Récapitulatif par accu"],
+  pk_n:["Voli","Flights","Vols"], pk_last:["Ultimo volo","Last flight","Dernier vol"], pk_none:["(senza pacco)","(no pack)","(sans accu)"]
+};
+for(const k in T_AR){ T.it[k]=T_AR[k][0]; T.en[k]=T_AR[k][1]; T.fr[k]=T_AR[k][2]; }
 /* derived channels: stable keys, bilingual display names */
 const DERIV_NAMES={
   Power:{it:"Potenza",en:"Power",fr:"Puissance"}, Energy:{it:"Energia",en:"Energy",fr:"Énergie"}, Rint:{it:"Resistenza interna",en:"Internal resistance",fr:"Résistance interne"},
@@ -544,6 +654,7 @@ function setLang(l){
   if(fi) fi.classList.toggle("active",lang==="it"); if(fe) fe.classList.toggle("active",lang==="en"); if(fr) fr.classList.toggle("active",lang==="fr");
   applyI18n();
   if(typeof DATA!=="undefined" && DATA){ renderFlightHead(DATA); renderKpis(VF()); renderVerdict(DATA); renderMain(); refreshReportSel(); refreshBuilder(); renderTable(); renderThemeControls(); }
+  if(typeof ARCH!=="undefined") renderArchive();
 }
 
 /* ---------- state ---------- */
@@ -809,7 +920,7 @@ function VF(){ return (focusRange && DATA) ? sliceFrame(DATA,focusRange) : DATA;
 /* ---------- KPIs ---------- */
 function locale(){ return lang==="en"?"en-GB":lang==="fr"?"fr-FR":"it-IT"; }
 function fmt(v,d){ return v==null||!isFinite(v)?"—":v.toLocaleString(locale(),{minimumFractionDigits:d,maximumFractionDigits:d}); }
-function hhmmss(s){ s=Math.round(s); const m=Math.floor(s/60),ss=s%60; return m+":"+String(ss).padStart(2,"0"); }
+function hhmmss(s){ const neg=s<0; s=Math.round(Math.abs(s)); const m=Math.floor(s/60),ss=s%60; return (neg?"−":"")+m+":"+String(ss).padStart(2,"0"); }
 
 function parseFilename(name){
   if(!name) return {dateObj:null,time:null,dateKnown:false};
@@ -996,9 +1107,11 @@ function drawChart(canvas, cfg){
 
   // each variable gets its OWN y-scale, autoscaled on its recorded min/max
   S.forEach(s=>{ const r=rangeOf(s.ys); s._min=r.min; s._max=r.max; s._col=cssv(s.color)||s.color; });
+  // cfg.sharedY: one common scale for all series (flight comparison), single left axis
+  if(cfg.sharedY){ let mn=Infinity,mx=-Infinity; S.forEach(s=>{ if(s._min<mn)mn=s._min; if(s._max>mx)mx=s._max; }); S.forEach(s=>{ s._min=mn; s._max=mx; }); }
   // one axis per series: series[0] on the left, the rest stacked on the right
   const padL=54, axisW=46, padT=14, padB=30;
-  const nRightAll=Math.max(0,S.length-1);
+  const nRightAll=cfg.sharedY?0:Math.max(0,S.length-1);
   const maxRight=Math.max(1,Math.floor((cssW-padL-110)/axisW));
   const nRight=Math.min(nRightAll,maxRight);     // how many right axes fit
   const padR=16+nRight*axisW;
@@ -1031,7 +1144,7 @@ function drawChart(canvas, cfg){
     const y=padT+H-H*i/ticks;
     g.strokeStyle=grid; g.lineWidth=1; g.beginPath(); g.moveTo(padL,y); g.lineTo(padL+W,y); g.stroke();
     const L=S[0], vL=L._min+(L._max-L._min)*i/ticks;
-    g.fillStyle=L._col; g.textAlign="left"; g.fillText(fmtTick(vL),4,y);
+    g.fillStyle=cfg.sharedY?muted:L._col; g.textAlign="left"; g.fillText(fmtTick(vL),4,y);
     for(let r=1;r<=nRight;r++){ const R=S[r], vR=R._min+(R._max-R._min)*i/ticks;
       g.fillStyle=R._col; g.textAlign="left"; g.fillText(fmtTick(vR),padL+W+7+(r-1)*axisW,y); }
   }
@@ -1388,6 +1501,7 @@ function renderAll(){
   renderFlightHead(DATA); renderKpis(VF()); renderMain(); renderVerdict(DATA);
   refreshReportSel(); refreshBuilder(); updateFocusBar();
   setupMainInteractions(); attachHover("viewChart","tipView"); setupViewInteractions();
+  renderArchive();
 }
 
 /* ---------- demo data ---------- */
@@ -1422,13 +1536,305 @@ function makeDemo(){
   computeDerived(f); detectClimbs(f); return f;
 }
 
+/* ---------- archivio voli (cartella sul PC) + confronto ----------
+   Ogni volo è un file "<data>_<modello>_<pacco>.rzf.json" nella cartella scelta.
+   Si salvano solo i canali registrati: derivate e salite si ricalcolano all'apertura. */
+const ARCH_EXT=".rzf.json";
+const ARCH_OK=("showDirectoryPicker" in window);
+let archDir=null, archPerm="none", archBusy=false;
+let ARCH=[];                       // [{file,model,pack,note,source,f,sum,ts}]
+const archSel=new Set();           // file selezionati per il confronto (max 4)
+const archF={model:"",pack:""};    // filtri elenco
+let archMsg="", archFormFor=null;
+
+/* IndexedDB: ricorda la cartella scelta tra una sessione e l'altra */
+function idbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open("rzfd",1); r.onupgradeneeded=()=>r.result.createObjectStore("kv"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function kvGet(k){ try{ const db=await idbOpen(); return await new Promise(res=>{ const q=db.transaction("kv").objectStore("kv").get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>res(null); }); }catch(e){ return null; } }
+async function kvSet(k,v){ try{ const db=await idbOpen(); await new Promise(res=>{ const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").put(v,k); tx.oncomplete=tx.onerror=()=>res(); }); }catch(e){} }
+
+function median(a){ if(!a.length) return null; const s=a.slice().sort((x,y)=>x-y), m=s.length>>1; return s.length%2?s[m]:(s[m-1]+s[m])/2; }
+const num=v=>v!=null&&Number.isFinite(v);
+/* vario: canale registrato se c'è, altrimenti derivato dalla quota (±1 s) */
+function varioOf(f){
+  const v=pick(f,["Vario"]); if(v) return v.vals;
+  const a=altSeries(f); if(!a) return null;
+  const N=f.t.length, k=Math.max(1,Math.round(1/f.DT)), out=new Array(N);
+  for(let i=0;i<N;i++){ const i0=Math.max(0,i-k), i1=Math.min(N-1,i+k); out[i]=(a.vals[i1]-a.vals[i0])/(((i1-i0)*f.DT)||1); }
+  return out;
+}
+/* planate: solo motore spento (+3 s dopo lo spegnimento), dalla 1ª salita all'ultimo istante sopra 3 m */
+function glideStats(f){
+  const a=altSeries(f), va=varioOf(f), C=f.climbs||[], N=f.t.length;
+  if(!a||!va) return {};
+  let i0=0; if(C.length) i0=C[0].i0; else { while(i0<N-1 && !(a.vals[i0]>3)) i0++; }
+  let i1=N-1; while(i1>i0 && !(a.vals[i1]>3)) i1--;
+  const motor=new Uint8Array(N), post=Math.round(3/f.DT);
+  for(const c of C) for(let k=c.i0;k<=Math.min(N-1,c.i1+post);k++) motor[k]=1;
+  let n=0,sum=0,ns=0,ss=0,nl=0;
+  for(let i=i0;i<=i1;i++){ if(motor[i]) continue; const v=va[i]; if(!Number.isFinite(v)) continue; n++; sum+=v; if(v<0){ns++;ss+=v;} if(v>0.2) nl++; }
+  const gl=f.series["Glide"]; let gr=null;
+  if(gl){ const arr=[]; for(let i=i0;i<=i1;i++) if(!motor[i]&&Number.isFinite(gl.vals[i])) arr.push(gl.vals[i]); gr=median(arr); }
+  return {glideT:n*f.DT, netVario:n?sum/n:null, sink:ns?ss/ns:null, liftPct:n?nl/n*100:null, glideRatio:gr};
+}
+function flightSummary(f){
+  const C=f.climbs||[], cells=f.cells||0, a=altSeries(f);
+  const avg=x=>x.length?x.reduce((p,q)=>p+q,0)/x.length:null;
+  const ok=C.filter(c=>num(c.dalt)&&c.dur>0), sp=C.filter(c=>num(c.mah)&&c.dalt>5), um=C.filter(c=>num(c.umin));
+  let altMax=null; if(a){ for(const v of a.vals) if(Number.isFinite(v)&&(altMax==null||v>altMax)) altMax=v; }
+  const ri=f.series["Rint"]?median(f.series["Rint"].vals.filter(Number.isFinite)):null;
+  return Object.assign({
+    dur:f.dur, altMax, nClimbs:C.length, motorT:C.reduce((p,c)=>p+c.dur,0),
+    dalt:avg(ok.map(c=>c.dalt)), rate:avg(ok.map(c=>c.dalt/c.dur)),
+    ipk:C.some(c=>num(c.ipk))?Math.max(...C.map(c=>c.ipk||0)):null,
+    imean:avg(C.filter(c=>num(c.imean)).map(c=>c.imean)),
+    spec:sp.length?sp.reduce((p,c)=>p+c.mah,0)/sp.reduce((p,c)=>p+c.dalt,0)*100:null,
+    vcell:(um.length&&cells)?Math.min(...um.map(c=>c.umin))/cells:null,
+    rint:ri
+  }, glideStats(f));
+}
+
+/* serializzazione volo <-> file */
+function frameToJson(f,info){
+  const series={}; for(const k in f.series){ const s=f.series[k]; if(s.derived) continue; series[k]={unit:s.unit||"",vals:s.vals.map(v=>Number.isFinite(v)?v:null)}; }
+  const m=f.meta||{};
+  return {format:"rz-flight",version:1,app:$(".ver").textContent,saved:new Date().toISOString(),
+    model:info.model,pack:info.pack,note:info.note,source:info.source,
+    meta:{date:m.dateObj?m.dateObj.toISOString():null,time:m.time||null,dateKnown:!!m.dateKnown},
+    DT:f.DT,dur:f.dur,summary:flightSummary(f),series};
+}
+function frameFromJson(o){
+  const keys=Object.keys(o.series||{}); if(!keys.length) throw new Error("no data");
+  const N=o.series[keys[0]].vals.length, DT=o.DT||0.2, t=new Array(N);
+  for(let i=0;i<N;i++) t[i]=+(i*DT).toFixed(2);
+  const series={}; for(const k of keys){ const s=o.series[k]; series[k]={unit:s.unit||"",vals:s.vals.map(v=>v==null?NaN:v)}; }
+  const m=o.meta||{};
+  const f={t,series,dur:o.dur!=null?o.dur:t[N-1],model:o.model||"",DT,meta:{dateObj:m.date?new Date(m.date):null,time:m.time||null,dateKnown:!!m.dateKnown}};
+  computeDerived(f); detectClimbs(f); return f;
+}
+function slug(s){ return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,30); }
+function archBaseName(f,model,pack){
+  const p=n=>String(n).padStart(2,"0"), m=f.meta||{};
+  const stamp=d=>`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  const ds=(m.dateObj&&m.dateKnown)?stamp(m.dateObj):"volo_"+stamp(new Date());
+  return [ds,slug(model),slug(pack)].filter(Boolean).join("_");
+}
+async function archFreeName(base){
+  for(let i=1;i<100;i++){ const n=base+(i>1?"-"+i:"")+ARCH_EXT; try{ await archDir.getFileHandle(n); }catch(e){ return n; } }
+  return base+"-"+Date.now()+ARCH_EXT;
+}
+function archEntry(file,o,f){ const d=f.meta&&f.meta.dateObj; return {file,model:o.model||"",pack:o.pack||"",note:o.note||"",source:o.source||"",f,sum:flightSummary(f),ts:d?d.getTime():0}; }
+function archFindDup(f){ return f._src ? ARCH.find(e=>e.source===f._src && Math.abs(e.f.dur-f.dur)<0.5) : null; }
+function archSort(){ ARCH.sort((a,b)=>b.ts-a.ts||(a.file<b.file?1:-1)); }
+
+/* cartella: scelta, permesso, lettura */
+async function archInit(){
+  if(!ARCH_OK) return renderArchive();
+  const h=await kvGet("archDir"); if(!h) return renderArchive();
+  archDir=h;
+  try{ archPerm=await h.queryPermission({mode:"readwrite"}); }catch(e){ archPerm="prompt"; }
+  if(archPerm==="granted") await archReload(); else renderArchive();
+}
+async function archPick(){
+  try{ archDir=await window.showDirectoryPicker({id:"rz-voli",mode:"readwrite"}); }catch(e){ return; }   // annullato
+  await kvSet("archDir",archDir); archPerm="granted"; archSel.clear(); await archReload();
+}
+async function archReconnect(){
+  try{ archPerm=await archDir.requestPermission({mode:"readwrite"}); }catch(e){ archPerm="denied"; }
+  if(archPerm==="granted") await archReload(); else renderArchive();
+}
+async function archReload(){
+  archBusy=true; renderArchFolder();
+  const out=[];
+  try{
+    for await (const [name,h] of archDir.entries()){
+      if(h.kind!=="file"||!name.endsWith(ARCH_EXT)) continue;
+      try{ const o=JSON.parse(await (await h.getFile()).text()); if(o.format!=="rz-flight") continue; out.push(archEntry(name,o,frameFromJson(o))); }catch(e){}
+    }
+  }catch(e){ archMsg=t("ar_err")+": "+e.message; }
+  ARCH=out; archSort(); archBusy=false;
+  for(const k of [...archSel]) if(!ARCH.some(e=>e.file===k)) archSel.delete(k);
+  renderArchive();
+}
+async function archWrite(name,o){ const h=await archDir.getFileHandle(name,{create:true}); const w=await h.createWritable(); await w.write(JSON.stringify(o)); await w.close(); }
+
+async function archSave(){
+  if(!DATA||isDemo) return;
+  if(!archDir){ archMsg=t("ar_needfolder"); return renderArchSave(); }
+  if(archPerm!=="granted"){ await archReconnect(); if(archPerm!=="granted") return; }
+  const model=$("#arModel").value.trim(), pack=$("#arPack").value.trim(), note=$("#arNote").value.trim();
+  try{
+    let file=DATA._arch;
+    if(!file){ const dup=archFindDup(DATA); if(dup) file=dup.file; }
+    const upd=!!file;
+    if(!file) file=await archFreeName(archBaseName(DATA,model,pack));
+    if(model) DATA.model=model;
+    const o=frameToJson(DATA,{model,pack,note,source:DATA._src||""});
+    await archWrite(file,o);
+    DATA._arch=file;
+    const e=archEntry(file,o,DATA), i=ARCH.findIndex(x=>x.file===file);
+    if(i>=0) ARCH[i]=e; else ARCH.push(e); archSort();
+    archMsg=(upd?t("ar_updated"):t("ar_saved"))+": "+file;
+    renderFlightHead(DATA); renderArchive();
+  }catch(err){ archMsg=t("ar_err")+": "+err.message; renderArchSave(); }
+}
+async function archDelete(file){
+  if(!confirm(t("ar_del_q")+"\n\n"+file)) return;
+  try{ await archDir.removeEntry(file); }catch(err){ archMsg=t("ar_err")+": "+err.message; return renderArchive(); }
+  ARCH=ARCH.filter(e=>e.file!==file); archSel.delete(file);
+  if(DATA&&DATA._arch===file){ delete DATA._arch; archFormFor=null; }
+  renderArchive();
+}
+function archOpen(file){
+  const e=ARCH.find(x=>x.file===file); if(!e) return;
+  focusRange=null; gZoom=null; reports=reports.filter(r=>!r.tmp);
+  DATA=e.f; DATA._arch=e.file; isDemo=false; $("#fname").textContent=e.file; renderAll();
+  const tab=document.querySelector('.tab[data-p="ov"]'); if(tab) tab.click();
+}
+
+/* rendering */
+function archVisible(){ const s=$('section[data-page="ar"]'); return s&&!s.hidden; }
+function archFiltered(){ return ARCH.filter(e=>(!archF.model||e.model===archF.model)&&(!archF.pack||e.pack===archF.pack)); }
+function archDate(e,short){
+  const m=e.f.meta||{}, d=m.dateObj;
+  if(d&&m.dateKnown) return short ? d.toLocaleDateString(locale(),{day:"2-digit",month:"2-digit"})
+                                  : d.toLocaleDateString(locale(),{day:"2-digit",month:"2-digit",year:"numeric"})+(m.time?" "+m.time.slice(0,5):"");
+  return m.time?m.time.slice(0,5):"—";
+}
+function archLabel(e){ return [archDate(e,true),e.model,e.pack].filter(Boolean).join(" · "); }
+function cmpColor(i){ return DEFCOLORS[i%DEFCOLORS.length]; }
+
+function renderArchFolder(){
+  const el=$("#arFolder"); if(!el) return;
+  if(!ARCH_OK){ el.innerHTML=`<p class="hint">${t("ar_unsupported")}</p>`; return; }
+  if(!archDir){ el.innerHTML=`<p class="hint">${t("ar_nofolder")}</p><button class="btn" data-ar="pick">${t("ar_pick")}</button>`; return; }
+  const name=`${t("ar_folder")}: <b>${escapeHtml(archDir.name)}</b>`;
+  if(archPerm!=="granted"){ el.innerHTML=`<span>${name}</span><button class="btn" data-ar="reconnect">${t("ar_reconnect")}</button><p class="hint">${t("ar_perm")}</p>`; return; }
+  el.innerHTML=`<span>${name} · ${archBusy?t("ar_loading"):ARCH.length+" "+t("pk_n").toLowerCase()}</span><button class="btn ghost" data-ar="pick">${t("ar_change")}</button>`;
+}
+function renderArchSave(){
+  const ready=ARCH_OK&&archDir&&archPerm==="granted";
+  const ins=["#arModel","#arPack","#arNote"].map(s=>$(s)), btn=$("#arSave"), msg=$("#arMsg");
+  const uniq=k=>[...new Set(ARCH.map(e=>e[k]).filter(Boolean))].sort();
+  $("#arModels").innerHTML=uniq("model").map(v=>`<option value="${escapeHtml(v)}">`).join("");
+  $("#arPacks").innerHTML=uniq("pack").map(v=>`<option value="${escapeHtml(v)}">`).join("");
+  if(!DATA||isDemo){ ins.forEach(i=>{i.disabled=true;i.value="";}); btn.disabled=true; btn.textContent=t("ar_save"); msg.textContent=t("ar_demo"); archFormFor=null; return; }
+  if(archFormFor!==DATA){   // nuovo volo caricato: precompila i campi
+    archFormFor=DATA; archMsg="";
+    if(!DATA._arch){ const d=archFindDup(DATA); if(d) DATA._arch=d.file; }   // log già archiviato: riprende i suoi dati
+    const e=DATA._arch&&ARCH.find(x=>x.file===DATA._arch);
+    ins[0].value=e?e.model:(DATA.model&&DATA.model!=="SM GPS"?DATA.model:"");
+    ins[1].value=e?e.pack:""; ins[2].value=e?e.note:"";
+  }
+  ins.forEach(i=>i.disabled=false);
+  btn.disabled=!ready; btn.textContent=DATA._arch?t("ar_update"):t("ar_save");
+  msg.textContent=archMsg||(DATA._arch?`${t("ar_in_arch")} ${DATA._arch}`:(ready?"":t("ar_needfolder")));
+}
+function renderArchFilters(){
+  const fill=(sel,key)=>{ const vals=[...new Set(ARCH.map(e=>e[key]).filter(Boolean))].sort();
+    if(archF[key]&&!vals.includes(archF[key])) archF[key]="";
+    sel.innerHTML=`<option value="">${t("ar_all")}</option>`+vals.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+    sel.value=archF[key]; };
+  fill($("#arFModel"),"model"); fill($("#arFPack"),"pack");
+}
+function renderArchList(){
+  const el=$("#arList"), L=archFiltered();
+  if(!L.length){ el.innerHTML=`<p class="empty">${ARCH.length?"—":t("ar_empty")}</p>`; return; }
+  const rows=L.map(e=>{ const s=e.sum, f=escapeHtml(e.file), sel=archSel.has(e.file);
+    return `<tr class="${sel?"sel":""}${DATA&&DATA._arch===e.file?" cur":""}">
+      <td><input type="checkbox" data-sel="${f}"${sel?" checked":""} aria-label="${escapeHtml(archLabel(e))}"></td>
+      <td class="mono txt">${archDate(e)}</td><td class="txt">${escapeHtml(e.model||"—")}</td><td class="txt">${escapeHtml(e.pack||"—")}</td>
+      <td class="mono">${hhmmss(s.dur)}</td><td class="mono">${fmt(s.altMax,0)}</td><td class="mono">${s.nClimbs}</td>
+      <td class="mono">${fmt(s.rate,1)}</td><td class="mono">${fmt(s.spec,0)}</td><td class="mono">${fmt(s.sink,2)}</td>
+      <td class="note" title="${escapeHtml(e.note)}">${escapeHtml(e.note)}</td>
+      <td class="act"><button data-open="${f}">${t("ar_open")}</button><button class="del" data-del="${f}" title="${t("ar_del")}" aria-label="${t("ar_del")}">✕</button></td></tr>`; }).join("");
+  el.innerHTML=`<table><thead><tr><th></th><th>${t("m_date")}</th><th>${t("ar_model")}</th><th>${t("ar_pack")}</th><th>${t("m_dur")}</th>
+    <th>${t("m_altmax")} m</th><th>${t("m_nclimb")}</th><th>${t("m_rate")} m/s</th><th>mAh/100m</th><th>${t("m_sink")} m/s</th><th>${t("ar_note")}</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function renderCompare(){
+  const card=$("#cmpCard"), sel=ARCH.filter(e=>archSel.has(e.file));
+  card.hidden=sel.length<2; if(sel.length<2||!archVisible()) return;
+  // variabili presenti in tutti i voli selezionati
+  const keys=Object.keys(sel[0].f.series).filter(k=>sel.every(e=>e.f.series[k]));
+  const vs=$("#cmpVar"), cur=vs.value;
+  vs.innerHTML=keys.map(k=>`<option value="${escapeHtml(k)}">${escapeHtml(dispName(k))}${isDeriv(k)?" ƒ":""}</option>`).join("");
+  vs.value=keys.includes(cur)?cur:(keys.find(k=>/Rel\.? ?altit/.test(k))||keys[0]||"");
+  const key=vs.value, align=$("#cmpAlign").value, win=+$("#cmpWin").value||0;
+  const series=[], legend=[];
+  sel.forEach((e,i)=>{
+    const f=e.f, s=f.series[key]; if(!s) return;
+    const C=f.climbs||[]; let off=0;
+    if(align==="climb"&&C.length) off=C[0].t0; else if(align==="glide"&&C.length) off=C[0].t1;
+    const d=decim(f.t.map(x=>x-off),s.vals,chartPts);
+    series.push({xs:d.xs,ys:d.ys,color:cmpColor(i),type:"line",name:archLabel(e),unit:s.unit,key});
+    legend.push(`<span><span class="swatch" style="background:${cmpColor(i)}"></span>${escapeHtml(archLabel(e))}${(align!=="start"&&!C.length)?" <i>("+t("al_start").toLowerCase()+")</i>":""}</span>`);
+  });
+  const cfg={series,height:320,xTimeAxis:true,sharedY:true};
+  if(win>0){ cfg.xmin=align==="start"?0:-5; cfg.xmax=cfg.xmin+win; }
+  drawChart($("#cmpChart"),cfg);
+  $("#cmpLegend").innerHTML=legend.join("");
+  renderCmpTable(sel);
+}
+function renderCmpTable(sel){
+  const R=[
+    {g:"grp_gen"},
+    {l:t("m_date"),txt:e=>archDate(e)}, {l:t("ar_model"),txt:e=>escapeHtml(e.model||"—")}, {l:t("ar_pack"),txt:e=>escapeHtml(e.pack||"—")},
+    {l:t("m_dur"),k:"dur",fm:hhmmss,b:"max"}, {l:t("m_altmax")+" [m]",k:"altMax",d:0,b:"max"},
+    {g:"grp_climb"},
+    {l:t("m_nclimb"),k:"nClimbs",d:0}, {l:t("m_dalt")+" [m]",k:"dalt",d:0,b:"max"}, {l:t("m_rate")+" [m/s]",k:"rate",d:1,b:"max"},
+    {l:t("m_ipk")+" [A]",k:"ipk",d:0}, {l:t("m_imean")+" [A]",k:"imean",d:0}, {l:"mAh/100m",k:"spec",d:0,b:"min"},
+    {l:t("m_vcell")+" [V]",k:"vcell",d:2,b:"max"}, {l:t("m_rint")+" [mΩ]",k:"rint",d:0,b:"min"},
+    {g:"grp_glide"},
+    {l:t("m_gtime"),k:"glideT",fm:hhmmss,b:"max"}, {l:t("m_net")+" [m/s]",k:"netVario",d:2,b:"max"},
+    {l:t("m_sink")+" [m/s]",k:"sink",d:2,b:"max"}, {l:t("m_lift")+" [%]",k:"liftPct",d:0,b:"max"},
+    {l:t("m_glide")+" [:1]",k:"glideRatio",d:1,b:"max"}
+  ];
+  const head=`<tr><th></th>${sel.map((e,i)=>`<th><span class="swatch" style="background:${cmpColor(i)}"></span>${escapeHtml(archLabel(e))}</th>`).join("")}</tr>`;
+  const body=R.map(r=>{
+    if(r.g) return `<tr class="grp"><th colspan="${sel.length+1}">${t(r.g)}</th></tr>`;
+    if(r.txt) return `<tr><td>${r.l}</td>${sel.map(e=>`<td>${r.txt(e)}</td>`).join("")}</tr>`;
+    // migliore calcolato sui valori come mostrati (arrotondati), così valori "uguali" non vengono evidenziati
+    const vals=sel.map(e=>{ const v=e.sum[r.k]; return num(v)&&r.d!=null?+v.toFixed(r.d):v; }), fin=vals.filter(num);
+    const best=(r.b&&fin.length>1&&new Set(fin).size>1)?(r.b==="max"?Math.max(...fin):Math.min(...fin)):null;
+    return `<tr><td>${r.l}</td>${vals.map(v=>`<td class="mono${best!=null&&v===best?" best":""}">${num(v)?(r.fm?r.fm(v):fmt(v,r.d)):"—"}</td>`).join("")}</tr>`;
+  }).join("");
+  $("#cmpTable").innerHTML=`<table class="cmptbl"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+}
+function renderPacks(){
+  const card=$("#pkCard"), L=archFiltered(); card.hidden=!L.length; if(!L.length) return;
+  const G={}; for(const e of L){ (G[e.pack]=G[e.pack]||[]).push(e); }
+  const avg=(a,k)=>{ const v=a.map(e=>e.sum[k]).filter(num); return v.length?v.reduce((p,q)=>p+q,0)/v.length:null; };
+  const rows=Object.keys(G).sort((a,b)=>a===""?1:b===""?-1:a.localeCompare(b)).map(k=>{ const a=G[k], last=a.reduce((p,e)=>e.ts>p.ts?e:p,a[0]);
+    return `<tr><td>${k?escapeHtml(k):`<i>${t("pk_none")}</i>`}</td><td class="mono">${a.length}</td><td class="mono">${archDate(last)}</td>
+      <td class="mono">${fmt(avg(a,"rate"),1)}</td><td class="mono">${fmt(avg(a,"spec"),0)}</td><td class="mono">${fmt(avg(a,"vcell"),2)}</td>
+      <td class="mono">${fmt(avg(a,"rint"),0)}</td><td class="mono">${fmt(avg(a,"sink"),2)}</td></tr>`; }).join("");
+  $("#pkTable").innerHTML=`<table><thead><tr><th>${t("ar_pack")}</th><th>${t("pk_n")}</th><th>${t("pk_last")}</th><th>${t("m_rate")} m/s</th>
+    <th>mAh/100m</th><th>${t("m_vcell")} V</th><th>${t("m_rint")} mΩ</th><th>${t("m_sink")} m/s</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function renderArchive(){ renderArchFolder(); renderArchSave(); renderArchFilters(); renderArchList(); renderCompare(); renderPacks(); }
+
+$("#arFolder").addEventListener("click",e=>{ const b=e.target.closest("button[data-ar]"); if(!b) return; if(b.dataset.ar==="pick") archPick(); else archReconnect(); });
+$("#arSave").addEventListener("click",archSave);
+$("#arList").addEventListener("change",e=>{
+  const c=e.target.closest("input[data-sel]"); if(!c) return; const k=c.dataset.sel;
+  if(c.checked){ if(archSel.size>=4){ c.checked=false; alert(t("ar_max4")); return; } archSel.add(k); } else archSel.delete(k);
+  renderArchList(); renderCompare();
+});
+$("#arList").addEventListener("click",e=>{
+  const o=e.target.closest("button[data-open]"); if(o) return archOpen(o.dataset.open);
+  const d=e.target.closest("button[data-del]"); if(d) archDelete(d.dataset.del);
+});
+$("#arFModel").addEventListener("change",e=>{ archF.model=e.target.value; renderArchList(); renderPacks(); });
+$("#arFPack").addEventListener("change",e=>{ archF.pack=e.target.value; renderArchList(); renderPacks(); });
+["#cmpVar","#cmpAlign","#cmpWin"].forEach(s=>$(s).addEventListener("change",renderCompare));
+$("#cmpClear").addEventListener("click",()=>{ archSel.clear(); renderArchList(); renderCompare(); });
+
 /* ---------- events ---------- */
 document.querySelectorAll(".tab").forEach(tb=>tb.addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected", x===tb));
   $("#setupBtn").classList.remove("active");
   const p=tb.dataset.p;
   document.querySelectorAll("section[data-page]").forEach(s=>s.hidden = s.dataset.page!==p);
-  if(p==="ov") renderMain(); if(p==="gr") renderView(); if(p==="tb") renderTable();
+  if(p==="ov") renderMain(); if(p==="gr") renderView(); if(p==="tb") renderTable(); if(p==="ar") renderArchive();
 }));
 $("#setupBtn").addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected","false"));
@@ -1450,7 +1856,7 @@ $("#file").addEventListener("change",e=>{
       if(!f) f=parseRaw(txt)||parseCsv(txt);
     }catch(err){ f=null; }
     if(!f || !altSeries(f)){ alert(t("file_err")); return; }
-    f.meta=parseFilename(file.name);
+    f.meta=parseFilename(file.name); f._src=file.name;
     focusRange=null; reports=reports.filter(r=>!r.tmp);
     DATA=f; isDemo=false; $("#fname").textContent=file.name; renderAll();
   };
@@ -1497,7 +1903,7 @@ $("#copyCsv").addEventListener("click",async()=>{
   const old=btn.textContent; btn.textContent=ok?t("copied"):t("copyfail"); setTimeout(()=>{btn.textContent=old;},1500);
 });
 
-function redrawAll(){ if(!DATA)return; renderKpis(VF()); renderMain(); renderView(); }
+function redrawAll(){ if(!DATA)return; renderKpis(VF()); renderMain(); renderView(); if(archVisible()) renderCompare(); }
 let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(redrawAll,120);});
 const mo=new MutationObserver(redrawAll); mo.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 if(window.matchMedia) matchMedia("(prefers-color-scheme:dark)").addEventListener("change",redrawAll);
@@ -1511,7 +1917,7 @@ $("#fileSM").addEventListener("change",e=>{
   rd.onload=()=>{
     let f=null; try{ f=parseNMEA(String(rd.result)); }catch(err){ f=null; }
     if(!f || !altSeries(f)){ alert(t("file_err")); return; }
-    if(!f.meta) f.meta=parseFilename(file.name);
+    if(!f.meta) f.meta=parseFilename(file.name); f._src=file.name;
     focusRange=null; reports=reports.filter(r=>!r.tmp);
     DATA=f; isDemo=false; $("#fname").textContent=file.name; renderAll();
   };
@@ -1544,6 +1950,8 @@ captureThemeDefaults(); applyTheme(); renderThemeControls();
 renderLogo();
 DATA=makeDemo(); isDemo=true; renderAll();
 setLang(lang);
+attachHover("cmpChart","tipCmp");
+archInit();
 // re-render once layout is fully settled (helps mobile canvas sizing)
 window.addEventListener("load",()=>{ if(DATA){ try{ renderKpis(VF()); renderMain(); renderView(); }catch(e){} } });
 })();

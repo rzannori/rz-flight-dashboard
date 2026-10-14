@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.6**
+- Versione corrente: **v1.7**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -29,7 +29,7 @@ Interfaccia **trilingue IT / EN / FR**, tema scuro antracite con colori personal
    - **SM Modellbau** → file GPS `.nmea`;
    - **RZ GPS** → *placeholder, non ancora implementato*;
    - **Demo** → carica dati fittizi + 2 grafici d'esempio.
-3. Schede: **Panoramica · Giudizio · Grafico · Tabella**, più **Set up** (ingranaggio) e guida **?**.
+3. Schede: **Panoramica · Giudizio · Grafico · Tabella · Archivio**, più **Set up** (ingranaggio) e guida **?**.
 4. Lingua con le bandierine 🇮🇹 🇬🇧 🇫🇷; logo cliccabile in alto a sinistra.
 
 ### Installazione su iPhone / iPad
@@ -138,6 +138,30 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 **Tabella (`tb`)**
 - Tutti i dati (`VF()`), selettore risoluzione, **Copia CSV** (`;` + virgola decimale; il download diretto è bloccato negli artifact, quindi si usa la copia).
 
+**Archivio (`ar`)** — solo Chrome/Edge su PC (File System Access API)
+- **Cartella**: scelta con `showDirectoryPicker`; l'handle è salvato in IndexedDB (`rzfd` → `kv` → `archDir`) e
+  all'avvio si verifica il permesso (`queryPermission`); se serve, pulsante **Riconnetti cartella** (`requestPermission`).
+  Consigliato metterla dentro Google Drive per desktop → backup automatico.
+- **Salva volo corrente**: campi **Modello / Pacco / Note** (suggerimenti dai voli già archiviati). Un log già
+  archiviato (stesso nome file d'origine e stessa durata) viene riconosciuto e **aggiornato**, non duplicato.
+  I dati Demo non si archiviano.
+- **Elenco**: filtri per modello e pacco; **Apri** carica il volo nelle altre schede; ✕ elimina il file (con conferma).
+- **Confronto** (2–4 voli spuntati): curve sovrapposte con **scala Y comune** (`drawChart` con `cfg.sharedY`),
+  allineate a *1ª salita*, *1ª planata* o *inizio volo*, finestra 1/2/5 min o tutto; tabella affiancata con il migliore in verde.
+  - *Salite*: n°, Δquota media (fino a 10 s dopo lo spegnimento), rateo (Δquota/tempo motore), I picco/media, mAh/100m, V/cella min, Rint mediana.
+  - *Planate* (solo motore spento +3 s, dalla 1ª salita all'ultimo istante sopra 3 m): tempo, vario netto, sink medio (solo tratti in discesa),
+    % tempo con vario > 0,2 m/s (termica), efficienza mediana (solo se c'è `Speed`). Senza canale `Vario` si deriva dalla quota (±1 s).
+- **Riepilogo per pacco**: medie per pacco dei voli filtrati (rateo, mAh/100m, V/cella min, Rint, sink).
+- Funzioni: `flightSummary`, `glideStats`, `varioOf`, `frameToJson`/`frameFromJson`, `archReload`, `archSave`, `renderArchive`, `renderCompare`.
+
+**Formato file archivio** — `<AAAA-MM-GG_hhmmss>_<modello>_<pacco>.rzf.json`:
+```js
+{ format:"rz-flight", version:1, app:"v1.7", saved:"<ISO>", model, pack, note, source:"<file log originale>",
+  meta:{ date:"<ISO>", time:"hh:mm:ss", dateKnown }, DT:0.2, dur, summary:{...},   // summary: solo informativo
+  series:{ "<canale>":{ unit, vals:[...] } } }                                       // solo canali registrati, null = nessun dato
+```
+Derivate e salite **non** si salvano: si ricalcolano all'apertura, così i miglioramenti agli algoritmi valgono anche per i voli vecchi.
+
 **Set up (`re`)**
 - **Costruttore report**: X (Tempo o variabile), Y (una o più), tipo (linea/area/dispersione), **colore per curva**, nome. Salvati in `localStorage`. La lista parte vuota.
 - **Aspetto**: color picker per i token principali (`--bg`, `--surface`, `--fg`, `--accent`, `--accent-2`, `--motor`), applicati live e salvati.
@@ -163,6 +187,8 @@ Helper: `nearestIdx`, `rangeOf`, `fmtTick`, `rgba/toRgb`, `cssv` (legge i token 
 ## 9. Stato e persistenza
 
 Variabili di modulo: `DATA`, `reports`, `lang`, `chartPts`, `focusRange`, `gZoom`, `drillReturn`, `isDemo`, `themeOverrides`, `logoData`.
+
+IndexedDB `rzfd` / store `kv`: `archDir` — handle della cartella archivio.
 
 `localStorage`:
 - `fd_lang` — lingua (it/en/fr)
@@ -216,6 +242,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - Zoom rotella anche in Panoramica (coesistendo col brushing).
 - Eventuale **merge GPS+Jeti** con allineamento manuale (es. istante di lancio).
 - Altre derivate: quota/densità aria, accelerazione verticale.
+- Archivio: confronto salita-per-salita (non solo medie), andamento nel tempo per pacco (grafico), export CSV del confronto.
 - ~~Packaging PWA~~ (fatto in v1.6); eventuale Tauri (.exe) se serve una "vera app" desktop.
 - Refactor opzionale in più file (html/css/js) una volta sotto git.
 
@@ -228,6 +255,9 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.7** — **Archivio voli** su cartella del PC (Chrome/Edge) con modello, pacco e note; **confronto** di 2–4 voli
+  (curve sovrapposte su scala comune, allineamento a salita/planata, tabella salite e planate); riepilogo per pacco;
+  `hhmmss` gestisce i tempi negativi.
 - **v1.6** — **PWA** installabile su iPhone: manifest, icone, service worker offline (anche font), safe-area per notch,
   selettore File senza filtro estensioni su iOS (altrimenti `.nmea` risulta non selezionabile).
 - **v1.5** — bugfix: nomi canali in francese (prima `undefined`); `@import` dei font spostato in testa (prima ignorato);
