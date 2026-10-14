@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.7**
+- Versione corrente: **v1.8**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -29,7 +29,7 @@ Interfaccia **trilingue IT / EN / FR**, tema scuro antracite con colori personal
    - **SM Modellbau** → file GPS `.nmea`;
    - **RZ GPS** → *placeholder, non ancora implementato*;
    - **Demo** → carica dati fittizi + 2 grafici d'esempio.
-3. Schede: **Panoramica · Giudizio · Grafico · Tabella · Archivio**, più **Set up** (ingranaggio) e guida **?**.
+3. Schede: **Panoramica · Giudizio · Grafico · Tabella · Polare · Archivio**, più **Set up** (ingranaggio) e guida **?**.
 4. Lingua con le bandierine 🇮🇹 🇬🇧 🇫🇷; logo cliccabile in alto a sinistra.
 
 ### Installazione su iPhone / iPad
@@ -138,6 +138,19 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 **Tabella (`tb`)**
 - Tutti i dati (`VF()`), selettore risoluzione, **Copia CSV** (`;` + virgola decimale; il download diretto è bloccato negli artifact, quindi si usa la copia).
 
+**Polare (`po`)** — richiede un log con `Speed` (GPS SM Modellbau)
+- Grafico velocità [km/h] / vario TE [m/s] dei soli tratti di **planata a motore spento** (come in `glideStats`: dalla 1ª salita
+  all'ultimo istante sopra 3 m, escludendo 3 s dopo lo spegnimento), con quota > 8 m e velocità ≥ 10 km/h.
+- Scartati: punti con |accelerazione| > 1 m/s² (manovre; accelerazione su ±1 s) e punti con vario TE ≥ 0 (salita).
+  Il vario TE è `vario + V·dV/dt/g`; se manca il canale `Vario` si deriva dalla quota (`varioOf`).
+- Mediana del sink per **fascia di velocità** (2/3/5 km/h, minimo 10 campioni ≈ 2 s), poi **parabola pesata** `s = a + b·v + c·v²`
+  (v in m/s) sulle mediane; se `c ≤ 0` la curva non è fisica e si mostrano solo le fasce.
+- Risultati: **sink minimo** e **finesse massima** (max di `v/s` lungo la curva, tangente dall'origine), con velocità relative;
+  "al limite dei dati" se il massimo cade a un estremo del range misurato.
+- Rispetta il **Focus** della Panoramica (usa `VF()`). Funzioni: `polarData`, `renderPolar`. `drawChart` ha l'hook `cfg.after(g,geo)` per overlay.
+- Limiti: la velocità GPS è **al suolo** (con vento forte i punti si disperdono); la polare è più fedele con planate a velocità
+  costante e diverse tra loro, in aria calma. Punti anomali oltre `1,5×` il sink massimo delle fasce non vengono disegnati.
+
 **Archivio (`ar`)** — solo Chrome/Edge su PC (File System Access API)
 - **Cartella**: scelta con `showDirectoryPicker`; l'handle è salvato in IndexedDB (`rzfd` → `kv` → `archDir`) e
   all'avvio si verifica il permesso (`queryPermission`); se serve, pulsante **Riconnetti cartella** (`requestPermission`).
@@ -242,6 +255,8 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - Zoom rotella anche in Panoramica (coesistendo col brushing).
 - Eventuale **merge GPS+Jeti** con allineamento manuale (es. istante di lancio).
 - Altre derivate: quota/densità aria, accelerazione verticale.
+- Polare: sovrapposizione di più voli dall'archivio (zavorra/baricentro), correzione del vento, esportazione dei punti.
+- Traccia GPS su mappa con riproduzione (lat/lon oggi non salvate da `parseNMEA`).
 - Archivio: confronto salita-per-salita (non solo medie), andamento nel tempo per pacco (grafico), export CSV del confronto.
 - ~~Packaging PWA~~ (fatto in v1.6); eventuale Tauri (.exe) se serve una "vera app" desktop.
 - Refactor opzionale in più file (html/css/js) una volta sotto git.
@@ -255,6 +270,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.8** — scheda **Polare di velocità** (sink minimo, finesse massima, curva e tangente); hook `cfg.after` in `drawChart`.
 - **v1.7** — **Archivio voli** su cartella del PC (Chrome/Edge) con modello, pacco e note; **confronto** di 2–4 voli
   (curve sovrapposte su scala comune, allineamento a salita/planata, tabella salite e planate); riepilogo per pacco;
   `hhmmss` gestisce i tempi negativi.
