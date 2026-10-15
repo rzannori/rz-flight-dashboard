@@ -232,6 +232,7 @@
   /* traiettoria 3D */
   #trChart{cursor:grab;touch-action:none} #trChart:active{cursor:grabbing}
   .trbtn{padding:3px 10px;font-size:.74rem}
+  .trzoom{display:inline-flex;align-items:center;gap:4px} .trzoom .mono{min-width:3.1em;text-align:center;color:var(--fg)}
   .trctl{display:flex;align-items:center;gap:10px;margin-top:10px}
   .trctl input[type=range]{flex:1;accent-color:var(--accent)}
   .trctl .mono{font-size:.76rem;color:var(--muted);white-space:nowrap}
@@ -268,7 +269,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.11</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.12</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -421,6 +422,7 @@
       <h2><span data-i18n="tr_h2">Traiettoria 3D</span> <span class="tag">3D</span>
         <span class="resctl"><span data-i18n="tr_exag">Quota ×</span>
           <select id="trExag" class="resSel"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="5">5</option></select>
+          <span class="trzoom"><button class="btn ghost trbtn" id="trZm" aria-label="zoom −">−</button><span class="mono" id="trZoom">×1</span><button class="btn ghost trbtn" id="trZp" aria-label="zoom +">+</button></span>
           <button class="btn ghost trbtn" id="trTop" data-i18n="tr_top">Dall'alto</button>
           <button class="btn ghost trbtn" id="trSide" data-i18n="tr_side">Laterale</button>
           <button class="btn ghost trbtn" id="tr3d">3D</button>
@@ -720,7 +722,7 @@ const T_TR={
   tr_nomove:["La posizione non varia: nessuna traiettoria da mostrare.","Position doesn't change: no trajectory to show.","La position ne varie pas : aucune trajectoire à afficher."],
   tr_legend:["colore = vario (verde salita · rosso discesa) · ○ partenza · □ fine","colour = vario (green climb · red sink) · ○ start · □ end","couleur = vario (vert montée · rouge descente) · ○ départ · □ fin"],
   tr_grid:["griglia","grid","grille"], tr_alt:["quota","alt","alt."],
-  tr_hint:["Trascina per ruotare, rotella per zoomare, doppio clic per ripristinare la vista. \"Quota ×\" esagera la scala verticale. Il cursore in basso sposta (o riproduce a 10×) un aliante sulla traiettoria, orientato come in volo; \"Segui\" tiene la vista centrata su di lui (utile con lo zoom). Rispetta il Focus della Panoramica.","Drag to rotate, wheel to zoom, double-click to reset the view. \"Altitude ×\" exaggerates the vertical scale. The slider moves (or plays at 10×) a glider along the trajectory, oriented as in flight; \"Follow\" keeps the view centred on it (handy when zoomed). Follows the Overview focus.","Faites glisser pour tourner, molette pour zoomer, double-clic pour réinitialiser la vue. « Altitude × » exagère l'échelle verticale. Le curseur déplace (ou lit à 10×) un planeur sur la trajectoire, orienté comme en vol ; « Suivre » garde la vue centrée sur lui (utile avec le zoom). Suit le Focus de l'Aperçu."]
+  tr_hint:["Trascina per ruotare, rotella o pulsanti −/+ (fino a ×40) per zoomare, due dita su touch, doppio clic per ripristinare la vista. \"Quota ×\" esagera la scala verticale. Il cursore in basso sposta (o riproduce a 10×) un aliante sulla traiettoria, orientato come in volo; \"Segui\" tiene la vista centrata su di lui (utile con lo zoom). Rispetta il Focus della Panoramica.","Drag to rotate, wheel or −/+ buttons (up to ×40) to zoom, two fingers on touch, double-click to reset the view. \"Altitude ×\" exaggerates the vertical scale. The slider moves (or plays at 10×) a glider along the trajectory, oriented as in flight; \"Follow\" keeps the view centred on it (handy when zoomed). Follows the Overview focus.","Faites glisser pour tourner, molette ou boutons −/+ (jusqu'à ×40) pour zoomer, deux doigts sur tactile, double-clic pour réinitialiser la vue. « Altitude × » exagère l'échelle verticale. Le curseur déplace (ou lit à 10×) un planeur sur la trajectoire, orienté comme en vol ; « Suivre » garde la vue centrée sur lui (utile avec le zoom). Suit le Focus de l'Aperçu."]
 };
 const T_UI={
   load_btn:["Carica","Load","Charger"],
@@ -2061,8 +2063,12 @@ function trackData(f,exag){
   for(let i=0;i<N;i++) if(!Number.isFinite(hd[i])) hd[i]=0;
   return {x,y,z,v,hd,gm,bk,t:f.t,N,Spos,Sneg,exag,xmn,xmx,ymn,ymx,zmn,zmx,sp:f.series["Speed"]||null};
 }
+const TR_ZMAX=40, TR_ZMIN=0.4;
+function trZoomBy(f){ trView.zoom=Math.max(TR_ZMIN,Math.min(TR_ZMAX,trView.zoom*f)); drawTrack(); }
 function drawTrack(){
   const cv=$("#trChart"), D=trCache&&trCache.D; if(!cv||!D||D.err) return;
+  $("#trZoom").textContent="×"+(trView.zoom<10?trView.zoom.toFixed(1).replace(/\.0$/,""):Math.round(trView.zoom));
+  $("#trZp").disabled=trView.zoom>=TR_ZMAX-1e-6; $("#trZm").disabled=trView.zoom<=TR_ZMIN+1e-6;
   const dpr=Math.min(2,window.devicePixelRatio||1), W=cv.clientWidth||cv.parentElement.clientWidth||600, H=Math.round(Math.min(560,Math.max(300,W*0.62)));
   cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+"px";
   const g=cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
@@ -2150,19 +2156,23 @@ function toggleTrackPlay(){
   trRaf=requestAnimationFrame(tick);
 }
 (function(){
-  const cv=$("#trChart"); let drag=null;
-  cv.addEventListener("pointerdown",e=>{ drag={x:e.clientX,y:e.clientY}; try{cv.setPointerCapture(e.pointerId);}catch(_){} });
-  cv.addEventListener("pointermove",e=>{ if(!drag) return;
-    trView.yaw+=(e.clientX-drag.x)*0.008; trView.el=Math.max(0,Math.min(Math.PI/2,trView.el+(e.clientY-drag.y)*0.008));
-    drag={x:e.clientX,y:e.clientY}; drawTrack(); });
-  const up=()=>{ drag=null; }; cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",up);
-  cv.addEventListener("wheel",e=>{ e.preventDefault(); trView.zoom=Math.max(0.4,Math.min(8,trView.zoom*Math.exp(-e.deltaY*0.0015))); drawTrack(); },{passive:false});
+  const cv=$("#trChart"); const ptr=new Map(); let pinch=0;
+  cv.addEventListener("pointerdown",e=>{ ptr.set(e.pointerId,{x:e.clientX,y:e.clientY}); pinch=0; try{cv.setPointerCapture(e.pointerId);}catch(_){} });
+  cv.addEventListener("pointermove",e=>{ const q=ptr.get(e.pointerId); if(!q) return;
+    if(ptr.size>=2){   // due dita: zoom (pizzico)
+      const o=[...ptr.entries()].find(([id])=>id!==e.pointerId)[1], d0=Math.hypot(q.x-o.x,q.y-o.y);
+      q.x=e.clientX; q.y=e.clientY; const d1=Math.hypot(q.x-o.x,q.y-o.y); if(d0>0&&d1>0) trZoomBy(d1/d0); return; }
+    trView.yaw+=(e.clientX-q.x)*0.008; trView.el=Math.max(0,Math.min(Math.PI/2,trView.el+(e.clientY-q.y)*0.008));
+    q.x=e.clientX; q.y=e.clientY; drawTrack(); });
+  const up=e=>{ ptr.delete(e.pointerId); }; cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",up);
+  cv.addEventListener("wheel",e=>{ e.preventDefault(); trZoomBy(Math.exp(-e.deltaY*0.0015)); },{passive:false});
   cv.addEventListener("dblclick",()=>{ trView={...TR_VIEW0}; drawTrack(); });
   $("#trTop").addEventListener("click",()=>{ trView.el=Math.PI/2; drawTrack(); });
   $("#trSide").addEventListener("click",()=>{ trView.el=0; drawTrack(); });
   $("#tr3d").addEventListener("click",()=>{ trView={...TR_VIEW0}; drawTrack(); });
   $("#trExag").addEventListener("change",renderTrack);
   $("#trFollow").addEventListener("change",drawTrack);
+  $("#trZp").addEventListener("click",()=>trZoomBy(1.5)); $("#trZm").addEventListener("click",()=>trZoomBy(1/1.5));
   $("#trSlider").addEventListener("input",e=>{ stopTrackPlay(); trIdx=+e.target.value; drawTrack(); });
   $("#trPlay").addEventListener("click",toggleTrackPlay);
 })();
