@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.13**
+- Versione corrente: **v1.14**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -288,6 +288,9 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.14** — **ottimizzazione PC**: la pagina usa tutta la larghezza dello schermo (prima colonna fissa di 1040 px; ora fino a 2000 px, con tetto per i monitor enormi);
+  i grafici (Panoramica, Grafico, Polare, Traiettoria) si adattano all'**altezza** della finestra (`chartH`) per riempire lo schermo senza scorrere;
+  il Giudizio è su due colonne e il Set up affianca Costruttore e Aspetto (da 1100 px). Sotto i 900 px restano le altezze di prima.
 - **v1.13** — **ottimizzazione iPhone/telefono**: la barra delle schede scorre in orizzontale (con 7 schede allargava l'intera pagina e spingeva
   fuori bordo i comandi) e centra la scheda scelta; intestazioni e comandi delle schede vanno a capo; campi dell'Archivio e del Set up a tutta
   larghezza; bersagli di tocco più grandi (`@media (pointer:coarse)`). Verificato in emulazione iPhone 13 (390 px): nessun elemento fuori bordo in nessuna scheda.
