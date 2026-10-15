@@ -106,15 +106,18 @@
     .top .center{grid-column:1 / -1;order:-1}
   }
 
-  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px}
-  .tab{appearance:none;background:none;border:none;color:var(--muted);font:600 .9rem "Barlow Semi Condensed",sans-serif;
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto;overflow-y:hidden;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .tabs::-webkit-scrollbar{display:none}
+  .wrap,.top>*,.card{min-width:0}
+  .tab{flex:none;white-space:nowrap;appearance:none;background:none;border:none;color:var(--muted);font:600 .9rem "Barlow Semi Condensed",sans-serif;
     letter-spacing:.4px;padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
   .tab[aria-selected=true]{color:var(--fg);border-bottom-color:var(--accent)}
   .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 
   .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
   .card + .card{margin-top:16px}
-  .card h2{font-size:1.05rem;letter-spacing:.3px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+  .card h2{font-size:1.05rem;letter-spacing:.3px;margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
   .card h2 .tag{font:600 .66rem "IBM Plex Mono",monospace;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;letter-spacing:.5px}
 
   /* KPI tiles */
@@ -216,7 +219,7 @@
   .ck .yitem label{cursor:pointer}
   .ck input[type=color]{width:24px;height:18px;padding:0;border:1px solid var(--line);border-radius:4px;background:none;cursor:pointer}
   .resSel{padding:4px 9px;font-size:.76rem;border-radius:7px}
-  .resctl{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font:500 .72rem "IBM Plex Sans",sans-serif;color:var(--muted);letter-spacing:.3px}
+  .resctl{margin-left:auto;display:inline-flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:6px;font:500 .72rem "IBM Plex Sans",sans-serif;color:var(--muted);letter-spacing:.3px}
   .dots{display:inline-flex;gap:3px;vertical-align:middle;margin-right:5px}
   .dots i{width:9px;height:9px;border-radius:50%;display:inline-block}
   .fx{display:inline-block;font:700 .62rem "IBM Plex Mono",monospace;color:var(--motor);border:1px solid var(--motor);border-radius:4px;padding:0 4px;margin-left:5px;vertical-align:middle;line-height:1.5}
@@ -229,11 +232,29 @@
   .hint{color:var(--muted);font-size:.8rem;margin-top:8px}
   .empty{color:var(--muted);font-size:.9rem;padding:30px 10px;text-align:center}
 
+  /* telefono: campi a tutta larghezza, bersagli di tocco più grandi */
+  @media(max-width:680px){
+    .row .fieldl{flex:1 1 100%}
+    .row .fieldl input[type=text],.row .fieldl select{width:100%}
+    .row .fieldl .btn{width:100%}
+    .kpis{gap:10px}
+  }
+  @media(pointer:coarse){
+    .tab{padding:12px 14px}
+    .trbtn{padding:8px 13px;font-size:.8rem}
+    .resSel,select{padding:8px 10px}
+    .flag{width:36px;height:23px} .helpbtn{width:30px;height:30px}
+    .trctl input[type=range]{height:28px}
+    .menu .mi{padding:12px 10px}
+  }
+
   /* traiettoria 3D */
   #trChart{cursor:grab;touch-action:none} #trChart:active{cursor:grabbing}
   .trbtn{padding:3px 10px;font-size:.74rem}
   .trzoom{display:inline-flex;align-items:center;gap:4px} .trzoom .mono{min-width:3.1em;text-align:center;color:var(--fg)}
-  .trctl{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .trctl{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-top:10px}
+  .trctl input[type=range]{min-width:140px}
+  @media(max-width:680px){ .trctl .mono{white-space:normal;flex-basis:100%;order:3} .trctl input[type=range]{flex:1 1 0} }
   .trctl input[type=range]{flex:1;accent-color:var(--accent)}
   .trctl .mono{font-size:.76rem;color:var(--muted);white-space:nowrap}
   .trlegend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:10px;font-size:.76rem;color:var(--muted)}
@@ -269,7 +290,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.12</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.13</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -2182,6 +2203,7 @@ document.querySelectorAll(".tab").forEach(tb=>tb.addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected", x===tb));
   $("#setupBtn").classList.remove("active");
   const p=tb.dataset.p;
+  try{ tb.scrollIntoView({inline:"center",block:"nearest",behavior:"smooth"}); }catch(e){}   // la scheda scelta resta visibile nella barra scorrevole
   document.querySelectorAll("section[data-page]").forEach(s=>s.hidden = s.dataset.page!==p);
   if(p==="ov") renderMain(); if(p==="gr") renderView(); if(p==="tb") renderTable(); if(p==="ar") renderArchive(); if(p==="po") renderPolar(); if(p==="tr") renderTrack();
 }));
