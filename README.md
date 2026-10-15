@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.10**
+- Versione corrente: **v1.11**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -149,6 +149,10 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
   la discesa satura il **rosso** all'80° percentile del sink (min 0,5 m/s), la salita il **verde** al 95° percentile (min 1 m/s).
 - Interazione: trascina = ruota, rotella = zoom, doppio clic = reset; pulsanti *Dall'alto / Laterale / 3D*; **Quota ×1/2/3/5** per esagerare la
   scala verticale; cursore + ▶ (riproduzione 10×) con marker e lettura di tempo, quota, vario e velocità. Rispetta il **Focus**.
+- **Aliante 3D** al posto del marker: sagoma (ali, piani di coda, deriva, fusoliera) con ombra sul suolo e filo a piombo, colorata col vario del
+  momento. È orientata su **rotta** (direzione di moto su ±1 s), **angolo di traiettoria** (salita/discesa) e **inclinazione in virata**
+  (`atan(V·ω/g)`, max ±60°, calcolata in `trackData` come `hd`/`gm`/`bk`). Dimensione fissa in pixel (28–58 px di apertura): resta visibile a qualsiasi zoom.
+- **Segui** (`#trFollow`): centra la vista sull'aliante, utile con lo zoom per vederlo da vicino.
 - Funzioni: `trackData`, `renderTrack`, `drawTrack`, `trVarioCol`. Solo log GPS: con Jeti (senza posizione) compare un messaggio.
 
 **Polare (`po`)** — richiede un log con `Speed` (GPS SM Modellbau)
@@ -284,6 +288,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.11** — traiettoria: **aliante 3D** (rotta, assetto, inclinazione in virata, ombra) al posto del cerchietto; opzione **Segui**.
 - **v1.10** — schermata iniziale più compatta: i quattro pulsanti di caricamento sono un unico menu a tendina **Carica ▾** (Jeti, SM Modellbau, RZ GPS, Demo) accanto a Set up; logo proporzionale su schermi stretti.
 - **v1.9** — scheda **Traiettoria 3D** colorata dal vario; `parseNMEA` ora salva `Lat`/`Lon` (conversione ddmm.mmmm → gradi decimali, solo fix validi).
 - **v1.8** — scheda **Polare di velocità** (sink minimo, finesse massima, curva e tangente); hook `cfg.after` in `drawChart`.

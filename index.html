@@ -268,7 +268,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.10</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.11</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -424,6 +424,7 @@
           <button class="btn ghost trbtn" id="trTop" data-i18n="tr_top">Dall'alto</button>
           <button class="btn ghost trbtn" id="trSide" data-i18n="tr_side">Laterale</button>
           <button class="btn ghost trbtn" id="tr3d">3D</button>
+          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="trFollow"><span data-i18n="tr_follow">Segui</span></label>
         </span>
       </h2>
       <p class="empty" id="trEmpty" hidden></p>
@@ -713,12 +714,13 @@ const T_PO={
 const T_TR={
   tab_tr:["Traiettoria","Trajectory","Trajectoire"],
   tr_h2:["Traiettoria 3D","3D trajectory","Trajectoire 3D"], tr_exag:["Quota ×","Altitude ×","Altitude ×"],
+  tr_follow:["Segui","Follow","Suivre"],
   tr_top:["Dall'alto","Top","Dessus"], tr_side:["Laterale","Side","Côté"],
   tr_nogps:["La traiettoria richiede la posizione GPS (latitudine e longitudine): carica un file GPS (SM Modellbau).","The trajectory needs GPS position (latitude and longitude): load a GPS file (SM Modellbau).","La trajectoire nécessite la position GPS (latitude et longitude) : chargez un fichier GPS (SM Modellbau)."],
   tr_nomove:["La posizione non varia: nessuna traiettoria da mostrare.","Position doesn't change: no trajectory to show.","La position ne varie pas : aucune trajectoire à afficher."],
   tr_legend:["colore = vario (verde salita · rosso discesa) · ○ partenza · □ fine","colour = vario (green climb · red sink) · ○ start · □ end","couleur = vario (vert montée · rouge descente) · ○ départ · □ fin"],
   tr_grid:["griglia","grid","grille"], tr_alt:["quota","alt","alt."],
-  tr_hint:["Trascina per ruotare, rotella per zoomare, doppio clic per ripristinare la vista. \"Quota ×\" esagera la scala verticale. Il cursore in basso sposta (o riproduce a 10×) un marker sulla traiettoria. Rispetta il Focus della Panoramica.","Drag to rotate, wheel to zoom, double-click to reset the view. \"Altitude ×\" exaggerates the vertical scale. The slider moves (or plays at 10×) a marker along the trajectory. Follows the Overview focus.","Faites glisser pour tourner, molette pour zoomer, double-clic pour réinitialiser la vue. « Altitude × » exagère l'échelle verticale. Le curseur déplace (ou lit à 10×) un marqueur sur la trajectoire. Suit le Focus de l'Aperçu."]
+  tr_hint:["Trascina per ruotare, rotella per zoomare, doppio clic per ripristinare la vista. \"Quota ×\" esagera la scala verticale. Il cursore in basso sposta (o riproduce a 10×) un aliante sulla traiettoria, orientato come in volo; \"Segui\" tiene la vista centrata su di lui (utile con lo zoom). Rispetta il Focus della Panoramica.","Drag to rotate, wheel to zoom, double-click to reset the view. \"Altitude ×\" exaggerates the vertical scale. The slider moves (or plays at 10×) a glider along the trajectory, oriented as in flight; \"Follow\" keeps the view centred on it (handy when zoomed). Follows the Overview focus.","Faites glisser pour tourner, molette pour zoomer, double-clic pour réinitialiser la vue. « Altitude × » exagère l'échelle verticale. Le curseur déplace (ou lit à 10×) un planeur sur la trajectoire, orienté comme en vol ; « Suivre » garde la vue centrée sur lui (utile avec le zoom). Suit le Focus de l'Aperçu."]
 };
 const T_UI={
   load_btn:["Carica","Load","Charger"],
@@ -2043,7 +2045,21 @@ function trackData(f,exag){
   if(!(xmx-xmn>1||ymx-ymn>1)) return {err:"tr_nomove"};
   const pos=v.filter(q=>q>0).sort((p,q)=>p-q), neg=v.filter(q=>q<0).map(q=>-q).sort((p,q)=>p-q);
   const Spos=Math.max(1,pos[Math.floor(pos.length*0.95)]||1), Sneg=Math.max(0.5,neg[Math.floor(neg.length*0.8)]||0.5);
-  return {x,y,z,v,t:f.t,N,Spos,Sneg,exag,xmn,xmx,ymn,ymx,zmn,zmx,sp:f.series["Speed"]||null};
+  // orientamento dell'aliante: rotta, angolo di traiettoria e inclinazione in virata (finestra ±1 s)
+  const kk=Math.max(1,Math.round(1/f.DT)), hd=new Array(N).fill(NaN), gm=new Array(N).fill(0), bk=new Array(N).fill(0);
+  const wrap=a=>{ while(a>Math.PI)a-=2*Math.PI; while(a<-Math.PI)a+=2*Math.PI; return a; };
+  for(let i=0;i<N;i++){
+    const j0=Math.max(0,i-kk), j1=Math.min(N-1,i+kk), dx=x[j1]-x[j0], dy=y[j1]-y[j0], h=Math.hypot(dx,dy), dtw=(j1-j0)*f.DT||1;
+    if(h/dtw<0.5) continue;                                         // fermo: la rotta verrà ereditata dai campioni vicini
+    hd[i]=Math.atan2(dx,dy); gm[i]=Math.atan2(z[j1]-z[j0],h);
+    const a0=Math.atan2(x[i]-x[j0],y[i]-y[j0]), a1=Math.atan2(x[j1]-x[i],y[j1]-y[i]);
+    const om=(i>j0&&j1>i)?wrap(a1-a0)/(dtw/2):0;                    // velocità di virata [rad/s], + = a destra
+    bk[i]=Math.max(-1.05,Math.min(1.05,Math.atan(h/dtw*om/9.81)));
+  }
+  let last=NaN; for(let i=0;i<N;i++){ if(Number.isFinite(hd[i])) last=hd[i]; else hd[i]=last; }
+  last=NaN; for(let i=N-1;i>=0;i--){ if(Number.isFinite(hd[i])) last=hd[i]; else hd[i]=last; }
+  for(let i=0;i<N;i++) if(!Number.isFinite(hd[i])) hd[i]=0;
+  return {x,y,z,v,hd,gm,bk,t:f.t,N,Spos,Sneg,exag,xmn,xmx,ymn,ymx,zmn,zmx,sp:f.series["Speed"]||null};
 }
 function drawTrack(){
   const cv=$("#trChart"), D=trCache&&trCache.D; if(!cv||!D||D.err) return;
@@ -2051,7 +2067,8 @@ function drawTrack(){
   cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+"px";
   const g=cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
   const ex=D.exag, xr=D.xmx-D.xmn, yr=D.ymx-D.ymn, zr=(D.zmx-D.zmn)*ex;
-  const cx=(D.xmx+D.xmn)/2, cy0=(D.ymx+D.ymn)/2, cz=zr/2;
+  const fi=Math.max(0,Math.min(D.N-1,Math.round(trIdx))), follow=$("#trFollow").checked;   // "Segui": la vista è centrata sull'aliante
+  const cx=follow?D.x[fi]:(D.xmx+D.xmn)/2, cy0=follow?D.y[fi]:(D.ymx+D.ymn)/2, cz=follow?(D.z[fi]-D.zmn)*ex:zr/2;
   const R=Math.max(1,0.5*Math.sqrt(xr*xr+yr*yr+zr*zr)), sc=0.46*Math.min(W,H)/R*trView.zoom;
   const cyw=Math.cos(trView.yaw), syw=Math.sin(trView.yaw), ce=Math.cos(trView.el), se=Math.sin(trView.el);
   const P=(x,y,z)=>{ const dx=x-cx, dy=y-cy0, dz=z-cz, x1=dx*cyw-dy*syw, y1=dx*syw+dy*cyw; return [W/2+x1*sc, H/2-(dz*ce+y1*se)*sc]; };
@@ -2078,10 +2095,29 @@ function drawTrack(){
   const s0=P(D.x[0],D.y[0],Z(0)), s1=P(D.x[D.N-1],D.y[D.N-1],Z(D.N-1));
   g.strokeStyle=cssv("--fg"); g.fillStyle=cssv("--bg"); g.lineWidth=2; g.beginPath(); g.arc(s0[0],s0[1],5,0,7); g.fill(); g.stroke();
   g.beginPath(); g.rect(s1[0]-5,s1[1]-5,10,10); g.fill(); g.stroke();
-  // marker corrente
+  // aliante sulla traiettoria: modello 3D (ali, piani di coda, deriva, fusoliera) orientato su rotta, assetto e inclinazione
   const i=Math.max(0,Math.min(D.N-1,Math.round(trIdx))), m=P(D.x[i],D.y[i],Z(i)), fl=P(D.x[i],D.y[i],0);
   g.strokeStyle=cssv("--fg"); g.globalAlpha=.6; g.setLineDash([3,3]); g.lineWidth=1; g.beginPath(); g.moveTo(m[0],m[1]); g.lineTo(fl[0],fl[1]); g.stroke(); g.setLineDash([]); g.globalAlpha=1;
-  g.fillStyle=trVarioCol(D.v[i],D); g.strokeStyle="#fff"; g.lineWidth=2; g.beginPath(); g.arc(m[0],m[1],6.5,0,7); g.fill(); g.stroke();
+  {
+    const S=Math.max(28,Math.min(58,W*0.06))/sc, th=D.hd[i], ga=D.gm[i], bank=D.bk[i];
+    const fx=Math.cos(ga)*Math.sin(th), fy=Math.cos(ga)*Math.cos(th), fz=Math.sin(ga);              // avanti
+    const r0x=Math.cos(th), r0y=-Math.sin(th);                                                       // destra (orizzontale)
+    const u0x=r0y*fz, u0y=-r0x*fz, u0z=r0x*fy-r0y*fx, cb=Math.cos(bank), sb=Math.sin(bank);          // su = destra × avanti
+    const rx=r0x*cb-u0x*sb, ry=r0y*cb-u0y*sb, rz=-u0z*sb, ux=u0x*cb+r0x*sb, uy=u0y*cb+r0y*sb, uz=u0z*cb;  // inclinazione attorno all'asse di avanzamento
+    const zb=(D.z[i]-D.zmn)*ex, tint=trVarioCol(D.v[i],D);
+    const V=(a,b,c,flat)=>{ a*=0.72; return P(D.x[i]+S*(a*fx+b*rx+c*ux), D.y[i]+S*(a*fy+b*ry+c*uy), flat?0:zb+S*(a*fz+b*rz+c*uz)); };   // fusoliera ≈ 0,55 dell'apertura alare
+    const poly=(pts,flat)=>{ g.beginPath(); pts.forEach((q,k)=>{ const v=V(q[0],q[1],q[2]||0,flat); k?g.lineTo(v[0],v[1]):g.moveTo(v[0],v[1]); }); g.closePath(); };
+    const mir=pts=>pts.map(q=>[q[0],-q[1],q[2]]);
+    const shapes=[[[0.07,0,0],[0.04,0.5,0],[0.005,0.5,0],[-0.03,0,0]], [[-0.30,0,0],[-0.335,0.12,0],[-0.37,0.12,0],[-0.375,0,0]], [[-0.30,0,0],[-0.375,0,0],[-0.385,0,0.12],[-0.345,0,0.12]]];
+    const parts=[shapes[0],mir(shapes[0]),shapes[1],mir(shapes[1]),shapes[2]];
+    g.fillStyle="#000"; g.globalAlpha=.28; parts.forEach(q=>{ poly(q,true); g.fill(); });                                  // ombra sul suolo
+    const nose=V(0.40,0,0), tail=V(-0.375,0,0), sn=V(0.40,0,0,true), st=V(-0.375,0,0,true);
+    g.beginPath(); g.moveTo(sn[0],sn[1]); g.lineTo(st[0],st[1]); g.strokeStyle="#000"; g.lineWidth=2.4; g.lineCap="round"; g.stroke(); g.globalAlpha=1;
+    g.lineJoin="round"; g.fillStyle=cssv("--fg"); g.strokeStyle=tint; g.lineWidth=1.6;
+    parts.forEach(q=>{ poly(q,false); g.fill(); g.stroke(); });
+    g.beginPath(); g.moveTo(nose[0],nose[1]); g.lineTo(tail[0],tail[1]); g.lineCap="round"; g.strokeStyle=tint; g.lineWidth=5; g.stroke(); g.strokeStyle=cssv("--fg"); g.lineWidth=2.6; g.stroke();
+    g.fillStyle=tint; g.beginPath(); g.arc(nose[0],nose[1],2.4,0,7); g.fill();
+  }
   // scala griglia
   g.fillStyle=muted; g.textAlign="left"; g.textBaseline="bottom"; g.fillText(`${t("tr_grid")} ${step} m`,8,H-6);
   const sp=D.sp?D.sp.vals[i]:null;
@@ -2126,6 +2162,7 @@ function toggleTrackPlay(){
   $("#trSide").addEventListener("click",()=>{ trView.el=0; drawTrack(); });
   $("#tr3d").addEventListener("click",()=>{ trView={...TR_VIEW0}; drawTrack(); });
   $("#trExag").addEventListener("change",renderTrack);
+  $("#trFollow").addEventListener("change",drawTrack);
   $("#trSlider").addEventListener("input",e=>{ stopTrackPlay(); trIdx=+e.target.value; drawTrack(); });
   $("#trPlay").addEventListener("click",toggleTrackPlay);
 })();
