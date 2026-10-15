@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.9**
+- Versione corrente: **v1.10**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -24,11 +24,13 @@ Interfaccia **trilingue IT / EN / FR**, tema scuro antracite con colori personal
 ## 2. Come si usa (utente finale)
 
 1. Salva il file `.html` e aprilo con doppio clic (funziona offline).
-2. In alto a destra, pulsanti di caricamento:
+2. In alto a destra il pulsante **Carica ▾** apre un menu con:
    - **Jeti Log** → log Jeti grezzo `.log` o CSV esportato;
    - **SM Modellbau** → file GPS `.nmea`;
    - **RZ GPS** → *placeholder, non ancora implementato*;
    - **Demo** → carica dati fittizi + 2 grafici d'esempio.
+
+   Il menu si chiude con Esc, con un clic fuori o dopo la scelta; è navigabile da tastiera (↓ ↑ Invio). Accanto c'è **Set up** (ingranaggio).
 3. Schede: **Panoramica · Giudizio · Grafico · Tabella · Polare · Traiettoria · Archivio**, più **Set up** (ingranaggio) e guida **?**.
 4. Lingua con le bandierine 🇮🇹 🇬🇧 🇫🇷; logo cliccabile in alto a sinistra.
 
@@ -190,7 +192,8 @@ Derivate e salite **non** si salvano: si ricalcolano all'apertura, così i migli
 - **Costruttore report**: X (Tempo o variabile), Y (una o più), tipo (linea/area/dispersione), **colore per curva**, nome. Salvati in `localStorage`. La lista parte vuota.
 - **Aspetto**: color picker per i token principali (`--bg`, `--surface`, `--fg`, `--accent`, `--accent-2`, `--motor`), applicati live e salvati.
 
-**Header**: logo (clic per cambiarlo), titolo + badge versione, loaders, bandierine lingua, guida `?` (overlay con `.open`).
+**Header**: logo (clic per cambiarlo, si ridimensiona in proporzione), titolo + badge versione, bandierine lingua, guida `?` (overlay con `.open`),
+riga di azioni con il menu **Carica ▾** (`#loadMenu`, classe `.open`; gli `<input type=file>` `#file`/`#fileSM` restano dentro le voci `<label>`) e **Set up**.
 
 ---
 
@@ -281,6 +284,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.10** — schermata iniziale più compatta: i quattro pulsanti di caricamento sono un unico menu a tendina **Carica ▾** (Jeti, SM Modellbau, RZ GPS, Demo) accanto a Set up; logo proporzionale su schermi stretti.
 - **v1.9** — scheda **Traiettoria 3D** colorata dal vario; `parseNMEA` ora salva `Lat`/`Lon` (conversione ddmm.mmmm → gradi decimali, solo fix validi).
 - **v1.8** — scheda **Polare di velocità** (sink minimo, finesse massima, curva e tangente); hook `cfg.after` in `drawChart`.
 - **v1.7** — **Archivio voli** su cartella del PC (Chrome/Edge) con modello, pacco e note; **confronto** di 2–4 voli

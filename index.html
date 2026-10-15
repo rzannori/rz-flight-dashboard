@@ -48,9 +48,25 @@
   .filebtn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#06222a;border:none;border-radius:8px;
     padding:9px 14px;font:600 .84rem "IBM Plex Sans",sans-serif;cursor:pointer}
   .filebtn:hover{filter:brightness(1.08)}
-  .loaders{display:flex;flex-direction:column;gap:7px;align-items:stretch;width:max-content;margin-left:auto}
-  .loaders .filebtn{justify-content:center}
-  .setupbtn{align-self:stretch;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--surface-2);
+  .actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:stretch}
+  .loadmenu{position:relative}
+  .loadmenu .filebtn{height:100%}
+  .loadmenu .caret{transition:transform .12s;margin-left:2px}
+  .loadmenu.open .caret{transform:rotate(180deg)}
+  .menu{display:none;position:absolute;right:0;top:calc(100% + 6px);min-width:250px;z-index:40;background:var(--surface);
+    border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 12px 32px rgba(0,0,0,.45)}
+  .loadmenu.open .menu{display:block}
+  .menu .mi{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:none;border-radius:8px;background:none;
+    color:var(--fg);font:500 .86rem "IBM Plex Sans",sans-serif;text-align:left;cursor:pointer}
+  .menu .mi svg{flex:none;color:var(--accent)}
+  .menu .mi .mt{display:flex;flex-direction:column;flex:1;min-width:0;line-height:1.25}
+  .menu .mi small{color:var(--muted);font-size:.72rem;font-weight:400}
+  .menu .mi:hover,.menu .mi:focus-visible{background:var(--surface-2);outline:none}
+  .menu .mi:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+  .menu .mi.soon{color:var(--muted)} .menu .mi.soon svg{color:var(--muted)}
+  .menu .soontag{margin-left:0}
+  .menu .sep{height:1px;background:var(--line);margin:5px 4px}
+  .setupbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--surface-2);
     color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font:600 .82rem "IBM Plex Sans",sans-serif;cursor:pointer}
   .setupbtn:hover{border-color:var(--accent);color:var(--accent)}
   .setupbtn.active{background:var(--accent);color:#06222a;border-color:var(--accent)}
@@ -75,19 +91,16 @@
   .helpcard ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:7px;font-size:.88rem}
   .helpcard li b{color:var(--fg)}
   .helpcard .fx{color:var(--motor)}
-  .filebtn.soon{background:transparent;color:var(--muted);border:1px solid var(--line);filter:none}
-  .filebtn.soon:hover{color:var(--fg);border-color:var(--accent);filter:none}
-  .filebtn.demo{background:transparent;color:var(--accent);border:1px solid var(--accent);filter:none}
-  .filebtn.demo:hover{background:var(--accent);color:#06222a;filter:none}
   .soontag{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--motor);border:1px solid var(--motor);border-radius:999px;padding:0 5px;margin-left:7px}
   input[type=file]#file,input[type=file]#fileSM{display:none}
+  .menu .mi:active{background:var(--surface-2)}
   .fname{color:var(--muted);font-size:.78rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .demo-flag{font-size:.68rem;font-weight:700;color:var(--warn);border:1px solid var(--warn);border-radius:999px;padding:2px 9px;letter-spacing:.5px}
   .logo{display:inline-flex;align-items:center;justify-content:center;height:46px;min-width:46px;max-width:160px;
     border:1px dashed var(--line);border-radius:10px;cursor:pointer;overflow:hidden;color:var(--muted);
     font-size:.68rem;letter-spacing:.6px;text-transform:uppercase;padding:0 10px;background:var(--surface)}
   .logo.set{border-style:solid;border-color:var(--line)}
-  .logo img{height:42px;max-width:150px;object-fit:contain;display:block;filter:invert(1) brightness(1.15)}
+  .logo img{height:auto;width:auto;max-height:42px;max-width:100%;object-fit:contain;display:block;filter:invert(1) brightness(1.15)}
   @media(max-width:680px){
     .top{grid-template-columns:1fr auto}
     .top .center{grid-column:1 / -1;order:-1}
@@ -255,7 +268,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.9</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.10</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -271,20 +284,25 @@
         </button>
         <button class="helpbtn" id="helpBtn" data-i18n-title="help" title="Guida">?</button>
       </div>
-      <div class="loaders">
-        <label class="filebtn" data-i18n-title="load_title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-          Jeti Log
-          <input type="file" id="file" accept=".log,.csv,.txt">
-        </label>
-        <label class="filebtn" id="loadSM" data-i18n-title="sm_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>SM Modellbau<input type="file" id="fileSM" accept=".nmea,.txt,.log"></label>
-        <button class="filebtn soon" id="loadRZ" data-i18n-title="rz_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>RZ GPS<span class="soontag" data-i18n="soon">presto</span></button>
-        <button class="filebtn demo" id="demoBtn" data-i18n-title="demo_title"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg><span data-i18n="demo">Demo</span></button>
-      </div>
+      <div class="actions">
+        <div class="loadmenu" id="loadMenu">
+          <button class="filebtn" id="loadBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="loadList">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span data-i18n="load_btn">Carica</span>
+            <svg class="caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="menu" id="loadList" role="menu">
+            <label class="mi" role="menuitem" tabindex="0" data-i18n-title="load_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="mt">Jeti Log<small data-i18n="mi_jeti">log .log o CSV</small></span><input type="file" id="file" accept=".log,.csv,.txt"></label>
+            <label class="mi" role="menuitem" tabindex="0" id="loadSM" data-i18n-title="sm_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="mt">SM Modellbau<small data-i18n="mi_sm">GPS · .nmea</small></span><input type="file" id="fileSM" accept=".nmea,.txt,.log"></label>
+            <button class="mi soon" role="menuitem" type="button" id="loadRZ" data-i18n-title="rz_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="mt">RZ GPS</span><span class="soontag" data-i18n="soon">presto</span></button>
+            <div class="sep" role="separator"></div>
+            <button class="mi demo" role="menuitem" type="button" id="demoBtn" data-i18n-title="demo_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg><span class="mt"><span data-i18n="demo">Demo</span><small data-i18n="mi_demo">dati di esempio</small></span></button>
+          </div>
+        </div>
       <button class="setupbtn" id="setupBtn" title="Set up">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.6H3a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 4.7 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 3V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></svg>
         <span data-i18n="setup">Set up</span>
       </button>
+      </div>
       <span class="fname" id="fname"></span>
     </div>
   </div>
@@ -702,6 +720,12 @@ const T_TR={
   tr_grid:["griglia","grid","grille"], tr_alt:["quota","alt","alt."],
   tr_hint:["Trascina per ruotare, rotella per zoomare, doppio clic per ripristinare la vista. \"Quota ×\" esagera la scala verticale. Il cursore in basso sposta (o riproduce a 10×) un marker sulla traiettoria. Rispetta il Focus della Panoramica.","Drag to rotate, wheel to zoom, double-click to reset the view. \"Altitude ×\" exaggerates the vertical scale. The slider moves (or plays at 10×) a marker along the trajectory. Follows the Overview focus.","Faites glisser pour tourner, molette pour zoomer, double-clic pour réinitialiser la vue. « Altitude × » exagère l'échelle verticale. Le curseur déplace (ou lit à 10×) un marqueur sur la trajectoire. Suit le Focus de l'Aperçu."]
 };
+const T_UI={
+  load_btn:["Carica","Load","Charger"],
+  mi_jeti:["log .log o CSV","raw .log or CSV","log .log ou CSV"], mi_sm:["GPS · .nmea","GPS · .nmea","GPS · .nmea"],
+  mi_demo:["dati di esempio","sample data","données d'exemple"]
+};
+for(const k in T_UI){ T.it[k]=T_UI[k][0]; T.en[k]=T_UI[k][1]; T.fr[k]=T_UI[k][2]; }
 for(const k in T_TR){ T.it[k]=T_TR[k][0]; T.en[k]=T_TR[k][1]; T.fr[k]=T_TR[k][2]; }
 for(const k in T_PO){ T.it[k]=T_PO[k][0]; T.en[k]=T_PO[k][1]; T.fr[k]=T_PO[k][2]; }
 /* derived channels: stable keys, bilingual display names */
@@ -2186,6 +2210,26 @@ let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(red
 const mo=new MutationObserver(redrawAll); mo.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 if(window.matchMedia) matchMedia("(prefers-color-scheme:dark)").addEventListener("change",redrawAll);
 
+/* menu "Carica" a tendina */
+(function(){
+  const box=$("#loadMenu"), btn=$("#loadBtn"), list=$("#loadList");
+  const items=()=>[...list.querySelectorAll(".mi")];
+  const open=(focusFirst)=>{ box.classList.add("open"); btn.setAttribute("aria-expanded","true"); if(focusFirst){ const f=items()[0]; if(f) f.focus(); } };
+  const close=(back)=>{ box.classList.remove("open"); btn.setAttribute("aria-expanded","false"); if(back) btn.focus(); };
+  btn.addEventListener("click",()=>{ box.classList.contains("open")?close():open(); });
+  // chiusura dopo la scelta (con un attimo di ritardo: il selettore file deve aprirsi prima)
+  list.addEventListener("click",()=>setTimeout(close,150));
+  list.addEventListener("change",()=>close());
+  document.addEventListener("click",e=>{ if(!box.contains(e.target)) close(); });
+  document.addEventListener("keydown",e=>{
+    if(!box.classList.contains("open")){ if(e.target===btn&&e.key==="ArrowDown"){ e.preventDefault(); open(true); } return; }
+    if(e.key==="Escape"){ close(true); return; }
+    const it=items(), i=it.indexOf(document.activeElement);
+    if(e.key==="ArrowDown"){ e.preventDefault(); it[(i+1)%it.length].focus(); }
+    else if(e.key==="ArrowUp"){ e.preventDefault(); it[(i<=0?it.length:i)-1].focus(); }
+    else if((e.key==="Enter"||e.key===" ")&&document.activeElement&&document.activeElement.tagName==="LABEL"){ e.preventDefault(); document.activeElement.click(); }
+  });
+})();
 function showSoon(name){ const el=$("#fname"); el.textContent=name+": "+t("soon_msg"); setTimeout(()=>{ if(el.textContent.indexOf(name)===0) el.textContent=""; },2400); }
 $("#loadRZ").addEventListener("click",()=>showSoon("RZ GPS"));
 $("#demoBtn").addEventListener("click",()=>{ focusRange=null; reports=reports.filter(r=>!r.tmp); DATA=makeDemo(); isDemo=true; $("#fname").textContent=""; seedDemoReports(); renderAll(); });
