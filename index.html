@@ -276,7 +276,7 @@
     .trbtn{padding:8px 13px;font-size:.8rem}
     .resSel,select{padding:8px 10px}
     .flag{width:36px;height:23px} .helpbtn{width:30px;height:30px}
-    .trctl input[type=range]{height:28px}
+    .trpanel input[type=range]{height:28px}
     .menu .mi{padding:12px 10px}
   }
 
@@ -284,13 +284,29 @@
   #trChart{cursor:grab;touch-action:none} #trChart:active{cursor:grabbing}
   .trbtn{padding:3px 10px;font-size:.74rem}
   .trzoom{display:inline-flex;align-items:center;gap:4px} .trzoom .mono{min-width:3.1em;text-align:center;color:var(--fg)}
-  .trctl{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-top:10px}
-  .trctl input[type=range]{min-width:140px}
-  @media(max-width:680px){ .trctl .mono{white-space:normal;flex-basis:100%;order:3} .trctl input[type=range]{flex:1 1 0} }
-  .trctl input[type=range]{flex:1;accent-color:var(--accent)}
-  .trctl .mono{font-size:.76rem;color:var(--muted);white-space:nowrap}
-  .trlegend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:10px;font-size:.76rem;color:var(--muted)}
-  .trbar{width:160px;height:10px;border-radius:5px;border:1px solid var(--line);background:linear-gradient(90deg,hsl(0 85% 52%),hsl(60 85% 52%),hsl(120 85% 52%))}
+  .trlayout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+  .trmain{min-width:0}
+  .trpanel{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .trsec{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+  .trh{font-size:.68rem;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .trbtns{display:flex;gap:6px;flex-wrap:wrap} .trbtns .btn{flex:1 1 auto}
+  .trrow{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.8rem}
+  .trrow select{min-width:76px}
+  .trrow.chk{justify-content:flex-start;cursor:pointer} .trrow.chk input{accent-color:var(--accent);width:15px;height:15px}
+  .trpanel input[type=range]{width:100%;accent-color:var(--accent)}
+  .trnote{font-size:.7rem;color:var(--muted);line-height:1.35}
+  .trv{display:flex;align-items:baseline;gap:6px;padding:2px 0;border-bottom:1px dashed color-mix(in srgb,var(--line) 60%,transparent);font-size:.8rem}
+  .trv:last-child{border-bottom:none}
+  .trv .k{flex:1;min-width:0;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .trv .v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+  .trv .u{width:3.2em;color:var(--muted);font-size:.7rem}
+  @media(min-width:900px){
+    .trlayout{grid-template-columns:290px minmax(0,1fr)}
+    .trpanel{order:-1;max-height:calc(100vh - 300px);overflow-y:auto;padding-right:4px}
+  }
+  .trlegend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:.76rem;color:var(--muted)}
+  .trlegend{flex-wrap:nowrap}
+  .trbar{flex:1;min-width:50px;height:10px;border-radius:5px;border:1px solid var(--line);background:linear-gradient(90deg,hsl(0 85% 52%),hsl(60 85% 52%),hsl(120 85% 52%))}
 
   /* archivio voli + confronto */
   .arfolder{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:.88rem}
@@ -322,7 +338,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.16</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.17</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -378,7 +394,7 @@
     <div class="card" style="margin-top:16px">
       <h2><span data-i18n="ov_h2">Quota &amp; salite a motore</span> <span class="tag">ALT / IBAT</span>
         <span class="resctl"><span data-i18n="detail">Dettaglio</span>
-          <select class="resSel"><option value="400" data-i18n="det_low">Basso</option><option value="1000" data-i18n="det_med">Medio</option><option value="1600" selected data-i18n="det_high">Alto</option><option value="4000" data-i18n="det_max">Massimo</option></select>
+          <select class="resSel" data-det><option value="400" data-i18n="det_low">Basso</option><option value="1000" data-i18n="det_med">Medio</option><option value="1600" selected data-i18n="det_high">Alto</option><option value="4000" data-i18n="det_max">Massimo</option></select>
         </span>
       </h2>
       <div class="focusbar" id="focusBar"><span id="focusLabel"></span><button id="focusReset" aria-label="reset">✕</button></div>
@@ -406,7 +422,7 @@
     <div class="card">
       <h2><span data-i18n="gr_h2">Grafico selezionabile</span> <span class="tag">REPORT</span>
         <span class="resctl"><span data-i18n="detail">Dettaglio</span>
-          <select class="resSel"><option value="400" data-i18n="det_low">Basso</option><option value="1000" data-i18n="det_med">Medio</option><option value="1600" selected data-i18n="det_high">Alto</option><option value="4000" data-i18n="det_max">Massimo</option></select>
+          <select class="resSel" data-det><option value="400" data-i18n="det_low">Basso</option><option value="1000" data-i18n="det_med">Medio</option><option value="1600" selected data-i18n="det_high">Alto</option><option value="4000" data-i18n="det_max">Massimo</option></select>
         </span>
       </h2>
       <p class="hint" style="margin-top:-4px" data-i18n-html="gr_hint">Usa <b>Dettaglio</b> (in alto a destra) per aumentare la risoluzione delle curve; usa il <b>quadratino colorato</b> accanto a ogni variabile nella legenda per cambiarne il colore.</p>
@@ -489,28 +505,39 @@
   <!-- PAGE: TRAIETTORIA 3D (da lat/lon/quota del GPS) -->
   <section data-page="tr" hidden>
     <div class="card">
-      <h2><span data-i18n="tr_h2">Traiettoria 3D</span> <span class="tag">3D</span>
-        <span class="resctl"><span data-i18n="tr_exag">Quota ×</span>
-          <select id="trExag" class="resSel"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="5">5</option></select>
-          <span class="trzoom"><button class="btn ghost trbtn" id="trZm" aria-label="zoom −">−</button><span class="mono" id="trZoom">×1</span><button class="btn ghost trbtn" id="trZp" aria-label="zoom +">+</button></span>
-          <button class="btn ghost trbtn" id="trTop" data-i18n="tr_top">Dall'alto</button>
-          <button class="btn ghost trbtn" id="trSide" data-i18n="tr_side">Laterale</button>
-          <button class="btn ghost trbtn" id="tr3d">3D</button>
-          <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="trFollow"><span data-i18n="tr_follow">Segui</span></label>
-        </span>
-      </h2>
+      <h2><span data-i18n="tr_h2">Traiettoria 3D</span> <span class="tag">3D</span></h2>
       <p class="empty" id="trEmpty" hidden></p>
-      <div id="trBody">
-        <div class="chart-wrap"><canvas id="trChart"></canvas></div>
-        <div class="trctl">
-          <button class="btn ghost trbtn" id="trPlay">▶</button>
-          <input type="range" id="trSlider" min="0" max="1" step="1" value="0" aria-label="time">
-          <span class="mono" id="trRead"></span>
+      <div id="trBody" class="trlayout">
+        <div class="trmain">
+          <div class="chart-wrap"><canvas id="trChart"></canvas></div>
+          <p class="hint" data-i18n="tr_hint"></p>
         </div>
-        <div class="trlegend"><span class="mono" id="trLo"></span><div class="trbar"></div><span class="mono" id="trHi"></span>
-          <span class="mono" style="opacity:.8" data-i18n="tr_legend"></span></div>
+        <aside class="trpanel" id="trPanel">
+          <div class="trsec">
+            <div class="trh" data-i18n="tr_sec_view">Vista</div>
+            <div class="trbtns">
+              <button class="btn ghost trbtn" id="trTop" data-i18n="tr_top">Dall'alto</button>
+              <button class="btn ghost trbtn" id="trSide" data-i18n="tr_side">Laterale</button>
+              <button class="btn ghost trbtn" id="tr3d">3D</button>
+            </div>
+            <div class="trrow"><span data-i18n="tr_zoom">Zoom</span><span class="trzoom"><button class="btn ghost trbtn" id="trZm" aria-label="zoom −">−</button><span class="mono" id="trZoom">×1</span><button class="btn ghost trbtn" id="trZp" aria-label="zoom +">+</button></span></div>
+            <div class="trrow"><span data-i18n="tr_exag">Quota ×</span><select id="trExag" class="resSel"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="5">5</option></select></div>
+            <label class="trrow chk"><input type="checkbox" id="trFollow"><span data-i18n="tr_follow">Segui</span></label>
+          </div>
+          <div class="trsec">
+            <div class="trh" data-i18n="tr_sec_play">Riproduzione</div>
+            <div class="trrow"><button class="btn ghost trbtn" id="trPlay">▶</button><select id="trSpeed" class="resSel" aria-label="speed"><option value="1">1×</option><option value="5">5×</option><option value="10" selected>10×</option><option value="30">30×</option></select></div>
+            <input type="range" id="trSlider" min="0" max="1" step="1" value="0" aria-label="time">
+          </div>
+          <div class="trsec">
+            <div class="trh" data-i18n="tr_sec_color">Colore = vario</div>
+            <div class="trlegend"><span class="mono" id="trLo"></span><div class="trbar"></div><span class="mono" id="trHi"></span></div>
+            <div class="trnote" data-i18n="tr_legend"></div>
+          </div>
+          <div class="trsec"><div class="trh" data-i18n="tr_sec_glider">Aliante</div><div id="trVals"></div></div>
+          <div class="trsec"><div class="trh" data-i18n="tr_sec_chan">Canali del log</div><div id="trChans"></div></div>
+        </aside>
       </div>
-      <p class="hint" data-i18n="tr_hint"></p>
     </div>
   </section>
 
@@ -790,7 +817,7 @@ const T_TR={
   tr_top:["Dall'alto","Top","Dessus"], tr_side:["Laterale","Side","Côté"],
   tr_nogps:["La traiettoria richiede la posizione GPS (latitudine e longitudine): carica un file GPS (SM Modellbau).","The trajectory needs GPS position (latitude and longitude): load a GPS file (SM Modellbau).","La trajectoire nécessite la position GPS (latitude et longitude) : chargez un fichier GPS (SM Modellbau)."],
   tr_nomove:["La posizione non varia: nessuna traiettoria da mostrare.","Position doesn't change: no trajectory to show.","La position ne varie pas : aucune trajectoire à afficher."],
-  tr_legend:["colore = vario (verde salita · rosso discesa) · ○ partenza · □ fine","colour = vario (green climb · red sink) · ○ start · □ end","couleur = vario (vert montée · rouge descente) · ○ départ · □ fin"],
+  tr_legend:["verde = salita · rosso = discesa · ○ partenza · □ fine","green = climb · red = sink · ○ start · □ end","vert = montée · rouge = descente · ○ départ · □ fin"],
   tr_grid:["griglia","grid","grille"], tr_alt:["quota","alt","alt."],
   tr_hint:["Trascina per ruotare, rotella o pulsanti −/+ (fino a ×40) per zoomare, due dita su touch, doppio clic per ripristinare la vista. \"Quota ×\" esagera la scala verticale. Il cursore in basso sposta (o riproduce a 10×) un aliante sulla traiettoria, orientato come in volo; \"Segui\" tiene la vista centrata su di lui (utile con lo zoom). Rispetta il Focus della Panoramica.","Drag to rotate, wheel or −/+ buttons (up to ×40) to zoom, two fingers on touch, double-click to reset the view. \"Altitude ×\" exaggerates the vertical scale. The slider moves (or plays at 10×) a glider along the trajectory, oriented as in flight; \"Follow\" keeps the view centred on it (handy when zoomed). Follows the Overview focus.","Faites glisser pour tourner, molette ou boutons −/+ (jusqu'à ×40) pour zoomer, deux doigts sur tactile, double-clic pour réinitialiser la vue. « Altitude × » exagère l'échelle verticale. Le curseur déplace (ou lit à 10×) un planeur sur la trajectoire, orienté comme en vol ; « Suivre » garde la vue centrée sur lui (utile avec le zoom). Suit le Focus de l'Aperçu."]
 };
@@ -807,6 +834,14 @@ const T_GR={
 };
 for(const k in T_GR){ T.it[k]=T_GR[k][0]; T.en[k]=T_GR[k][1]; T.fr[k]=T_GR[k][2]; }
 for(const k in T_UI){ T.it[k]=T_UI[k][0]; T.en[k]=T_UI[k][1]; T.fr[k]=T_UI[k][2]; }
+const T_TV={
+  tr_sec_view:["Vista","View","Vue"], tr_zoom:["Zoom","Zoom","Zoom"], tr_sec_play:["Riproduzione","Playback","Lecture"],
+  tr_sec_color:["Colore = vario","Colour = vario","Couleur = vario"], tr_sec_glider:["Aliante","Glider","Planeur"], tr_sec_chan:["Canali del log","Log channels","Canaux du log"],
+  tv_time:["Tempo","Time","Temps"], tv_alt:["Quota","Altitude","Altitude"], tv_vario:["Vario","Vario","Vario"], tv_speed:["Velocità","Speed","Vitesse"],
+  tv_hdg:["Rotta","Heading","Cap"], tv_pitch:["Assetto","Pitch","Assiette"], tv_bank:["Inclinazione","Bank","Inclinaison"],
+  tv_dist:["Dist. dalla partenza","Dist. from start","Dist. du départ"], tv_path:["Percorso","Path length","Parcours"]
+};
+for(const k in T_TV){ T.it[k]=T_TV[k][0]; T.en[k]=T_TV[k][1]; T.fr[k]=T_TV[k][2]; }
 for(const k in T_TR){ T.it[k]=T_TR[k][0]; T.en[k]=T_TR[k][1]; T.fr[k]=T_TR[k][2]; }
 for(const k in T_PO){ T.it[k]=T_PO[k][0]; T.en[k]=T_PO[k][1]; T.fr[k]=T_PO[k][2]; }
 /* derived channels: stable keys, bilingual display names */
@@ -2169,11 +2204,12 @@ function trackData(f,exag){
   if(!la||!lo||!a) return {err:"tr_nogps"};
   const N=f.t.length, va=varioOf(f), k=2;
   const lat0=la.vals[0], lon0=lo.vals[0], kx=111320*Math.cos(lat0*Math.PI/180), ky=110574;
-  const x=new Array(N), y=new Array(N), z=new Array(N), v=new Array(N);
+  const x=new Array(N), y=new Array(N), z=new Array(N), v=new Array(N), cum=new Array(N).fill(0), hs=new Array(N).fill(0);
   let xmn=1e9,xmx=-1e9,ymn=1e9,ymx=-1e9,zmn=1e9,zmx=-1e9;
   for(let i=0;i<N;i++){
     x[i]=(lo.vals[i]-lon0)*kx; y[i]=(la.vals[i]-lat0)*ky; z[i]=a.vals[i];
     let sm=0,n=0; for(let j=Math.max(0,i-k);j<=Math.min(N-1,i+k);j++) if(Number.isFinite(va[j])){ sm+=va[j]; n++; } v[i]=n?sm/n:0;
+    if(i>0) cum[i]=cum[i-1]+Math.hypot(x[i]-x[i-1],y[i]-y[i-1]);
     if(x[i]<xmn)xmn=x[i]; if(x[i]>xmx)xmx=x[i]; if(y[i]<ymn)ymn=y[i]; if(y[i]>ymx)ymx=y[i]; if(z[i]<zmn)zmn=z[i]; if(z[i]>zmx)zmx=z[i];
   }
   if(!(xmx-xmn>1||ymx-ymn>1)) return {err:"tr_nomove"};
@@ -2184,6 +2220,7 @@ function trackData(f,exag){
   const wrap=a=>{ while(a>Math.PI)a-=2*Math.PI; while(a<-Math.PI)a+=2*Math.PI; return a; };
   for(let i=0;i<N;i++){
     const j0=Math.max(0,i-kk), j1=Math.min(N-1,i+kk), dx=x[j1]-x[j0], dy=y[j1]-y[j0], h=Math.hypot(dx,dy), dtw=(j1-j0)*f.DT||1;
+    hs[i]=h/dtw*3.6;                                                // velocità al suolo [km/h] (±1 s)
     if(h/dtw<0.5) continue;                                         // fermo: la rotta verrà ereditata dai campioni vicini
     hd[i]=Math.atan2(dx,dy); gm[i]=Math.atan2(z[j1]-z[j0],h);
     const a0=Math.atan2(x[i]-x[j0],y[i]-y[j0]), a1=Math.atan2(x[j1]-x[i],y[j1]-y[i]);
@@ -2193,7 +2230,7 @@ function trackData(f,exag){
   let last=NaN; for(let i=0;i<N;i++){ if(Number.isFinite(hd[i])) last=hd[i]; else hd[i]=last; }
   last=NaN; for(let i=N-1;i>=0;i--){ if(Number.isFinite(hd[i])) last=hd[i]; else hd[i]=last; }
   for(let i=0;i<N;i++) if(!Number.isFinite(hd[i])) hd[i]=0;
-  return {x,y,z,v,hd,gm,bk,t:f.t,N,Spos,Sneg,exag,xmn,xmx,ymn,ymx,zmn,zmx,sp:f.series["Speed"]||null};
+  return {x,y,z,v,hd,gm,bk,hs,cum,t:f.t,N,Spos,Sneg,exag,xmn,xmx,ymn,ymx,zmn,zmx,sp:f.series["Speed"]||null,ser:f.series,keys:Object.keys(f.series)};
 }
 const TR_ZMAX=40, TR_ZMIN=0.4;
 function trZoomBy(f){ trView.zoom=Math.max(TR_ZMIN,Math.min(TR_ZMAX,trView.zoom*f)); drawTrack(); }
@@ -2201,7 +2238,7 @@ function drawTrack(){
   const cv=$("#trChart"), D=trCache&&trCache.D; if(!cv||!D||D.err) return;
   $("#trZoom").textContent="×"+(trView.zoom<10?trView.zoom.toFixed(1).replace(/\.0$/,""):Math.round(trView.zoom));
   $("#trZp").disabled=trView.zoom>=TR_ZMAX-1e-6; $("#trZm").disabled=trView.zoom<=TR_ZMIN+1e-6;
-  const dpr=Math.min(2,window.devicePixelRatio||1), W=cv.clientWidth||cv.parentElement.clientWidth||600, H=window.innerWidth<900?Math.round(Math.min(560,Math.max(300,W*0.62))):chartH(380,470);
+  const dpr=Math.min(2,window.devicePixelRatio||1), W=cv.clientWidth||cv.parentElement.clientWidth||600, H=window.innerWidth<900?Math.round(Math.min(560,Math.max(300,W*0.62))):chartH(420,370);
   cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+"px";
   const g=cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
   const ex=D.exag, xr=D.xmx-D.xmn, yr=D.ymx-D.ymn, zr=(D.zmx-D.zmn)*ex;
@@ -2258,8 +2295,26 @@ function drawTrack(){
   }
   // scala griglia
   g.fillStyle=muted; g.textAlign="left"; g.textBaseline="bottom"; g.fillText(`${t("tr_grid")} ${step} m`,8,H-6);
-  const sp=D.sp?D.sp.vals[i]:null;
-  $("#trRead").textContent=`${hhmmss(D.t[i])} · ${t("tr_alt")} ${fmt(D.z[i],0)} m · ${D.v[i]>0?"+":""}${fmt(D.v[i],1)} m/s${sp!=null&&Number.isFinite(sp)?" · "+fmt(sp,0)+" km/h":""}`;
+  updateTrValues(D,i);
+}
+/* colonna sinistra: valori che cambiano lungo il volo (calcolati + tutti i canali del log) */
+let trRefs={};
+function buildTrPanel(D){
+  const row=(k,label,unit)=>`<div class="trv"><span class="k" title="${escapeHtml(label)}">${escapeHtml(label)}</span><span class="v mono" data-r="${escapeHtml(k)}">—</span><span class="u">${escapeHtml(unit||"")}</span></div>`;
+  $("#trVals").innerHTML=[row("t",t("tv_time"),"m:s"),row("alt",t("tv_alt"),"m"),row("vario",t("tv_vario"),"m/s"),row("spd",t("tv_speed"),"km/h"),row("hdg",t("tv_hdg"),"°"),
+    row("pitch",t("tv_pitch"),"°"),row("bank",t("tv_bank"),"°"),row("dist",t("tv_dist"),"m"),row("path",t("tv_path"),"m")].join("");
+  $("#trChans").innerHTML=D.keys.map(k=>row("c:"+k,dispName(k)+(isDeriv(k)?" ƒ":""),D.ser[k].unit)).join("");
+  trRefs={}; document.querySelectorAll("#trPanel [data-r]").forEach(e=>{ trRefs[e.dataset.r]=e; });
+}
+function updateTrValues(D,i){
+  const set=(k,txt,col)=>{ const e=trRefs[k]; if(e){ e.textContent=txt; e.style.color=col||""; } };
+  const deg=a=>a*180/Math.PI, sp=D.sp?D.sp.vals[i]:D.hs[i];
+  set("t",hhmmss(D.t[i])); set("alt",fmt(D.z[i],0));
+  set("vario",(D.v[i]>0?"+":"")+fmt(D.v[i],1),trVarioCol(D.v[i],D));
+  set("spd",Number.isFinite(sp)?fmt(sp,0):"—"); set("hdg",fmt(((deg(D.hd[i])%360)+360)%360,0));
+  set("pitch",fmt(deg(D.gm[i]),1)); set("bank",fmt(deg(D.bk[i]),0));
+  set("dist",fmt(Math.hypot(D.x[i]-D.x[0],D.y[i]-D.y[0]),0)); set("path",fmt(D.cum[i],0));
+  for(const k of D.keys){ const v=D.ser[k].vals[i]; set("c:"+k,Number.isFinite(v)?fmt(v,decFor(k)):"—"); }
 }
 function renderTrack(){
   if(!trVisible()) return;
@@ -2274,6 +2329,7 @@ function renderTrack(){
   if(D.err){ empty.hidden=false; empty.textContent=t(D.err); body.style.display="none"; return; }
   empty.hidden=true; body.style.display="";
   $("#trLo").textContent=`−${fmt(D.Sneg,1)} m/s`; $("#trHi").textContent=`+${fmt(D.Spos,1)} m/s`;
+  buildTrPanel(D);
   drawTrack();
 }
 function stopTrackPlay(){ if(trRaf){ cancelAnimationFrame(trRaf); trRaf=0; } const b=$("#trPlay"); if(b) b.textContent="▶"; }
@@ -2282,7 +2338,7 @@ function toggleTrackPlay(){
   if(trRaf){ stopTrackPlay(); return; }
   if(trIdx>=D.N-1) trIdx=0;
   $("#trPlay").textContent="❚❚"; let last=performance.now();
-  const tick=now=>{ trIdx+=Math.max(0,(now-last)/1000)*10/(D.t[1]-D.t[0]||0.2); last=now;
+  const tick=now=>{ trIdx+=Math.max(0,(now-last)/1000)*(+$("#trSpeed").value||10)/(D.t[1]-D.t[0]||0.2); last=now;
     if(trIdx>=D.N-1){ trIdx=D.N-1; $("#trSlider").value=trIdx; drawTrack(); stopTrackPlay(); return; }
     $("#trSlider").value=Math.round(trIdx); drawTrack(); trRaf=requestAnimationFrame(tick); };
   trRaf=requestAnimationFrame(tick);
@@ -2355,7 +2411,7 @@ $("#addBtn").addEventListener("click",()=>{
   reports.push({name,x,y,type:$("#typeSel").value,colors});
   saveReports(); $("#nameInp").value=""; renderSaved(); refreshReportSel();
 });
-document.addEventListener("change",e=>{ const t=e.target; if(t&&t.classList&&t.classList.contains("resSel")){ chartPts=+t.value||1600; document.querySelectorAll(".resSel").forEach(s=>{s.value=String(chartPts);}); renderMain(); renderView(); } });
+document.addEventListener("change",e=>{ const t=e.target; if(t&&t.hasAttribute&&t.hasAttribute("data-det")){ chartPts=+t.value||1600; document.querySelectorAll("select[data-det]").forEach(s=>{s.value=String(chartPts);}); renderMain(); renderView(); } });   // solo i menu "Dettaglio"
 $("#resetBtn").addEventListener("click",()=>{ reports=[]; saveReports(); renderSaved(); refreshReportSel(); });
 $("#savedList").addEventListener("click",e=>{ const b=e.target.closest("button[data-del]"); if(!b)return; reports.splice(+b.dataset.del,1); saveReports(); renderSaved(); refreshReportSel(); });
 $("#reportSel").addEventListener("change",renderView);
