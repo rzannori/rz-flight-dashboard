@@ -247,7 +247,11 @@
   }
 
   /* analisi volo */
-  .agroup{margin-top:14px} .agroup:first-child{margin-top:0}
+  .agroups{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+  @media(min-width:1100px){ .agroups{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  .agroup{border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-left:5px solid var(--accent);border-radius:12px;padding:12px 14px 14px;
+    background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+  .agroup>.trh{font:700 .95rem "Barlow Semi Condensed",sans-serif;letter-spacing:.9px;color:var(--accent);margin-bottom:2px}
   .agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px}
   .atile{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0}
   .atile .al{font-size:.66rem;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -267,7 +271,20 @@
   .histx span{flex:1;min-width:0;text-align:center;white-space:nowrap;overflow:visible}
   .histt{font-size:.7rem;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:10px 0 6px}
   .histt:first-child{margin-top:0}
-  @media(min-width:1100px){ #verdictText{columns:2;column-gap:36px} #verdictText p{break-inside:avoid-column} }
+  .narr{margin-top:6px}
+  .nsec{margin:0 0 14px} .nsec h3{font:700 .92rem "Barlow Semi Condensed",sans-serif;letter-spacing:.9px;text-transform:uppercase;color:var(--accent);margin:0 0 4px}
+  .nsec p{margin:0 0 8px;line-height:1.55}
+  @media(min-width:1300px){ .narr{columns:2;column-gap:40px} .nsec{break-inside:avoid} }
+  .vbox{margin-top:10px;border:1px solid var(--accent);border-left-width:6px;border-radius:12px;padding:14px 18px;background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+  .vbox h3{font:700 1.05rem "Barlow Semi Condensed",sans-serif;letter-spacing:.9px;text-transform:uppercase;margin:0 0 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .vbox .lvl{font:700 .8rem "IBM Plex Sans",sans-serif;border-radius:999px;padding:3px 12px;letter-spacing:.3px;text-transform:none}
+  .vbox .lvl.good{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)} .vbox .lvl.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)} .vbox .lvl.crit{background:color-mix(in srgb,var(--crit) 18%,transparent);color:var(--crit)}
+  .vbox .vcols{display:grid;grid-template-columns:minmax(0,1fr);gap:8px 28px;margin:6px 0 8px}
+  @media(min-width:900px){ .vbox .vcols{grid-template-columns:1fr 1fr} }
+  .vbox .vl{font-size:.7rem;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .vbox ul{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:.9rem}
+  .vbox li::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;background:var(--good)} .vbox ul.w li::before{background:var(--warn)} .vbox li.none::before{display:none} .vbox li.none{color:var(--muted)}
+  .vbox p{margin:6px 0 0;line-height:1.55}
 
   /* scheda Grafico: pannello variabili a sinistra (live) */
   .grlayout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;align-items:start}
@@ -383,7 +400,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.19</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.20</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -455,9 +472,14 @@
   <!-- PAGE: GIUDIZIO -->
   <section data-page="ju" hidden>
     <div class="card verdict">
-      <h2><span data-i18n="ju_h2">Analisi del volo</span> <span class="tag">AUTO</span></h2>
+      <h2><span data-i18n="ju_h2">Analisi</span> <span class="tag">AUTO</span></h2>
       <div class="chips" id="chips"></div>
-      <div id="anaTiles"></div>
+      <div id="verdictText" class="narr"></div>
+      <div id="anaVerdict"></div>
+    </div>
+    <div class="card">
+      <h2><span data-i18n="an_sec_summary">Riepilogo dati</span> <span class="tag">DATA</span></h2>
+      <div id="anaTiles" class="agroups"></div>
     </div>
     <div class="card">
       <h2><span data-i18n="an_sec_phases">Fasi del volo</span> <span class="tag">TIMELINE</span></h2>
@@ -474,10 +496,6 @@
         <div id="histSpeed"></div>
         <div id="histVario"></div>
       </div>
-    </div>
-    <div class="card verdict">
-      <h2><span data-i18n="an_sec_comment">Commento automatico</span></h2>
-      <div id="verdictText"></div>
     </div>
     <div class="card">
       <h2><span data-i18n="an_sec_climbs">Salite a motore</span> <span class="tag">MOTOR</span></h2>
@@ -733,7 +751,7 @@ const T = {
     load_title:"Carica un log Jeti grezzo (.log) o CSV esportato",
     sm_title:"Carica un file NMEA SM Modellbau (GPS)", rz_title:"Caricamento RZ GPS — in arrivo",
     ov_h2:"Quota & salite a motore", leg_alt:"Quota relativa", leg_motor:"Salita a motore (corrente assorbita)",
-    ju_h2:"Analisi del volo", gr_h2:"Grafico selezionabile",
+    ju_h2:"Analisi", gr_h2:"Grafico selezionabile",
     gr_hint:"Usa <b>Dettaglio</b> (in alto a destra) per aumentare la risoluzione delle curve; usa il <b>quadratino colorato</b> accanto a ogni variabile nella legenda per cambiarne il colore.",
     rep_label:"Report", detail:"Dettaglio", det_low:"Basso", det_med:"Medio", det_high:"Alto", det_max:"Massimo",
     tb_h2:"Tabella dati", resolution:"Risoluzione", copycsv:"Copia CSV", copied:"Copiato ✓", copyfail:"Copia non riuscita",
@@ -767,7 +785,7 @@ const T = {
     load_title:"Load a raw Jeti log (.log) or exported CSV",
     sm_title:"Load an SM Modellbau NMEA file (GPS)", rz_title:"RZ GPS loading — coming soon",
     ov_h2:"Altitude & motor climbs", leg_alt:"Relative altitude", leg_motor:"Motor climb (current draw)",
-    ju_h2:"Flight analysis", gr_h2:"Selectable chart",
+    ju_h2:"Analysis", gr_h2:"Selectable chart",
     gr_hint:"Use <b>Detail</b> (top right) to increase the resolution of the curves; use the <b>colour chip</b> next to each variable in the legend to change its colour.",
     rep_label:"Report", detail:"Detail", det_low:"Low", det_med:"Medium", det_high:"High", det_max:"Max",
     tb_h2:"Data table", resolution:"Resolution", copycsv:"Copy CSV", copied:"Copied ✓", copyfail:"Copy failed",
@@ -801,7 +819,7 @@ const T = {
     load_title:"Charger un log Jeti brut (.log) ou CSV exporté",
     sm_title:"Charger un fichier NMEA SM Modellbau (GPS)", rz_title:"Chargement RZ GPS — bientôt",
     ov_h2:"Altitude & montées moteur", leg_alt:"Altitude relative", leg_motor:"Montée moteur (courant absorbé)",
-    ju_h2:"Analyse du vol", gr_h2:"Graphique sélectionnable",
+    ju_h2:"Analyse", gr_h2:"Graphique sélectionnable",
     gr_hint:"Utilisez <b>Détail</b> (en haut à droite) pour augmenter la résolution des courbes ; utilisez la <b>pastille de couleur</b> à côté de chaque variable dans la légende pour changer sa couleur.",
     rep_label:"Rapport", detail:"Détail", det_low:"Bas", det_med:"Moyen", det_high:"Haut", det_max:"Max",
     tb_h2:"Tableau de données", resolution:"Résolution", copycsv:"Copier CSV", copied:"Copié ✓", copyfail:"Échec de la copie",
@@ -932,6 +950,15 @@ const T_AN={
   an_h_speed:["Tempo per velocità · planata (s)","Time by speed · glide (s)","Temps par vitesse · plané (s)"], an_h_vario:["Tempo per vario · motore spento (s)","Time by vario · motor off (s)","Temps par vario · moteur coupé (s)"],
   an_noair:["Dati insufficienti per l'analisi (serve una quota).","Not enough data for the analysis (altitude needed).","Données insuffisantes pour l'analyse (altitude requise)."]
 };
+const T_NA={
+  an_sec_summary:["Riepilogo dati","Data summary","Récapitulatif"],
+  nar_flight:["Il volo","The flight","Le vol"], nar_motor:["Lancio e salite a motore","Launch and motor climbs","Lancement et montées moteur"],
+  nar_therm:["Termiche","Thermals","Ascendances"], nar_glide:["Planata","Glide","Plané"], nar_gps:["Velocità e percorso","Speed and path","Vitesse et parcours"],
+  nar_tech:["Motore e batteria","Motor and battery","Moteur et batterie"], nar_verdict:["Giudizio","Verdict","Verdict"],
+  nar_strong:["Punti di forza","Strengths","Points forts"], nar_watch:["Da tenere d'occhio","Keep an eye on","À surveiller"],
+  lvl_top:["Ottimo","Excellent","Excellent"], lvl_good:["Buono","Good","Bon"], lvl_fair:["Discreto","Fair","Correct"], lvl_work:["Da migliorare","Needs work","À améliorer"]
+};
+for(const k in T_NA){ T.it[k]=T_NA[k][0]; T.en[k]=T_NA[k][1]; T.fr[k]=T_NA[k][2]; }
 for(const k in T_AN){ T.it[k]=T_AN[k][0]; T.en[k]=T_AN[k][1]; T.fr[k]=T_AN[k][2]; }
 for(const k in T_GR){ T.it[k]=T_GR[k][0]; T.en[k]=T_GR[k][1]; T.fr[k]=T_GR[k][2]; }
 for(const k in T_UI){ T.it[k]=T_UI[k][0]; T.en[k]=T_UI[k][1]; T.fr[k]=T_UI[k][2]; }
@@ -1373,7 +1400,7 @@ function analyzeFlight(f){
 }
 function renderAnalysis(f){
   const A=analyzeFlight(f), tiles=$("#anaTiles");
-  if(!A){ tiles.innerHTML=`<p class="empty">${t("an_noair")}</p>`; $("#anaPhases").innerHTML=""; $("#thermWrap").innerHTML=""; $("#histSpeed").innerHTML=""; $("#histVario").innerHTML=""; return; }
+  if(!A){ tiles.innerHTML=`<p class="empty">${t("an_noair")}</p>`; $("#anaPhases").innerHTML=""; $("#thermWrap").innerHTML=""; $("#histSpeed").innerHTML=""; $("#histVario").innerHTML=""; return null; }
   const tile=(lbl,val,unit,sub,cls)=>`<div class="atile ${cls||""}"><div class="al" title="${escapeHtml(lbl)}">${escapeHtml(lbl)}</div><div class="av">${val}${unit?`<span class="u">${unit}</span>`:""}</div>${sub?`<div class="as">${sub}</div>`:""}</div>`;
   const pct=x=>A.air>0?fmt(x/A.air*100,0)+" %":"";
   const grp=(title,list)=>list.length?`<div class="agroup"><div class="trh">${t(title)}</div><div class="agrid">${list.join("")}</div></div>`:"";
@@ -1420,10 +1447,111 @@ function renderAnalysis(f){
     return `<div class="histt">${t(title)}</div><div class="hist">`+bins.map(b=>`<div class="hb" style="height:${(b.s/mx*100).toFixed(1)}%;background:${colFn(b)}" title="${fmtLabel(b)}: ${fmt(b.s,0)} s"></div>`).join("")+`</div><div class="histx">`+bins.map((b,k)=>`<span>${k%every===0?fmtLabel(b,true):""}</span>`).join("")+`</div>`; };
   $("#histSpeed").innerHTML=histo("an_h_speed",A.hs,b=>"var(--accent-2)",(b,short)=>short?String(b.lo):`${b.lo}–${b.hi} km/h`);
   $("#histVario").innerHTML=histo("an_h_vario",A.hvar,b=>`hsl(${Math.round(Math.max(0,Math.min(1,((b.lo+b.hi)/2+2)/4))*120)} 85% 50%)`,(b,short)=>short?fmt(b.lo,1):`${fmt(b.lo,1)}…${fmt(b.hi,1)} m/s`);
+  return A;
+}
+function renderNarrative(f,A,tech,lowPara,minAlt){
+  const box=$("#verdictText"), vb=$("#anaVerdict");
+  if(!A){ box.innerHTML=""; vb.innerHTML=""; return; }
+  const LG=(it,en,fr)=>lang==="en"?en:lang==="fr"?fr:it, B=x=>`<b>${x}</b>`, n0=v=>fmt(v,0), n1=v=>fmt(v,1), n2=v=>fmt(v,2);
+  const C=A.C, th=A.th, E=A.el, sv=A.sv, pc=x=>A.air>0?Math.round(x/A.air*100):0, mp=pc(A.secs[1]), tp=pc(A.secs[2]), gp=pc(A.secs[3]);
+  const model=(f.model||"").replace(/^DEMO\s*[—-]\s*/,"").trim(), m=f.meta||{};
+  let when=(m.dateObj&&m.dateKnown)?m.dateObj.toLocaleDateString(locale(),{weekday:"long",day:"numeric",month:"long",year:"numeric"})+(m.time?` ${LG("alle","at","à")} ${m.time.slice(0,5)}`:""):"";
+  if(when&&!model) when=when.charAt(0).toUpperCase()+when.slice(1);
+  const P=sv?polarData(f,3):null, R=P&&P.res, S=[], pos=[], neg=[], tips=[];
+  const plural=(k,one,many)=>k===1?one:many;
+
+  // 1 · il volo
+  let kind; if(!C.length) kind=LG("Non risulta nessuna salita a motore: il volo è interamente a motore spento (lancio a mano, a verricello o in pendio).","No motor climb is recorded: the whole flight is motor-off (hand launch, winch or slope).","Aucune montée moteur n'est enregistrée : tout le vol est moteur coupé (lancer main, treuil ou pente).");
+  else if(mp<12) kind=LG("Un volo soprattutto «a vela», con il motore usato solo per portarsi in quota.","A mostly soaring flight, with the motor used only to get up to altitude.","Un vol surtout « à voile », le moteur ne servant qu'à prendre de l'altitude.");
+  else if(mp<30) kind=LG("Un volo misto: il motore ti ha riportato più volte in quota.","A mixed flight: the motor took you back up to altitude several times.","Un vol mixte : le moteur t'a remonté plusieurs fois en altitude.");
+  else kind=LG("Un volo in cui il motore ha avuto un ruolo importante.","A flight where the motor played a big part.","Un vol où le moteur a joué un rôle important.");
+  S.push([t("nar_flight"),LG(`${model?B(escapeHtml(model))+": ":""}${when?when+", ":""}volo di ${B(hhmmss(f.dur))}${A.air<f.dur-5?` (${hhmmss(A.air)} in aria)`:""}, quota massima ${B(n0(A.altMax)+" m")}. Il tempo in aria è fatto per il ${B(mp+"% di motore")}, il ${B(tp+"% di termica")} e il ${B(gp+"% di planata")}. ${kind}`,
+    `${model?B(escapeHtml(model))+": ":""}${when?when+", ":""}flight of ${B(hhmmss(f.dur))}${A.air<f.dur-5?` (${hhmmss(A.air)} airborne)`:""}, peak altitude ${B(n0(A.altMax)+" m")}. Air time splits into ${B(mp+"% motor")}, ${B(tp+"% thermal")} and ${B(gp+"% glide")}. ${kind}`,
+    `${model?B(escapeHtml(model))+" : ":""}${when?when+", ":""}vol de ${B(hhmmss(f.dur))}${A.air<f.dur-5?` (${hhmmss(A.air)} en l'air)`:""}, altitude maximale ${B(n0(A.altMax)+" m")}. Le temps en l'air se répartit en ${B(mp+" % moteur")}, ${B(tp+" % ascendance")} et ${B(gp+" % plané")}. ${kind}`)]);
+
+  // 2 · salite a motore
+  if(C.length){
+    const rate=A.secs[1]>0?A.gainMotor/A.secs[1]:0;
+    const rating=rate>=3?LG("salite decise","strong climbs","montées franches"):rate>=1.5?LG("salite regolari","steady climbs","montées régulières"):LG("salite lente","slow climbs","montées lentes");
+    const list=C.slice(0,4).map((c,k)=>`#${k+1} ${hhmmss(c.t0)}: ${n0(c.dur)} s${c.dalt!=null?`, +${n0(c.dalt)} m (${n1(c.dalt/c.dur)} m/s)`:""}`).join(" · ")+(C.length>4?" …":"");
+    S.push([t("nar_motor"),LG(`Il motore è stato acceso ${B(C.length+" "+plural(C.length,"volta","volte"))} per ${B(hhmmss(A.secs[1]))} complessivi, con un guadagno di ${B("+"+n0(A.gainMotor)+" m")} (${n1(rate)} m/s in media: ${rating}). ${list}.${A.launchAlt!=null?` Dopo l'ultima salita eri a ${B(n0(A.launchAlt)+" m")}.`:""}`,
+      `The motor was run ${B(C.length+" "+plural(C.length,"time","times"))} for ${B(hhmmss(A.secs[1]))} in total, gaining ${B("+"+n0(A.gainMotor)+" m")} (${n1(rate)} m/s on average: ${rating}). ${list}.${A.launchAlt!=null?` After the last climb you were at ${B(n0(A.launchAlt)+" m")}.`:""}`,
+      `Le moteur a tourné ${B(C.length+" "+plural(C.length,"fois","fois"))} pendant ${B(hhmmss(A.secs[1]))} au total, pour un gain de ${B("+"+n0(A.gainMotor)+" m")} (${n1(rate)} m/s en moyenne : ${rating}). ${list}.${A.launchAlt!=null?` Après la dernière montée tu étais à ${B(n0(A.launchAlt)+" m")}.`:""}`)]);
+    if(mp<=15) pos.push(LG("Uso parsimonioso del motore","Frugal use of the motor","Usage économe du moteur")); else if(mp>25) neg.push(LG(`Molto tempo a motore (${mp}%)`,`A lot of motor time (${mp}%)`,`Beaucoup de temps moteur (${mp} %)`)),tips.push(LG("prova a salire più in alto in una volta sola e a cercare la termica prima di riaccendere il motore","try to climb higher in one go and look for a thermal before restarting the motor","essaie de monter plus haut en une fois et de chercher une ascendance avant de rallumer le moteur"));
+  }
+
+  // 3 · termiche
+  if(!th.length){
+    S.push([t("nar_therm"),LG(`Non ho rilevato termiche vere e proprie (vario medio sopra +0,3 m/s per almeno 12 secondi): ${gp>60?"il volo è stato una lunga discesa, senza risalite spontanee.":"le risalite sono state brevi o deboli."}`,
+      `No proper thermals were detected (mean vario above +0.3 m/s for at least 12 seconds): ${gp>60?"the flight was one long descent with no natural climbs.":"the climbs were short or weak."}`,
+      `Aucune vraie ascendance détectée (vario moyen supérieur à +0,3 m/s pendant au moins 12 secondes) : ${gp>60?"le vol a été une longue descente, sans montées naturelles.":"les montées ont été brèves ou faibles."}`)]);
+    if(gp>50&&A.air>240){ neg.push(LG("Nessuna termica sfruttata","No thermal used","Aucune ascendance exploitée")); tips.push(LG("cerca le ascendenze sopra superfici scure e asciutte e controlla il vario con la radio: una termica ti fa risparmiare un'intera salita","look for lift over dark, dry ground and watch the vario: one thermal saves a whole motor climb","cherche les ascendances au-dessus des surfaces sombres et sèches et surveille le vario : une ascendance t'économise une montée moteur")); }
+  } else {
+    const best=th.reduce((a,x)=>x.rate>a.rate?x:a,th[0]), avgRate=th.reduce((a,x)=>a+x.rate,0)/th.length;
+    const strength=avgRate>=2?LG("Termiche forti e ben sfruttate.","Strong thermals, well used.","Ascendances fortes et bien exploitées."):avgRate>=1?LG("Termiche discrete.","Decent thermals.","Ascendances correctes."):LG("Termiche deboli: ogni metro guadagnato è costato tempo.","Weak thermals: every metre gained cost time.","Ascendances faibles : chaque mètre gagné a coûté du temps.");
+    const dr=A.hasGps?th.filter(x=>x.drift!=null):[], avgDrift=dr.length?dr.reduce((a,x)=>a+x.drift,0)/dr.length:null;
+    const more=C.length&&A.gainTherm>A.gainMotor;
+    S.push([t("nar_therm"),LG(`Ho trovato ${B(th.length+" "+plural(th.length,"termica","termiche"))}, per ${B(hhmmss(A.secs[2]))} (${tp}% del tempo) e ${B("+"+n0(A.gainTherm)+" m")} guadagnati${more?" — più di quanto ti abbia dato il motore":""}. La migliore è alle ${B(hhmmss(best.t0))}: ${B("+"+n0(best.gain)+" m")} in ${n0(best.dur)} s, ${B(n1(best.rate)+" m/s")} di salita media e un vario massimo di +${n1(best.vmax)} m/s. ${strength}${avgDrift!=null?` Durante la risalita le termiche ti hanno spostato in media di ${n0(avgDrift)} m (deriva col vento).`:""}`,
+      `I found ${B(th.length+" "+plural(th.length,"thermal","thermals"))}, for ${B(hhmmss(A.secs[2]))} (${tp}% of the time) and ${B("+"+n0(A.gainTherm)+" m")} gained${more?" — more than the motor gave you":""}. The best one is at ${B(hhmmss(best.t0))}: ${B("+"+n0(best.gain)+" m")} in ${n0(best.dur)} s, ${B(n1(best.rate)+" m/s")} average climb and a peak vario of +${n1(best.vmax)} m/s. ${strength}${avgDrift!=null?` While climbing, the thermals carried you ${n0(avgDrift)} m on average (wind drift).`:""}`,
+      `J'ai trouvé ${B(th.length+" "+plural(th.length,"ascendance","ascendances"))}, pour ${B(hhmmss(A.secs[2]))} (${tp} % du temps) et ${B("+"+n0(A.gainTherm)+" m")} gagnés${more?" — plus que ce que t'a donné le moteur":""}. La meilleure est à ${B(hhmmss(best.t0))} : ${B("+"+n0(best.gain)+" m")} en ${n0(best.dur)} s, ${B(n1(best.rate)+" m/s")} de montée moyenne et un vario max de +${n1(best.vmax)} m/s. ${strength}${avgDrift!=null?` Pendant la montée, les ascendances t'ont déplacé en moyenne de ${n0(avgDrift)} m (dérive due au vent).`:""}`)]);
+    if(avgRate>=1.5) pos.push(LG(`Termiche sfruttate bene (${n1(avgRate)} m/s di media)`,`Thermals used well (${n1(avgRate)} m/s average)`,`Ascendances bien exploitées (${n1(avgRate)} m/s en moyenne)`));
+    if(th.length>=2&&more) pos.push(LG("Più quota dalle termiche che dal motore","More altitude from thermals than from the motor","Plus d'altitude des ascendances que du moteur"));
+  }
+
+  // 4 · planata
+  if(A.secs[3]>20){
+    const sk=A.sink!=null?-A.sink:null;
+    const skr=sk==null?"":sk<0.5?LG("molto basso, segno di una planata pulita","very low, a sign of clean gliding","très faible, signe d'un plané propre"):sk<0.8?LG("buono","good","bon"):sk<1.2?LG("nella media, tipico di una planata veloce o di aria discendente","average, typical of fast gliding or sinking air","moyen, typique d'un plané rapide ou d'un air descendant"):LG("alto: o voli molto veloce o hai attraversato molta aria discendente","high: either you fly very fast or crossed a lot of sinking air","élevé : soit tu voles très vite, soit tu as traversé beaucoup d'air descendant");
+    let cmp="";
+    if(R&&sv&&sv.med!=null){ const d=sv.med-R.vGlide;
+      const verdict=Math.abs(d)<=8?LG("voli vicino alla velocità di massima efficienza: ottima scelta","you fly close to the best-glide speed: a great choice","tu voles près de la vitesse de finesse max : excellent choix"):
+        d>8?LG(`voli in media ${n0(d)} km/h sopra la velocità di massima efficienza: rallentando tra una termica e l'altra allungheresti la planata`,`you fly on average ${n0(d)} km/h above the best-glide speed: slowing down between thermals would stretch the glide`,`tu voles en moyenne ${n0(d)} km/h au-dessus de la vitesse de finesse max : ralentir entre deux ascendances allongerait le plané`):
+        LG(`voli in media ${n0(-d)} km/h sotto la velocità di massima efficienza: in aria calma conviene accelerare un po'`,`you fly on average ${n0(-d)} km/h below the best-glide speed: in calm air speed up a little`,`tu voles en moyenne ${n0(-d)} km/h sous la vitesse de finesse max : en air calme accélère un peu`);
+      cmp=LG(` La velocità mediana in planata è ${B(n0(sv.med)+" km/h")}; dalla scheda Polare risultano sink minimo ${n2(R.sinkMin)} m/s a ${n0(R.vSink)} km/h e finesse massima ${B(n1(R.glide)+":1")} a ${n0(R.vGlide)} km/h: ${verdict}.`,
+        ` Median glide speed is ${B(n0(sv.med)+" km/h")}; the Polar tab gives a minimum sink of ${n2(R.sinkMin)} m/s at ${n0(R.vSink)} km/h and a best glide of ${B(n1(R.glide)+":1")} at ${n0(R.vGlide)} km/h: ${verdict}.`,
+        ` La vitesse médiane en plané est ${B(n0(sv.med)+" km/h")} ; l'onglet Polaire donne une chute min. de ${n2(R.sinkMin)} m/s à ${n0(R.vSink)} km/h et une finesse max de ${B(n1(R.glide)+":1")} à ${n0(R.vGlide)} km/h : ${verdict}.`);
+      if(Math.abs(d)<=8) pos.push(LG("Velocità di planata vicina al punto di massima efficienza","Glide speed close to the best-glide point","Vitesse de plané proche du point de finesse max"));
+      else if(d>20){ neg.push(LG(`Planata ${n0(d)} km/h sopra la velocità di massima efficienza`,`Gliding ${n0(d)} km/h above best-glide speed`,`Plané ${n0(d)} km/h au-dessus de la vitesse de finesse max`)); tips.push(LG(`tra le termiche rallenta verso ${n0(R.vGlide)} km/h per allungare la planata`,`slow towards ${n0(R.vGlide)} km/h between thermals to stretch the glide`,`ralentis vers ${n0(R.vGlide)} km/h entre les ascendances pour allonger le plané`)); } }
+    S.push([t("nar_glide"),LG(`A motore spento fuori dalle termiche (${B(hhmmss(A.secs[3]))}) il sink medio è ${B(n2(sk)+" m/s")}${sk!=null?`: ${skr}`:""}.${A.gr!=null?` L'efficienza mediana è ${B(n1(A.gr)+":1")}.`:""}${A.liftPct!=null?` Per il ${n0(A.liftPct)}% del tempo di planata il vario era positivo: ${A.liftPct>10?"hai volato spesso in aria sostenuta":"hai volato quasi sempre in aria calma o discendente"}.`:""}${cmp}`,
+      `Motor off and outside thermals (${B(hhmmss(A.secs[3]))}) the average sink is ${B(n2(sk)+" m/s")}${sk!=null?`: ${skr}`:""}.${A.gr!=null?` Median glide ratio is ${B(n1(A.gr)+":1")}.`:""}${A.liftPct!=null?` For ${n0(A.liftPct)}% of the glide time the vario was positive: ${A.liftPct>10?"you often flew in buoyant air":"you mostly flew in calm or sinking air"}.`:""}${cmp}`,
+      `Moteur coupé et hors ascendances (${B(hhmmss(A.secs[3]))}) la chute moyenne est de ${B(n2(sk)+" m/s")}${sk!=null?` : ${skr}`:""}.${A.gr!=null?` La finesse médiane est de ${B(n1(A.gr)+":1")}.`:""}${A.liftPct!=null?` Pendant ${n0(A.liftPct)} % du temps de plané le vario était positif : ${A.liftPct>10?"tu as souvent volé en air porteur":"tu as surtout volé en air calme ou descendant"}.`:""}${cmp}`)]);
+    if(sk!=null){ if(sk<=0.6) pos.push(LG(`Sink in planata molto contenuto (${n2(sk)} m/s)`,`Very low glide sink (${n2(sk)} m/s)`,`Chute en plané très faible (${n2(sk)} m/s)`)); else if(sk>1.0){ neg.push(LG(`Sink in planata elevato (${n2(sk)} m/s)`,`High glide sink (${n2(sk)} m/s)`,`Chute en plané élevée (${n2(sk)} m/s)`)); tips.push(LG("riduci la velocità di crociera e evita le zone di aria discendente","reduce cruise speed and avoid sinking-air zones","réduis la vitesse de croisière et évite les zones d'air descendant")); } }
+  }
+
+  // 5 · velocità e percorso
+  if(sv||A.path!=null){
+    let land="", lj="";
+    if(A.path!=null){ const d=A.dend; lj=d<=50?LG("un atterraggio di precisione","a precision landing","un atterrissage de précision"):d<=150?LG("un atterraggio vicino al punto di lancio","a landing close to the launch point","un atterrissage près du point de lancement"):d<=400?LG("un atterraggio a distanza comoda da recuperare a piedi","a landing at a comfortable walking distance","un atterrissage à distance raisonnable, à rejoindre à pied"):LG("un atterraggio lontano: occhio al recupero","a far landing: mind the retrieval","un atterrissage éloigné : attention à la récupération");
+      if(d<=100) pos.push(LG("Atterraggio vicino al punto di lancio","Landing close to the launch point","Atterrissage près du point de lancement")); else if(d>400){ neg.push(LG(`Atterraggio a ${n0(d)} m dal lancio`,`Landing ${n0(d)} m from launch`,`Atterrissage à ${n0(d)} m du lancement`)); tips.push(LG("pianifica il rientro con più quota di margine","plan the return with more altitude margin","prévois le retour avec plus de marge d'altitude")); }
+      if(A.dmax>1000){ neg.push(LG(`Distanza massima oltre 1 km (${n1(A.dmax/1000)} km)`,`Max distance over 1 km (${n1(A.dmax/1000)} km)`,`Distance max au-delà de 1 km (${n1(A.dmax/1000)} km)`)); tips.push(LG("a più di 1 km controlla il contatto visivo e la copertura radio","beyond 1 km check line of sight and radio coverage","au-delà de 1 km, vérifie le contact visuel et la couverture radio")); }
+      land=LG(` Hai percorso ${B(n1(A.path/1000)+" km")}, allontanandoti al massimo di ${B(n0(A.dmax)+" m")} dal punto di lancio e atterrando a ${B(n0(d)+" m")} da dove sei partito: ${lj}.`,` You covered ${B(n1(A.path/1000)+" km")}, moving at most ${B(n0(A.dmax)+" m")} from the launch point and landing ${B(n0(d)+" m")} from where you started: ${lj}.`,` Tu as parcouru ${B(n1(A.path/1000)+" km")}, en t'éloignant au maximum de ${B(n0(A.dmax)+" m")} du point de lancement et en atterrissant à ${B(n0(d)+" m")} de ton départ : ${lj}.`); }
+    S.push([t("nar_gps"),LG(`${sv?`Velocità massima ${B(n0(sv.max)+" km/h")}${sv.avg!=null?`, media ${B(n0(sv.avg)+" km/h")} a motore spento`:""}.`:""}${land}`,`${sv?`Top speed ${B(n0(sv.max)+" km/h")}${sv.avg!=null?`, ${B(n0(sv.avg)+" km/h")} average with the motor off`:""}.`:""}${land}`,`${sv?`Vitesse maximale ${B(n0(sv.max)+" km/h")}${sv.avg!=null?`, moyenne ${B(n0(sv.avg)+" km/h")} moteur coupé`:""}.`:""}${land}`)]);
+  }
+
+  // 6 · motore e batteria (il vecchio commento tecnico) + passaggio basso
+  const techHtml=tech.map(x=>`<p>${x}</p>`).join("");
+  if(techHtml) S.push([t("nar_tech"),null,techHtml]);
+  if(E.spec!=null){ if(E.spec<=120) pos.push(LG(`Salite efficienti (${n0(E.spec)} mAh/100 m)`,`Efficient climbs (${n0(E.spec)} mAh/100 m)`,`Montées efficaces (${n0(E.spec)} mAh/100 m)`)); else if(E.spec>140){ neg.push(LG(`Consumo alto in salita (${n0(E.spec)} mAh/100 m)`,`High climb consumption (${n0(E.spec)} mAh/100 m)`,`Consommation élevée en montée (${n0(E.spec)} mAh/100 m)`)); tips.push(LG("sali con meno gas: costa meno energia per ogni metro","climb with less throttle: it costs less energy per metre","monte avec moins de gaz : ça coûte moins d'énergie par mètre")); } }
+  if(E.vcell!=null){ if(E.vcell>=3.55) pos.push(LG("Batteria in ottima forma sotto carico","Battery in great shape under load","Batterie en pleine forme sous charge")); else if(E.vcell<3.45){ neg.push(LG(`Tensione bassa sotto carico (${n2(E.vcell)} V/cella)`,`Low voltage under load (${n2(E.vcell)} V/cell)`,`Tension basse sous charge (${n2(E.vcell)} V/élément)`)); tips.push(LG("imposta un allarme di tensione a circa 3,5 V/cella","set a voltage alarm at about 3.5 V/cell","règle une alarme de tension à environ 3,5 V/élément")); } }
+  if(E.tesc!=null&&E.tesc>=70){ neg.push(LG(`Regolatore caldo (${n0(E.tesc)} °C)`,`Hot ESC (${n0(E.tesc)} °C)`,`Variateur chaud (${n0(E.tesc)} °C)`)); tips.push(LG("lascia raffreddare il regolatore tra una salita e l'altra","let the ESC cool between climbs","laisse refroidir le variateur entre deux montées")); }
+  if(lowPara&&minAlt!=null){ neg.push(LG(`Passaggio molto basso (${n0(minAlt)} m dal suolo)`,`Very low pass (${n0(minAlt)} m above ground)`,`Passage très bas (${n0(minAlt)} m du sol)`)); tips.push(LG("tieni più margine di quota: a pochi metri un problema al motore non lascia scampo","keep more altitude margin: a few metres up, a motor problem leaves no way out","garde plus de marge d'altitude : à quelques mètres, un souci moteur ne pardonne pas")); }
+
+  box.innerHTML=S.map(([ti,txt,raw])=>`<div class="nsec"><h3>${ti}</h3>${raw||`<p>${txt}</p>`}</div>`).join("");
+
+  // giudizio finale
+  const score=pos.length-1.5*neg.length;
+  const lvl=neg.length===0&&pos.length>=3?["good","lvl_top"]:score>=1?["good","lvl_good"]:score>=-1?["warn","lvl_fair"]:["crit","lvl_work"];
+  const lvlTxt=t(lvl[1]).toLowerCase();
+  const concl=LG(`Nel complesso è un volo ${B(lvlTxt)}${pos.length?`: ${pos.length} ${plural(pos.length,"punto di forza","punti di forza")}`:""}${neg.length?`${pos.length?" e":":"} ${neg.length} ${plural(neg.length,"cosa da tenere d'occhio","cose da tenere d'occhio")}`:""}.${tips.length?` Per il prossimo volo: ${tips[0]}.`:" Continua così."}`,
+    `Overall rating: ${B(t(lvl[1]))}${pos.length?` — ${pos.length} ${plural(pos.length,"strength","strengths")}`:""}${neg.length?`${pos.length?" and":" —"} ${neg.length} ${plural(neg.length,"thing to watch","things to watch")}`:""}.${tips.length?` For the next flight: ${tips[0]}.`:" Keep it up."}`,
+    `Évaluation globale : ${B(t(lvl[1]))}${pos.length?` — ${pos.length} ${plural(pos.length,"point fort","points forts")}`:""}${neg.length?`${pos.length?" et":" —"} ${neg.length} ${plural(neg.length,"point à surveiller","points à surveiller")}`:""}.${tips.length?` Pour le prochain vol : ${tips[0]}.`:" Continue comme ça."}`);
+  vb.innerHTML=`<div class="vbox"><h3>${t("nar_verdict")} <span class="lvl ${lvl[0]}">${t(lvl[1])}</span></h3><div class="vcols">`+
+    `<div><div class="vl">${t("nar_strong")}</div><ul>${pos.length?pos.map(x=>`<li>${x}</li>`).join(""):'<li class="none">—</li>'}</ul></div>`+
+    `<div><div class="vl">${t("nar_watch")}</div><ul class="w">${neg.length?neg.map(x=>`<li>${x}</li>`).join(""):'<li class="none">—</li>'}</ul></div></div><p>${concl}</p>${tips.length>1?`<p>${tips.slice(1,3).map(x=>"• "+x.charAt(0).toUpperCase()+x.slice(1)).join("<br>")}</p>`:""}</div>`;
 }
 function renderVerdict(f){
-  renderAnalysis(f);
-  const chips=[], paras=[], cells=f.cells||4, C=f.climbs;
+  const A=renderAnalysis(f);
+  const chips=[], paras=[], cells=f.cells||4, C=f.climbs; let lowPara=null;
   const LG=(it,en,fr)=>lang==="en"?en:lang==="fr"?fr:it;
   const cap=pick(f,["Cap.","Cap"]), te=pick(f,["TempESC"]);
   const totMah = C.reduce((a,c)=>a+(c.mah||0),0);
@@ -1432,7 +1560,8 @@ function renderVerdict(f){
   const minCell = (()=>{ const a=C.filter(c=>c.umin).map(c=>c.umin/cells); return a.length?Math.min(...a):null; })();
   const capEnd = cap?Math.max(...cap.vals):null;
   const tescMax = te?Math.max(...te.vals):null;
-  const minAlt = (()=>{const a=altSeries(f);if(!a)return null;const end=f.dur-15;let m=1e9;for(let i=0;i<f.t.length;i++){if(f.t[i]>5&&f.t[i]<end)m=Math.min(m,a.vals[i]);}return m<1e9?m:null;})();
+  const minAlt = (()=>{ const a=altSeries(f); if(!a) return null; let i0=0; while(i0<a.vals.length-1&&!(a.vals[i0]>3)) i0++; let i1=a.vals.length-1; while(i1>i0&&!(a.vals[i1]>3)) i1--;
+    const ta=f.t[i0]+10, tb=f.t[i1]-15; let mn=1e9; for(let i=i0;i<=i1;i++){ if(f.t[i]>ta&&f.t[i]<tb) mn=Math.min(mn,a.vals[i]); } return mn<1e9?mn:null; })();   // passaggio più basso a metà volo (esclusi decollo e atterraggio)
 
   // chips
   chips.push({c:"good",t:LG(`${C.length} salit${C.length===1?'a':'e'} a motore`,`${C.length} motor climb${C.length===1?'':'s'}`,`${C.length} montée${C.length===1?'':'s'} moteur`)});
@@ -1457,7 +1586,7 @@ function renderVerdict(f){
   if(soarRatio>0.4) open+=LG(`: in pratica hai veleggiato per circa il <b>${fmt(soarRatio*100,0)}%</b> del tempo, il motore è stato poco più di un ascensore`,`: you basically soared about <b>${fmt(soarRatio*100,0)}%</b> of the time, the motor was little more than a lift`,`: tu as plané environ <b>${fmt(soarRatio*100,0)}%</b> du temps, le moteur n'a été guère plus qu'un ascenseur`);
   open+=".";
   if(maxAlt!=null) open+=LG(` Sei arrivato fino a <b>${fmt(maxAlt,0)} m</b>${maxVar!=null?` e in termica il vario ha toccato <b>+${fmt(maxVar,1)} m/s</b>`:""}.`,` You reached <b>${fmt(maxAlt,0)} m</b>${maxVar!=null?` and in lift the vario peaked at <b>+${fmt(maxVar,1)} m/s</b>`:""}.`,` Tu es monté jusqu'à <b>${fmt(maxAlt,0)} m</b>${maxVar!=null?` et en ascendance le vario a atteint <b>+${fmt(maxVar,1)} m/s</b>`:""}.`);
-  paras.push(open);
+  // (l'introduzione ora è nella narrativa "Analisi")
   if(spec!=null){
     let p=LG(`Sui consumi: le salite ti costano in media <b>${fmt(spec,0)} mAh ogni 100 m</b> di quota. `,`On consumption: climbs cost you on average <b>${fmt(spec,0)} mAh per 100 m</b> of altitude. `,`Côté conso : les montées coûtent en moyenne <b>${fmt(spec,0)} mAh par 100 m</b> d'altitude. `);
     p+= spec<115?LG("È un gran bel numero — stai salendo dolce e la batteria la sfrutti bene. ","That's a great number — you climb gently and use the pack well. ","Très bon chiffre — tu montes en douceur et tu exploites bien l'accu. "):
@@ -1473,7 +1602,7 @@ function renderVerdict(f){
     else if(minCell<3.55) paras.push(LG(`Il pacco ha lavorato onestamente: il punto più basso sotto carico è <b>${fmt(minCell,2)} V/cella</b>. Va bene, ma sulle salite di fine volo tienilo d'occhio.`,`The pack worked honestly: its lowest point under load is <b>${fmt(minCell,2)} V/cell</b>. Fine, but keep an eye on it during late-flight climbs.`,`L'accu a travaillé honnêtement : son point le plus bas sous charge est <b>${fmt(minCell,2)} V/cellule</b>. C'est bon, mais surveille-le sur les montées de fin de vol.`));
     else paras.push(LG(`Il pacco è in forma: anche nel momento di sforzo maggiore non è mai sceso sotto <b>${fmt(minCell,2)} V/cella</b> sotto carico. Nessun segno di sofferenza, e la corrente è pulita — niente che faccia pensare a contatti o saldature ballerine.`,`The pack is in good shape: even at peak effort it never dropped below <b>${fmt(minCell,2)} V/cell</b> under load. No sign of strain, and the current is clean — nothing suggesting dodgy contacts or cold solder joints.`,`L'accu est en forme : même au plus fort de l'effort il n'est jamais descendu sous <b>${fmt(minCell,2)} V/cellule</b> sous charge. Aucun signe de souffrance, et le courant est propre — rien qui évoque de mauvais contacts ou soudures.`));
   }
-  if(minAlt!=null && minAlt<20) paras.push(LG(`Una cosa che salta all'occhio: a un certo punto eri a <b>${fmt(minAlt,0)} m</b> dal suolo. Salvate così sono roba da manico, ma a quella quota il margine è quasi zero — se il motore non parte pulito o becchi una discesa, atterri dove capita. Bellissime, ma tienile come eccezione.`,`One thing that stands out: at some point you were <b>${fmt(minAlt,0)} m</b> off the ground. Saves like that take skill, but at that height the margin is almost zero — if the motor doesn't fire cleanly or you hit sink, you land wherever you can. Great, but keep them the exception.`,`Un point qui saute aux yeux : à un moment tu étais à <b>${fmt(minAlt,0)} m</b> du sol. De tels rattrapages demandent du métier, mais à cette hauteur la marge est quasi nulle — si le moteur ne démarre pas net ou si tu prends une descendance, tu atterris où tu peux. Superbe, mais à garder en exception.`));
+  if(minAlt!=null && minAlt<20) lowPara=(LG(`Una cosa che salta all'occhio: a un certo punto eri a <b>${fmt(minAlt,0)} m</b> dal suolo. Salvate così sono roba da manico, ma a quella quota il margine è quasi zero — se il motore non parte pulito o becchi una discesa, atterri dove capita. Bellissime, ma tienile come eccezione.`,`One thing that stands out: at some point you were <b>${fmt(minAlt,0)} m</b> off the ground. Saves like that take skill, but at that height the margin is almost zero — if the motor doesn't fire cleanly or you hit sink, you land wherever you can. Great, but keep them the exception.`,`Un point qui saute aux yeux : à un moment tu étais à <b>${fmt(minAlt,0)} m</b> du sol. De tels rattrapages demandent du métier, mais à cette hauteur la marge est quasi nulle — si le moteur ne démarre pas net ou si tu prends une descendance, tu atterris où tu peux. Superbe, mais à garder en exception.`));
   if(capEnd!=null){
     let p=LG(`A fine volo hai tirato giù <b>${fmt(capEnd,0)} mAh</b> dal pacco`,`By the end you pulled <b>${fmt(capEnd,0)} mAh</b> from the pack`,`En fin de vol tu as tiré <b>${fmt(capEnd,0)} mAh</b> de l'accu`);
     if(totMah>0) p+=LG(` (circa ${fmt(totMah,0)} dalle salite, il resto se n'è andato nell'impianto RX/servi durante il volo)`,` (about ${fmt(totMah,0)} from the climbs, the rest went to the RX/servos during the flight)`,` (environ ${fmt(totMah,0)} pour les montées, le reste est parti dans le RX/servos pendant le vol)`);
@@ -1486,10 +1615,9 @@ function renderVerdict(f){
   }
   if(q){ let bad=0; const end=f.dur-15; for(let i=0;i<f.t.length;i++){ if(f.t[i]>5&&f.t[i]<end&&q.vals[i]<80) bad++; }
     if(bad>80) paras.push(LG(`Un appunto sulla radio: in volo ci sono stati diversi cali di qualità del segnale. La ricevente ha tenuto, ma darei un'occhiata a come sono messe le antenne.`,`A radio note: there were several signal-quality dips in flight. The receiver held, but I'd check how the antennas are routed.`,`Une note radio : il y a eu plusieurs baisses de qualité du signal en vol. Le récepteur a tenu, mais je vérifierais le placement des antennes.`)); }
-  paras.push(LG(`Per il resto, impianto sano e motore usato con la testa. ${C.length>2?'Hai lavorato bene le termiche.':''}`,`Otherwise, healthy setup and the motor used with judgement. ${C.length>2?'You worked the thermals well.':''}`,`Pour le reste, installation saine et moteur utilisé avec jugeote. ${C.length>2?'Tu as bien exploité les ascendances.':''}`));
 
   $("#chips").innerHTML = chips.map(c=>`<span class="chip ${c.c}">${c.t}</span>`).join("");
-  $("#verdictText").innerHTML = paras.map(p=>`<p>${p}</p>`).join("");
+  renderNarrative(f,A,paras,lowPara,minAlt);
 
   // climb table
   if(C.length){

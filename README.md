@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.19**
+- Versione corrente: **v1.20**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -131,8 +131,16 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 - **Popup salita**: clic su una banda → riepilogo (durata, Δquota, I picco/media, V/cella, mAh).
 - Interazioni in `setupMainInteractions()`.
 
-**Analisi volo (`ju`, ex "Giudizio")** — `analyzeFlight(f)` + `renderAnalysis(f)` (sempre sul volo intero)
-- **Riepilogo a schede** per gruppo: *Volo* (durata, tempo in volo, quota max, quota a fine motore, guadagno a motore e in termica, tempo motore/termica/planata con %),
+**Analisi volo (`ju`, ex "Giudizio")** — `analyzeFlight(f)` + `renderAnalysis(f)` + `renderNarrative(...)` (sempre sul volo intero)
+- **In alto, "Analisi" — narrativa descrittiva** (`renderNarrative`), a due colonne da 1300 px, in sezioni con titolo: *Il volo* (modello, data, durata, quota massima, ripartizione motore/termica/planata, tipo di volo),
+  *Lancio e salite a motore* (n°, tempo, guadagno, rateo medio e giudizio, elenco delle salite), *Termiche* (n°, tempo, guadagno, la migliore, valutazione, deriva col vento), *Planata* (sink medio con valutazione,
+  efficienza, % di aria sostenuta e **confronto della velocità mediana con la polare**: sopra/sotto/vicina alla velocità di massima efficienza), *Velocità e percorso* (GPS: velocità, km percorsi, distanza max, precisione dell'atterraggio),
+  *Motore e batteria* (commento tecnico: mAh/100 m, sag, capacità, ESC, qualità radio — solo con dati elettrici).
+- **Giudizio** in un riquadro evidenziato: livello (**Ottimo / Buono / Discreto / Da migliorare**) da `punti di forza − 1,5 × cose da tenere d'occhio` (Ottimo = nessuna criticità e ≥ 3 punti di forza), elenchi *Punti di forza* e *Da tenere d'occhio*,
+  conclusione con il consiglio per il prossimo volo. Regole: forza = uso parsimonioso del motore (≤ 15 %), termiche ≥ 1,5 m/s, più quota dalle termiche che dal motore, sink in planata ≤ 0,6 m/s, velocità vicina alla finesse massima (± 8 km/h),
+  atterraggio entro 100 m, ≤ 120 mAh/100 m, ≥ 3,55 V/cella; attenzione = nessuna termica con planata lunga, sink > 1 m/s, passaggio sotto i 20 m a metà volo (esclusi i primi 10 s e gli ultimi 15 s), < 3,45 V/cella, ESC ≥ 70 °C, > 140 mAh/100 m, atterraggio oltre 400 m, distanza oltre 1 km, planata 20 km/h sopra la finesse massima, motore > 25 %.
+- Testi in italiano, inglese e francese.
+- **Riepilogo dati** in quattro **riquadri bordati** con titolo in evidenza (Volo · Termiche e planata · Velocità e percorso (GPS) · Motore e batteria), a due colonne da 1100 px, con le schede per gruppo: *Volo* (durata, tempo in volo, quota max, quota a fine motore, guadagno a motore e in termica, tempo motore/termica/planata con %),
   *Termiche e planata* (numero, miglior termica, rateo medio, sink medio, efficienza mediana, % vario > 0 in planata), *Velocità e percorso (GPS)* (max/media/mediana,
   percorso, distanza max e dal punto di partenza all'atterraggio), *Motore e batteria* (mAh, Wh, corrente e potenza max, V/cella min con semaforo, Rint, mAh/100 m, ESC max).
   I gruppi e le schede compaiono solo se i canali necessari esistono (un log GPS non mostra la batteria e viceversa).
@@ -140,7 +148,7 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 - **Termiche rilevate**: tratti a motore spento (esclusi i 3 s dopo lo spegnimento) con vario medio ±3 s > **+0,3 m/s** per almeno **12 s** (pause < 6 s unite, mai attraverso il motore),
   guadagno ≥ 3 m. Tabella: inizio, durata, guadagno (quota max − quota di ingresso), rateo, vario max, quota di ingresso e, col GPS, **deriva** orizzontale.
 - **Distribuzioni**: istogrammi del tempo per velocità (in planata, fasce da 10 km/h) e per vario (a motore spento, fasce da 0,5 m/s).
-- **Commento automatico** (il vecchio giudizio, su due colonne da 1100 px) e tabella delle **salite a motore**. I chip e i paragrafi su mAh/100 m e sag compaiono solo con dati elettrici.
+- Tabella delle **salite a motore** in fondo. I chip e i paragrafi su mAh/100 m e sag compaiono solo con dati elettrici.
 
 **Grafico (`gr`)**
 - **Pannello Variabili (live)** a sinistra (sopra il grafico su schermi stretti): elenco verticale di tutte le variabili del volo con spunta,
@@ -311,6 +319,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.20** — **Analisi volo**: in alto la narrativa **"Analisi"** (descrittiva, più estesa) con **giudizio finale** (livello, punti di forza, cose da tenere d'occhio, consiglio); i gruppi di dati sono in riquadri bordati con titolo in grassetto. Corretto il falso "passaggio molto basso (0 m)" che contava i secondi a terra.
 - **v1.19** — scheda **Giudizio → Analisi volo** ampliata (riepilogo a schede, fasi del volo, termiche rilevate, distribuzioni, commento, salite); scheda **Polare** con colonna destra di dati e info (risultati, coefficienti della curva, tabella delle fasce). Corretti i chip "0 mAh/100m" e "sag min —" che comparivano per i log senza dati elettrici.
 - **v1.18** — Traiettoria: layout a **tre colonne** (comandi a sinistra, dati del volo a destra) e **pan col tasto destro** del mouse; zoom con la rotella verso il cursore. File di esempio corretto (la riga `$SMGPS2` ora ha il formato atteso dal lettore: la salita a motore viene riconosciuta).
 - **v1.17** — scheda Traiettoria: comandi e variabili in **colonna a sinistra** sul PC (vista, zoom, riproduzione con velocità, legenda, valori dell'aliante e di tutti i canali) e grafico a tutta altezza. **Bugfix**: i menu "Dettaglio" non si influenzano più con gli altri menu (Fascia della Polare, Quota ×, velocità) che prima ne alteravano il valore.
