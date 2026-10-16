@@ -232,6 +232,43 @@
   .hint{color:var(--muted);font-size:.8rem;margin-top:8px}
   .empty{color:var(--muted);font-size:.9rem;padding:30px 10px;text-align:center}
 
+  /* polare: colonna dati a destra */
+  .polayout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+  .pomain{min-width:0}
+  .popanel{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .pochips{flex-direction:column;align-items:stretch;margin-bottom:6px} .pochips .chip{justify-content:flex-start}
+  .polegend{flex-direction:column;align-items:flex-start;gap:6px;margin-top:0}
+  .poband{max-height:300px;overflow:auto}
+  .poband table{font-size:.74rem} .poband th,.poband td{padding:4px 6px}
+  .poband tr.hlS td{color:var(--good);font-weight:600} .poband tr.hlG td{color:var(--warn);font-weight:600}
+  @media(min-width:1000px){
+    .polayout{grid-template-columns:minmax(0,1fr) 340px}
+    .popanel{max-height:calc(100vh - 290px);overflow-y:auto;padding-right:4px}
+  }
+
+  /* analisi volo */
+  .agroup{margin-top:14px} .agroup:first-child{margin-top:0}
+  .agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px}
+  .atile{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0}
+  .atile .al{font-size:.66rem;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .atile .av{font:600 1.35rem "IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;margin-top:3px}
+  .atile .av .u{font-size:.72rem;color:var(--muted);font-weight:500;margin-left:3px}
+  .atile .as{font-size:.7rem;color:var(--muted);margin-top:1px}
+  .atile.good .av{color:var(--good)} .atile.warn .av{color:var(--warn)} .atile.crit .av{color:var(--crit)} .atile.motor .av{color:var(--motor)}
+  .phasebar{position:relative;display:flex;height:30px;border-radius:7px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+  .phasebar i{display:block;height:100%;min-width:1px}
+  .phaseticks{position:relative;height:16px;margin-top:3px;font:500 .66rem "IBM Plex Mono",monospace;color:var(--muted)}
+  .phaseticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+  .anarow{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:16px;align-items:start} .anarow>.card+.card{margin-top:0}
+  @media(min-width:1100px){ .anarow{grid-template-columns:minmax(0,3fr) minmax(0,2fr)} }
+  .hist{display:flex;align-items:flex-end;gap:2px;height:96px;border-bottom:1px solid var(--line);padding:0 2px}
+  .hist .hb{flex:1;min-width:0;border-radius:3px 3px 0 0;opacity:.9;min-height:1px}
+  .histx{display:flex;gap:2px;padding:0 2px;font:500 .62rem "IBM Plex Mono",monospace;color:var(--muted)}
+  .histx span{flex:1;min-width:0;text-align:center;white-space:nowrap;overflow:visible}
+  .histt{font-size:.7rem;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:10px 0 6px}
+  .histt:first-child{margin-top:0}
+  @media(min-width:1100px){ #verdictText{columns:2;column-gap:36px} #verdictText p{break-inside:avoid-column} }
+
   /* scheda Grafico: pannello variabili a sinistra (live) */
   .grlayout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;align-items:start}
   .grmain{min-width:0}
@@ -346,7 +383,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.18</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.19</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -387,7 +424,7 @@
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" aria-selected="true"  data-p="ov" data-i18n="tab_ov">Panoramica</button>
-    <button class="tab" role="tab" aria-selected="false" data-p="ju" data-i18n="tab_ju">Giudizio</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="ju" data-i18n="tab_ju">Analisi volo</button>
     <button class="tab" role="tab" aria-selected="false" data-p="gr" data-i18n="tab_gr">Grafico</button>
     <button class="tab" role="tab" aria-selected="false" data-p="tb" data-i18n="tab_tb">Tabella</button>
     <button class="tab" role="tab" aria-selected="false" data-p="po" data-i18n="tab_po">Polare</button>
@@ -418,10 +455,33 @@
   <!-- PAGE: GIUDIZIO -->
   <section data-page="ju" hidden>
     <div class="card verdict">
-      <h2><span data-i18n="ju_h2">Giudizio di volo</span> <span class="tag">AUTO</span></h2>
+      <h2><span data-i18n="ju_h2">Analisi del volo</span> <span class="tag">AUTO</span></h2>
       <div class="chips" id="chips"></div>
+      <div id="anaTiles"></div>
+    </div>
+    <div class="card">
+      <h2><span data-i18n="an_sec_phases">Fasi del volo</span> <span class="tag">TIMELINE</span></h2>
+      <div id="anaPhases"></div>
+    </div>
+    <div class="anarow">
+      <div class="card">
+        <h2><span data-i18n="an_sec_thermals">Termiche rilevate</span> <span class="tag">THERMALS</span></h2>
+        <div class="scroll-x" id="thermWrap"></div>
+        <p class="hint" data-i18n="an_th_hint"></p>
+      </div>
+      <div class="card">
+        <h2><span data-i18n="an_sec_dist">Distribuzioni</span> <span class="tag">HIST</span></h2>
+        <div id="histSpeed"></div>
+        <div id="histVario"></div>
+      </div>
+    </div>
+    <div class="card verdict">
+      <h2><span data-i18n="an_sec_comment">Commento automatico</span></h2>
       <div id="verdictText"></div>
-      <div class="scroll-x" id="climbTableWrap" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
+      <h2><span data-i18n="an_sec_climbs">Salite a motore</span> <span class="tag">MOTOR</span></h2>
+      <div class="scroll-x" id="climbTableWrap"></div>
     </div>
   </section>
 
@@ -502,11 +562,19 @@
           <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="poPts" checked><span data-i18n="po_pts">Punti</span></label>
         </span>
       </h2>
-      <div class="chips" id="poRes"></div>
-      <p class="empty" id="poEmpty" hidden></p>
-      <div class="chart-wrap" id="poWrap"><canvas id="polarChart"></canvas></div>
-      <div class="legend" id="poLegend"></div>
-      <p class="hint" data-i18n="po_hint"></p>
+      <div class="polayout">
+        <div class="pomain">
+          <p class="empty" id="poEmpty" hidden></p>
+          <div class="chart-wrap" id="poWrap"><canvas id="polarChart"></canvas></div>
+        </div>
+        <aside class="popanel" id="poPanel">
+          <div class="trsec"><div class="trh" data-i18n="po_sec_res">Risultati</div><div class="chips pochips" id="poRes"></div><div id="poRows"></div></div>
+          <div class="trsec"><div class="trh" data-i18n="po_sec_curve">Curva polare</div><div id="poFit"></div></div>
+          <div class="trsec"><div class="trh" data-i18n="po_sec_bands">Fasce di velocità</div><div class="poband" id="poBands"></div></div>
+          <div class="trsec"><div class="trh" data-i18n="po_sec_leg">Legenda</div><div class="legend polegend" id="poLegend"></div></div>
+          <div class="trsec"><div class="trh" data-i18n="po_sec_notes">Note</div><div class="trnote" data-i18n="po_hint"></div></div>
+        </aside>
+      </div>
     </div>
   </section>
 
@@ -660,12 +728,12 @@ const $ = s => document.querySelector(s);
 const T = {
   it:{
     sub_demo:"dati di esempio", sub_loaded:"log caricato", tagline:"analisi log di volo",
-    tab_ov:"Panoramica", tab_ju:"Giudizio", tab_gr:"Grafico", tab_tb:"Tabella",
+    tab_ov:"Panoramica", tab_ju:"Analisi volo", tab_gr:"Grafico", tab_tb:"Tabella",
     setup:"Set up", soon:"presto", logo_title:"Clicca per cambiare il logo",
     load_title:"Carica un log Jeti grezzo (.log) o CSV esportato",
     sm_title:"Carica un file NMEA SM Modellbau (GPS)", rz_title:"Caricamento RZ GPS — in arrivo",
     ov_h2:"Quota & salite a motore", leg_alt:"Quota relativa", leg_motor:"Salita a motore (corrente assorbita)",
-    ju_h2:"Giudizio di volo", gr_h2:"Grafico selezionabile",
+    ju_h2:"Analisi del volo", gr_h2:"Grafico selezionabile",
     gr_hint:"Usa <b>Dettaglio</b> (in alto a destra) per aumentare la risoluzione delle curve; usa il <b>quadratino colorato</b> accanto a ogni variabile nella legenda per cambiarne il colore.",
     rep_label:"Report", detail:"Dettaglio", det_low:"Basso", det_med:"Medio", det_high:"Alto", det_max:"Massimo",
     tb_h2:"Tabella dati", resolution:"Risoluzione", copycsv:"Copia CSV", copied:"Copiato ✓", copyfail:"Copia non riuscita",
@@ -690,16 +758,16 @@ const T = {
     focus:"Focus", back:"Indietro", drill_isolate:"Isola questa variabile nel grafico",
     drill_hint:"Trascina sul grafico per analizzare un tratto; clic su una salita per il riepilogo; clic su una KPI per aprirla nel grafico.",
     help:"Guida",
-    help_html:`<h3>Come usare RZ Flight Dashboard</h3><ul><li><b>Scheda Set up</b>: consente di creare i tuoi report (le variabili con <span class="fx">ƒ</span> sono derivate, calcolate dai dati reali) e di personalizzare i colori della dashboard.</li><li><b>In alto</b>: bandierine per la lingua, logo cliccabile a sinistra.</li><li><b>Scheda Panoramica</b>: dati chiave, grafico quota con le salite a motore evidenziate; passa il cursore sul grafico per leggere i valori. <b>Drill-through</b>: trascina sul grafico per focalizzare un intervallo (KPI e tabella si ricalcolano, ✕ per azzerare), clic su una salita per il riepilogo, clic su una KPI per aprirla nel Grafico.</li><li><b>Scheda Giudizio</b>: analisi automatica del volo.</li><li><b>Scheda Grafico</b>: scegli un report dal menu a tendina. Il pulsante <b>Dettaglio</b> alza o abbassa la risoluzione; i quadratini colorati accanto alle variabili cambiano il colore; ogni variabile ha la sua scala laterale. <b>Zoom</b> con la rotella del mouse e scorrimento con la barra sotto il grafico (⟲ per azzerare); clic su una curva per isolarla (← Indietro per tornare alla vista precedente).</li><li><b>Scheda Tabella</b>: include tutti i dati, risoluzione regolabile e <b>Copia CSV</b>.</li><li><b>Scheda Traiettoria</b> (log GPS): traiettoria 3D del volo colorata dal vario (verde salita, rosso discesa); trascina per ruotare, rotella per zoomare, cursore e ▶ per seguire il volo.</li><li><b>Scheda Polare</b> (log GPS): grafico velocità/sink della planata a motore spento, con curva polare, sink minimo e finesse massima.</li><li><b>Scheda Archivio</b> (Chrome/Edge su PC): scegli una cartella, salva i voli con modello, pacco e note; spunta 2–4 voli per confrontare curve sovrapposte, salite e planate; in fondo il riepilogo per pacco.</li></ul>`
+    help_html:`<h3>Come usare RZ Flight Dashboard</h3><ul><li><b>Scheda Set up</b>: consente di creare i tuoi report (le variabili con <span class="fx">ƒ</span> sono derivate, calcolate dai dati reali) e di personalizzare i colori della dashboard.</li><li><b>In alto</b>: bandierine per la lingua, logo cliccabile a sinistra.</li><li><b>Scheda Panoramica</b>: dati chiave, grafico quota con le salite a motore evidenziate; passa il cursore sul grafico per leggere i valori. <b>Drill-through</b>: trascina sul grafico per focalizzare un intervallo (KPI e tabella si ricalcolano, ✕ per azzerare), clic su una salita per il riepilogo, clic su una KPI per aprirla nel Grafico.</li><li><b>Scheda Analisi volo</b>: riepilogo del volo, fasi (motore, termica, planata), termiche rilevate, distribuzioni di velocità e vario, dati di batteria/GPS e commento automatico.</li><li><b>Scheda Grafico</b>: scegli un report dal menu a tendina. Il pulsante <b>Dettaglio</b> alza o abbassa la risoluzione; i quadratini colorati accanto alle variabili cambiano il colore; ogni variabile ha la sua scala laterale. <b>Zoom</b> con la rotella del mouse e scorrimento con la barra sotto il grafico (⟲ per azzerare); clic su una curva per isolarla (← Indietro per tornare alla vista precedente).</li><li><b>Scheda Tabella</b>: include tutti i dati, risoluzione regolabile e <b>Copia CSV</b>.</li><li><b>Scheda Traiettoria</b> (log GPS): traiettoria 3D del volo colorata dal vario (verde salita, rosso discesa); trascina per ruotare, rotella per zoomare, cursore e ▶ per seguire il volo.</li><li><b>Scheda Polare</b> (log GPS): grafico velocità/sink della planata a motore spento, con curva polare, sink minimo e finesse massima.</li><li><b>Scheda Archivio</b> (Chrome/Edge su PC): scegli una cartella, salva i voli con modello, pacco e note; spunta 2–4 voli per confrontare curve sovrapposte, salite e planate; in fondo il riepilogo per pacco.</li></ul>`
   },
   en:{
     sub_demo:"sample data", sub_loaded:"log loaded", tagline:"flight log analysis",
-    tab_ov:"Overview", tab_ju:"Assessment", tab_gr:"Chart", tab_tb:"Table",
+    tab_ov:"Overview", tab_ju:"Flight analysis", tab_gr:"Chart", tab_tb:"Table",
     setup:"Set up", soon:"soon", logo_title:"Click to change the logo",
     load_title:"Load a raw Jeti log (.log) or exported CSV",
     sm_title:"Load an SM Modellbau NMEA file (GPS)", rz_title:"RZ GPS loading — coming soon",
     ov_h2:"Altitude & motor climbs", leg_alt:"Relative altitude", leg_motor:"Motor climb (current draw)",
-    ju_h2:"Flight assessment", gr_h2:"Selectable chart",
+    ju_h2:"Flight analysis", gr_h2:"Selectable chart",
     gr_hint:"Use <b>Detail</b> (top right) to increase the resolution of the curves; use the <b>colour chip</b> next to each variable in the legend to change its colour.",
     rep_label:"Report", detail:"Detail", det_low:"Low", det_med:"Medium", det_high:"High", det_max:"Max",
     tb_h2:"Data table", resolution:"Resolution", copycsv:"Copy CSV", copied:"Copied ✓", copyfail:"Copy failed",
@@ -724,16 +792,16 @@ const T = {
     focus:"Focus", back:"Back", drill_isolate:"Isolate this variable in the chart",
     drill_hint:"Drag on the chart to analyse a segment; click a climb for its summary; click a KPI to open it in the chart.",
     help:"Guide",
-    help_html:`<h3>How to use RZ Flight Dashboard</h3><ul><li><b>Set up tab</b>: lets you create your reports (variables marked <span class="fx">ƒ</span> are derived, computed from the real data) and customise the dashboard colours.</li><li><b>Top</b>: flags for the language, clickable logo on the left.</li><li><b>Overview tab</b>: key figures, altitude chart with motor climbs highlighted; hover over the chart to read values. <b>Drill-through</b>: drag on the chart to focus a window (KPIs and table recompute, ✕ to reset), click a climb for its summary, click a KPI to open it in the Chart.</li><li><b>Assessment tab</b>: automatic flight analysis.</li><li><b>Chart tab</b>: pick a report from the drop-down. The <b>Detail</b> button raises or lowers the resolution; the colour chips next to the variables change their colour; every variable has its own side axis. <b>Zoom</b> with the mouse wheel and pan with the bar below the chart (⟲ to reset); click a curve to isolate it (← Back to return to the previous view).</li><li><b>Table tab</b>: includes all the data, adjustable resolution and <b>Copy CSV</b>.</li><li><b>Trajectory tab</b> (GPS logs): 3D flight path coloured by vario (green climb, red sink); drag to rotate, wheel to zoom, slider and ▶ to follow the flight.</li><li><b>Polar tab</b> (GPS logs): speed/sink chart of motor-off glides, with polar curve, minimum sink and best glide ratio.</li><li><b>Archive tab</b> (Chrome/Edge on a computer): choose a folder, save flights with model, pack and notes; tick 2–4 flights to compare overlaid curves, climbs and glides; summary by pack at the bottom.</li></ul>`
+    help_html:`<h3>How to use RZ Flight Dashboard</h3><ul><li><b>Set up tab</b>: lets you create your reports (variables marked <span class="fx">ƒ</span> are derived, computed from the real data) and customise the dashboard colours.</li><li><b>Top</b>: flags for the language, clickable logo on the left.</li><li><b>Overview tab</b>: key figures, altitude chart with motor climbs highlighted; hover over the chart to read values. <b>Drill-through</b>: drag on the chart to focus a window (KPIs and table recompute, ✕ to reset), click a climb for its summary, click a KPI to open it in the Chart.</li><li><b>Flight analysis tab</b>: flight summary, phases (motor, thermal, glide), detected thermals, speed and vario distributions, battery/GPS data and automatic commentary.</li><li><b>Chart tab</b>: pick a report from the drop-down. The <b>Detail</b> button raises or lowers the resolution; the colour chips next to the variables change their colour; every variable has its own side axis. <b>Zoom</b> with the mouse wheel and pan with the bar below the chart (⟲ to reset); click a curve to isolate it (← Back to return to the previous view).</li><li><b>Table tab</b>: includes all the data, adjustable resolution and <b>Copy CSV</b>.</li><li><b>Trajectory tab</b> (GPS logs): 3D flight path coloured by vario (green climb, red sink); drag to rotate, wheel to zoom, slider and ▶ to follow the flight.</li><li><b>Polar tab</b> (GPS logs): speed/sink chart of motor-off glides, with polar curve, minimum sink and best glide ratio.</li><li><b>Archive tab</b> (Chrome/Edge on a computer): choose a folder, save flights with model, pack and notes; tick 2–4 flights to compare overlaid curves, climbs and glides; summary by pack at the bottom.</li></ul>`
   },
   fr:{
     sub_demo:"données d'exemple", sub_loaded:"log chargé", tagline:"analyse de logs de vol",
-    tab_ov:"Aperçu", tab_ju:"Évaluation", tab_gr:"Graphique", tab_tb:"Tableau",
+    tab_ov:"Aperçu", tab_ju:"Analyse du vol", tab_gr:"Graphique", tab_tb:"Tableau",
     setup:"Set up", soon:"bientôt", logo_title:"Cliquer pour changer le logo",
     load_title:"Charger un log Jeti brut (.log) ou CSV exporté",
     sm_title:"Charger un fichier NMEA SM Modellbau (GPS)", rz_title:"Chargement RZ GPS — bientôt",
     ov_h2:"Altitude & montées moteur", leg_alt:"Altitude relative", leg_motor:"Montée moteur (courant absorbé)",
-    ju_h2:"Évaluation du vol", gr_h2:"Graphique sélectionnable",
+    ju_h2:"Analyse du vol", gr_h2:"Graphique sélectionnable",
     gr_hint:"Utilisez <b>Détail</b> (en haut à droite) pour augmenter la résolution des courbes ; utilisez la <b>pastille de couleur</b> à côté de chaque variable dans la légende pour changer sa couleur.",
     rep_label:"Rapport", detail:"Détail", det_low:"Bas", det_med:"Moyen", det_high:"Haut", det_max:"Max",
     tb_h2:"Tableau de données", resolution:"Résolution", copycsv:"Copier CSV", copied:"Copié ✓", copyfail:"Échec de la copie",
@@ -758,7 +826,7 @@ const T = {
     focus:"Focus", back:"Retour", drill_isolate:"Isoler cette variable dans le graphe",
     drill_hint:"Faites glisser sur le graphe pour analyser une portion ; cliquez sur une montée pour son résumé ; cliquez sur une KPI pour l'ouvrir dans le graphe.",
     help:"Guide",
-    help_html:`<h3>Comment utiliser RZ Flight Dashboard</h3><ul><li><b>Onglet Set up</b> : permet de créer vos rapports (les variables marquées <span class="fx">ƒ</span> sont dérivées, calculées à partir des données réelles) et de personnaliser les couleurs du tableau de bord.</li><li><b>En haut</b> : drapeaux pour la langue, logo cliquable à gauche.</li><li><b>Onglet Aperçu</b> : données clés, graphe d'altitude avec les montées moteur mises en évidence ; survolez le graphe pour lire les valeurs. <b>Drill-through</b> : faites glisser sur le graphe pour focaliser une plage (les KPI et le tableau se recalculent, ✕ pour réinitialiser), cliquez sur une montée pour son résumé, cliquez sur une KPI pour l'ouvrir dans le Graphique.</li><li><b>Onglet Évaluation</b> : analyse automatique du vol.</li><li><b>Onglet Graphique</b> : choisissez un rapport dans le menu déroulant. Le bouton <b>Détail</b> augmente ou diminue la résolution ; les pastilles de couleur à côté des variables changent la couleur ; chaque variable a son propre axe latéral. <b>Zoom</b> avec la molette et défilement avec la barre sous le graphe (⟲ pour réinitialiser) ; cliquez sur une courbe pour l'isoler (← Retour pour revenir à la vue précédente).</li><li><b>Onglet Tableau</b> : inclut toutes les données, résolution réglable et <b>Copier CSV</b>.</li><li><b>Onglet Trajectoire</b> (logs GPS) : trajectoire 3D du vol colorée par le vario (vert montée, rouge descente) ; faites glisser pour tourner, molette pour zoomer, curseur et ▶ pour suivre le vol.</li><li><b>Onglet Polaire</b> (logs GPS) : graphique vitesse/chute des plané moteur coupé, avec courbe polaire, chute minimale et finesse maximale.</li><li><b>Onglet Archives</b> (Chrome/Edge sur ordinateur) : choisissez un dossier, enregistrez les vols avec modèle, accu et notes ; cochez 2 à 4 vols pour comparer courbes superposées, montées et planés ; récapitulatif par accu en bas.</li></ul>`
+    help_html:`<h3>Comment utiliser RZ Flight Dashboard</h3><ul><li><b>Onglet Set up</b> : permet de créer vos rapports (les variables marquées <span class="fx">ƒ</span> sont dérivées, calculées à partir des données réelles) et de personnaliser les couleurs du tableau de bord.</li><li><b>En haut</b> : drapeaux pour la langue, logo cliquable à gauche.</li><li><b>Onglet Aperçu</b> : données clés, graphe d'altitude avec les montées moteur mises en évidence ; survolez le graphe pour lire les valeurs. <b>Drill-through</b> : faites glisser sur le graphe pour focaliser une plage (les KPI et le tableau se recalculent, ✕ pour réinitialiser), cliquez sur une montée pour son résumé, cliquez sur une KPI pour l'ouvrir dans le Graphique.</li><li><b>Onglet Analyse du vol</b> : résumé du vol, phases (moteur, ascendance, plané), ascendances détectées, distributions de vitesse et vario, données batterie/GPS et commentaire automatique.</li><li><b>Onglet Graphique</b> : choisissez un rapport dans le menu déroulant. Le bouton <b>Détail</b> augmente ou diminue la résolution ; les pastilles de couleur à côté des variables changent la couleur ; chaque variable a son propre axe latéral. <b>Zoom</b> avec la molette et défilement avec la barre sous le graphe (⟲ pour réinitialiser) ; cliquez sur une courbe pour l'isoler (← Retour pour revenir à la vue précédente).</li><li><b>Onglet Tableau</b> : inclut toutes les données, résolution réglable et <b>Copier CSV</b>.</li><li><b>Onglet Trajectoire</b> (logs GPS) : trajectoire 3D du vol colorée par le vario (vert montée, rouge descente) ; faites glisser pour tourner, molette pour zoomer, curseur et ▶ pour suivre le vol.</li><li><b>Onglet Polaire</b> (logs GPS) : graphique vitesse/chute des plané moteur coupé, avec courbe polaire, chute minimale et finesse maximale.</li><li><b>Onglet Archives</b> (Chrome/Edge sur ordinateur) : choisissez un dossier, enregistrez les vols avec modèle, accu et notes ; cochez 2 à 4 vols pour comparer courbes superposées, montées et planés ; récapitulatif par accu en bas.</li></ul>`
   }
 };
 /* archivio + confronto: [it, en, fr] */
@@ -842,6 +910,29 @@ const T_GR={
   gr_pick:["Spunta le variabili nell'elenco a sinistra: il grafico si costruisce subito.","Tick variables in the list on the left: the chart builds instantly.","Cochez des variables dans la liste à gauche : le graphique se construit tout de suite."],
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
+const T_AN={
+  an_sec_phases:["Fasi del volo","Flight phases","Phases du vol"], an_sec_thermals:["Termiche rilevate","Detected thermals","Ascendances détectées"],
+  an_sec_dist:["Distribuzioni","Distributions","Distributions"], an_sec_comment:["Commento automatico","Automatic commentary","Commentaire automatique"],
+  an_sec_climbs:["Salite a motore","Motor climbs","Montées moteur"],
+  an_g_flight:["Volo","Flight","Vol"], an_g_air:["Termiche e planata","Thermals and glide","Ascendances et plané"], an_g_gps:["Velocità e percorso (GPS)","Speed and path (GPS)","Vitesse et parcours (GPS)"], an_g_elec:["Motore e batteria","Motor and battery","Moteur et batterie"],
+  an_dur:["Durata","Duration","Durée"], an_airtime:["In volo","Airborne","En vol"], an_alt:["Quota max","Max altitude","Altitude max"], an_launch:["Quota a fine motore","Altitude at motor cut","Altitude fin moteur"],
+  an_gain_m:["Guadagno a motore","Motor gain","Gain moteur"], an_gain_t:["Guadagno in termica","Thermal gain","Gain en ascendance"],
+  an_tmotor:["Tempo motore","Motor time","Temps moteur"], an_tglide:["Tempo planata","Glide time","Temps plané"], an_ttherm:["Tempo in termica","Thermal time","Temps en ascendance"],
+  an_nth:["Termiche","Thermals","Ascendances"], an_bestth:["Miglior termica","Best thermal","Meilleure ascendance"], an_avgth:["Rateo medio termiche","Avg thermal rate","Taux moyen ascendances"],
+  an_sink:["Sink medio planata","Avg glide sink","Chute moy. plané"], an_gr:["Efficienza mediana","Median glide ratio","Finesse médiane"], an_lift:["Vario > 0 in planata","Vario > 0 in glide","Vario > 0 en plané"],
+  an_vmax:["Velocità max","Max speed","Vitesse max"], an_vavg:["Velocità media","Avg speed","Vitesse moy."], an_vmed:["Velocità mediana planata","Median glide speed","Vitesse méd. plané"],
+  an_path:["Percorso","Path length","Parcours"], an_dmax:["Distanza max","Max distance","Distance max"], an_dend:["Atterraggio da partenza","Landing from start","Atterrissage / départ"],
+  an_mah:["Consumo","Used","Consommé"], an_wh:["Energia","Energy","Énergie"], an_ipk:["Corrente max","Peak current","Courant max"], an_ppk:["Potenza max","Peak power","Puissance max"],
+  an_vcell:["V/cella min","Min V/cell","V/cell. min"], an_rint:["Rint mediana","Median Rint","Rint médiane"], an_spec:["mAh/100 m","mAh/100 m","mAh/100 m"], an_tesc:["ESC max","ESC max","ESC max"],
+  ph_ground:["A terra","Ground","Au sol"], ph_motor:["Motore","Motor","Moteur"], ph_therm:["Termica","Thermal","Ascendance"], ph_glide:["Planata","Glide","Plané"],
+  th_col_n:["#","#","#"], th_col_t0:["Inizio","Start","Début"], th_col_dur:["Durata s","Duration s","Durée s"], th_col_gain:["Guadagno m","Gain m","Gain m"],
+  th_col_rate:["Rateo m/s","Rate m/s","Taux m/s"], th_col_max:["Vario max","Max vario","Vario max"], th_col_in:["Quota ingresso","Entry alt.","Alt. entrée"], th_col_drift:["Deriva m","Drift m","Dérive m"],
+  an_nothermals:["Nessuna termica rilevata in questo volo.","No thermals detected in this flight.","Aucune ascendance détectée sur ce vol."],
+  an_th_hint:["Termica = tratto a motore spento con vario medio (±3 s) sopra +0,3 m/s per almeno 12 s (pause sotto 6 s unite). Guadagno = quota massima raggiunta meno quota di ingresso. Deriva = spostamento orizzontale tra inizio e fine (solo con GPS).","Thermal = motor-off stretch with mean vario (±3 s) above +0.3 m/s for at least 12 s (gaps under 6 s merged). Gain = peak altitude minus entry altitude. Drift = horizontal displacement from start to end (GPS only).","Ascendance = tronçon moteur coupé avec vario moyen (±3 s) supérieur à +0,3 m/s pendant au moins 12 s (pauses de moins de 6 s fusionnées). Gain = altitude max moins altitude d'entrée. Dérive = déplacement horizontal début-fin (GPS seulement)."],
+  an_h_speed:["Tempo per velocità · planata (s)","Time by speed · glide (s)","Temps par vitesse · plané (s)"], an_h_vario:["Tempo per vario · motore spento (s)","Time by vario · motor off (s)","Temps par vario · moteur coupé (s)"],
+  an_noair:["Dati insufficienti per l'analisi (serve una quota).","Not enough data for the analysis (altitude needed).","Données insuffisantes pour l'analyse (altitude requise)."]
+};
+for(const k in T_AN){ T.it[k]=T_AN[k][0]; T.en[k]=T_AN[k][1]; T.fr[k]=T_AN[k][2]; }
 for(const k in T_GR){ T.it[k]=T_GR[k][0]; T.en[k]=T_GR[k][1]; T.fr[k]=T_GR[k][2]; }
 for(const k in T_UI){ T.it[k]=T_UI[k][0]; T.en[k]=T_UI[k][1]; T.fr[k]=T_UI[k][2]; }
 const T_TV={
@@ -853,6 +944,17 @@ const T_TV={
 };
 for(const k in T_TV){ T.it[k]=T_TV[k][0]; T.en[k]=T_TV[k][1]; T.fr[k]=T_TV[k][2]; }
 for(const k in T_TR){ T.it[k]=T_TR[k][0]; T.en[k]=T_TR[k][1]; T.fr[k]=T_TR[k][2]; }
+const T_PO2={
+  po_sec_res:["Risultati","Results","Résultats"], po_sec_curve:["Curva polare","Polar curve","Courbe polaire"], po_sec_bands:["Fasce di velocità","Speed bands","Tranches de vitesse"],
+  po_sec_leg:["Legenda","Legend","Légende"], po_sec_notes:["Note","Notes","Notes"],
+  po_r_sink:["Sink minimo","Min sink","Chute min."], po_r_vsink:["a velocità","at speed","à la vitesse"],
+  po_r_glide:["Finesse massima","Max glide ratio","Finesse max"], po_r_vglide:["a velocità","at speed","à la vitesse"], po_r_sglide:["sink a quel punto","sink at that point","chute à ce point"],
+  po_r_samples:["Campioni usati","Samples used","Échantillons"], po_r_range:["Intervallo velocità","Speed range","Plage de vitesse"], po_r_medspd:["Velocità mediana","Median speed","Vitesse médiane"],
+  po_r_medsink:["Sink mediano","Median sink","Chute médiane"], po_r_bw:["Larghezza fascia","Band width","Largeur de tranche"], po_r_minn:["Minimo campioni/fascia","Min samples/band","Échantillons min./tranche"],
+  po_f_eq:["sink(v) = a + b·v + c·v²   (v in m/s)","sink(v) = a + b·v + c·v²   (v in m/s)","chute(v) = a + b·v + c·v²   (v en m/s)"], po_f_rmse:["Scarto medio (RMS)","RMS residual","Écart moyen (RMS)"], po_f_valid:["Valida tra","Valid between","Valable entre"],
+  po_b_v:["km/h","km/h","km/h"], po_b_s:["sink m/s","sink m/s","chute m/s"], po_b_gr:["finesse","glide","finesse"], po_b_n:["n","n","n"]
+};
+for(const k in T_PO2){ T.it[k]=T_PO2[k][0]; T.en[k]=T_PO2[k][1]; T.fr[k]=T_PO2[k][2]; }
 for(const k in T_PO){ T.it[k]=T_PO[k][0]; T.en[k]=T_PO[k][1]; T.fr[k]=T_PO[k][2]; }
 /* derived channels: stable keys, bilingual display names */
 const DERIV_NAMES={
@@ -1214,14 +1316,120 @@ function renderKpis(f){
 }
 
 /* ---------- verdict ---------- */
+/* ---------- analisi del volo: fasi, termiche, distribuzioni, riepilogo ---------- */
+function analyzeFlight(f){
+  const a=altSeries(f), N=f.t.length, DT=f.DT; if(!a||N<10) return null;
+  const va=varioOf(f), C=f.climbs||[], sp=f.series["Speed"], la=f.series["Lat"], lo=f.series["Lon"];
+  let i0=0; while(i0<N-1&&!(a.vals[i0]>3)) i0++;
+  let i1=N-1; while(i1>i0&&!(a.vals[i1]>3)) i1--;
+  if(i1-i0<10) return null;
+  const mot=new Uint8Array(N), motPost=new Uint8Array(N), post=Math.round(3/DT);
+  for(const c of C) for(let k=c.i0;k<=Math.min(N-1,c.i1);k++) mot[k]=1;
+  for(const c of C) for(let k=c.i0;k<=Math.min(N-1,c.i1+post);k++) motPost[k]=1;
+  // vario medio ±3 s (somme cumulative)
+  const k3=Math.max(1,Math.round(3/DT)), pre=new Array(N+1).fill(0), vs=new Array(N);
+  for(let i=0;i<N;i++) pre[i+1]=pre[i]+(Number.isFinite(va[i])?va[i]:0);
+  for(let i=0;i<N;i++){ const j0=Math.max(0,i-k3), j1=Math.min(N-1,i+k3); vs[i]=(pre[j1+1]-pre[j0])/(j1-j0+1); }
+  // posizione locale (m) se c'è il GPS
+  let X=null,Y=null; if(la&&lo){ const kx=111320*Math.cos(la.vals[0]*Math.PI/180), ky=110574; X=lo.vals.map(v=>(v-lo.vals[0])*kx); Y=la.vals.map(v=>(v-la.vals[0])*ky); }
+  // termiche: vario medio > +0,3 m/s a motore spento, ≥ 12 s, pause < 6 s unite (non attraverso il motore)
+  const runs=[]; let st=-1;
+  for(let i=i0;i<=i1+1;i++){ const on=i<=i1&&!motPost[i]&&vs[i]>0.3; if(on&&st<0) st=i; if(!on&&st>=0){ runs.push([st,i-1]); st=-1; } }
+  const gap=Math.round(6/DT), merged=[];
+  for(const r of runs){ const L=merged[merged.length-1]; let clean=!!L; if(L){ if(r[0]-L[1]>gap) clean=false; else for(let k=L[1];k<=r[0];k++) if(motPost[k]){ clean=false; break; } }
+    if(clean) L[1]=r[1]; else merged.push([r[0],r[1]]); }
+  const th=[]; for(const [s0,s1] of merged){ const dur=(s1-s0)*DT; if(dur<12) continue;
+    let mx=-1e9, amax=-1e9, sum=0; for(let k=s0;k<=s1;k++){ mx=Math.max(mx,vs[k]); amax=Math.max(amax,a.vals[k]); sum+=vs[k]; }
+    const gain=amax-a.vals[s0]; if(gain<3) continue;
+    th.push({t0:f.t[s0],t1:f.t[s1],i0:s0,i1:s1,dur,gain,rate:gain/dur,vmax:mx,vavg:sum/(s1-s0+1),alt0:a.vals[s0],drift:X?Math.hypot(X[s1]-X[s0],Y[s1]-Y[s0]):null}); }
+  const inTh=new Uint8Array(N); for(const t of th) for(let k=t.i0;k<=t.i1;k++) inTh[k]=1;
+  // fasi: 0 terra · 1 motore · 2 termica · 3 planata
+  const ph=new Uint8Array(N); for(let i=0;i<N;i++) ph[i]=(i<i0||i>i1)?0:mot[i]?1:inTh[i]?2:3;
+  const secs=[0,0,0,0]; for(let i=i0;i<=i1;i++) secs[ph[i]]++; for(let k=0;k<4;k++) secs[k]*=DT;
+  const air=(i1-i0)*DT;
+  // planata: sink medio, finesse, % vario>0
+  let ns=0,ss=0,np=0,n3=0; const gv=[]; for(let i=i0;i<=i1;i++) if(ph[i]===3){ n3++; const v=va[i]; if(Number.isFinite(v)){ if(v<0){ ns++; ss+=v; } if(v>0.2) np++; } }
+  const gl=f.series["Glide"]; let gr=null; if(gl){ const arr=[]; for(let i=i0;i<=i1;i++) if(ph[i]===3&&Number.isFinite(gl.vals[i])) arr.push(gl.vals[i]); gr=median(arr); }
+  // velocità (planata + termica = motore spento)
+  let sv=null; if(sp){ const arr=[]; for(let i=i0;i<=i1;i++) if(ph[i]>=2&&Number.isFinite(sp.vals[i])&&sp.vals[i]>5) arr.push(sp.vals[i]); sv={max:Math.max(...sp.vals.slice(i0,i1+1).filter(Number.isFinite)),avg:arr.length?arr.reduce((p,q)=>p+q,0)/arr.length:null,med:median(arr)}; }
+  // percorso GPS
+  let path=null,dmax=null,dend=null; if(X){ path=0; dmax=0; for(let i=Math.max(1,i0);i<=i1;i++){ path+=Math.hypot(X[i]-X[i-1],Y[i]-Y[i-1]); dmax=Math.max(dmax,Math.hypot(X[i]-X[i0],Y[i]-Y[i0])); } dend=Math.hypot(X[i1]-X[i0],Y[i1]-Y[i0]); }
+  // istogrammi (secondi per fascia)
+  const hist=(vals,lo0,hi0,w)=>{ const n=Math.max(1,Math.round((hi0-lo0)/w)), b=new Array(n).fill(0); for(const v of vals){ let k=Math.floor((v-lo0)/w); k=Math.max(0,Math.min(n-1,k)); b[k]+=DT; } return b.map((s,k)=>({lo:lo0+k*w,hi:lo0+(k+1)*w,s})); };
+  let hs=null; if(sp){ const v=[]; for(let i=i0;i<=i1;i++) if(ph[i]===3&&Number.isFinite(sp.vals[i])&&sp.vals[i]>5) v.push(sp.vals[i]); if(v.length>20){ const lo0=Math.floor(Math.min(...v)/10)*10, hi0=Math.max(lo0+30,Math.ceil(Math.max(...v)/10)*10); hs=hist(v,lo0,hi0,10); } }
+  const hv=[]; for(let i=i0;i<=i1;i++) if(!motPost[i]&&Number.isFinite(va[i])) hv.push(va[i]);
+  const hvar=hv.length>20?hist(hv,-3,3,0.5):null;
+  // elettrico
+  const ib=pick(f,["IBat"]), cap=pick(f,["Cap.","Cap"]), en=f.series["Energy"], pw=f.series["Power"], ri=f.series["Rint"], cells=f.cells||0;
+  const el={}; if(ib){ el.ipk=Math.max(...ib.vals.filter(Number.isFinite)); } if(cap) el.mah=Math.max(...cap.vals.filter(Number.isFinite)); if(en) el.wh=Math.max(...en.vals.filter(Number.isFinite))/60;
+  if(pw) el.ppk=Math.max(...pw.vals.filter(Number.isFinite)); if(ri){ const v=ri.vals.filter(Number.isFinite); if(v.length) el.rint=median(v); }
+  const um=C.filter(c=>c.umin!=null); if(um.length&&cells) el.vcell=Math.min(...um.map(c=>c.umin))/cells;
+  const sp100=C.filter(c=>c.mah!=null&&c.dalt>5); if(sp100.length) el.spec=sp100.reduce((p,c)=>p+c.mah,0)/sp100.reduce((p,c)=>p+c.dalt,0)*100;
+  const te=pick(f,["TempESC"]); if(te) el.tesc=Math.max(...te.vals.filter(Number.isFinite));
+  const altMax=Math.max(...a.vals.slice(i0,i1+1)), lastClimb=C.length?C[C.length-1]:null;
+  return {N,DT,i0,i1,air,ph,secs,th,C,altMax,launchAlt:lastClimb?a.vals[Math.min(N-1,lastClimb.i1)]:null,
+    gainMotor:C.reduce((p,c)=>p+Math.max(0,c.dalt||0),0),gainTherm:th.reduce((p,x)=>p+x.gain,0),
+    sink:ns?ss/ns:null,gr,liftPct:n3?np/n3*100:null,sv,path,dmax,dend,hs,hvar,el,hasGps:!!X};
+}
+function renderAnalysis(f){
+  const A=analyzeFlight(f), tiles=$("#anaTiles");
+  if(!A){ tiles.innerHTML=`<p class="empty">${t("an_noair")}</p>`; $("#anaPhases").innerHTML=""; $("#thermWrap").innerHTML=""; $("#histSpeed").innerHTML=""; $("#histVario").innerHTML=""; return; }
+  const tile=(lbl,val,unit,sub,cls)=>`<div class="atile ${cls||""}"><div class="al" title="${escapeHtml(lbl)}">${escapeHtml(lbl)}</div><div class="av">${val}${unit?`<span class="u">${unit}</span>`:""}</div>${sub?`<div class="as">${sub}</div>`:""}</div>`;
+  const pct=x=>A.air>0?fmt(x/A.air*100,0)+" %":"";
+  const grp=(title,list)=>list.length?`<div class="agroup"><div class="trh">${t(title)}</div><div class="agrid">${list.join("")}</div></div>`:"";
+  const E=A.el, th=A.th, g1=[], g2=[], g3=[], g4=[];
+  g1.push(tile(t("an_dur"),hhmmss(f.dur),"")); g1.push(tile(t("an_airtime"),hhmmss(A.air),"",fmt(A.air/Math.max(f.dur,1)*100,0)+" %"));
+  g1.push(tile(t("an_alt"),fmt(A.altMax,0),"m"));
+  if(A.launchAlt!=null) g1.push(tile(t("an_launch"),fmt(A.launchAlt,0),"m"));
+  if(A.C.length) g1.push(tile(t("an_gain_m"),"+"+fmt(A.gainMotor,0),"m","","motor"));
+  g1.push(tile(t("an_gain_t"),"+"+fmt(A.gainTherm,0),"m","","good"));
+  g1.push(tile(t("an_tmotor"),hhmmss(A.secs[1]),"",pct(A.secs[1]),"motor"));
+  g1.push(tile(t("an_ttherm"),hhmmss(A.secs[2]),"",pct(A.secs[2]),"good"));
+  g1.push(tile(t("an_tglide"),hhmmss(A.secs[3]),"",pct(A.secs[3])));
+  g2.push(tile(t("an_nth"),String(th.length),""));
+  if(th.length){ const best=th.reduce((p,x)=>x.rate>p.rate?x:p,th[0]); g2.push(tile(t("an_bestth"),"+"+fmt(best.rate,1),"m/s",`${hhmmss(best.t0)} · +${fmt(best.gain,0)} m`,"good"));
+    g2.push(tile(t("an_avgth"),"+"+fmt(th.reduce((p,x)=>p+x.rate,0)/th.length,1),"m/s")); }
+  if(A.sink!=null) g2.push(tile(t("an_sink"),fmt(A.sink,2),"m/s"));
+  if(A.gr!=null) g2.push(tile(t("an_gr"),fmt(A.gr,1),":1"));
+  if(A.liftPct!=null) g2.push(tile(t("an_lift"),fmt(A.liftPct,0),"%"));
+  if(A.sv){ g3.push(tile(t("an_vmax"),fmt(A.sv.max,0),"km/h")); if(A.sv.avg!=null) g3.push(tile(t("an_vavg"),fmt(A.sv.avg,0),"km/h")); if(A.sv.med!=null) g3.push(tile(t("an_vmed"),fmt(A.sv.med,0),"km/h")); }
+  if(A.path!=null){ g3.push(tile(t("an_path"),fmt(A.path/1000,2),"km")); g3.push(tile(t("an_dmax"),fmt(A.dmax,0),"m")); g3.push(tile(t("an_dend"),fmt(A.dend,0),"m")); }
+  if(E.mah!=null) g4.push(tile(t("an_mah"),fmt(E.mah,0),"mAh")); if(E.wh!=null) g4.push(tile(t("an_wh"),fmt(E.wh,1),"Wh"));
+  if(E.ipk!=null) g4.push(tile(t("an_ipk"),fmt(E.ipk,0),"A")); if(E.ppk!=null) g4.push(tile(t("an_ppk"),fmt(E.ppk,0),"W"));
+  if(E.vcell!=null) g4.push(tile(t("an_vcell"),fmt(E.vcell,2),"V",""+"",E.vcell>=3.55?"good":E.vcell>=3.45?"warn":"crit"));
+  if(E.rint!=null) g4.push(tile(t("an_rint"),fmt(E.rint,0),"mΩ")); if(E.spec!=null) g4.push(tile(t("an_spec"),fmt(E.spec,0),"",""));
+  if(E.tesc!=null) g4.push(tile(t("an_tesc"),fmt(E.tesc,0),"°C","",E.tesc<60?"good":E.tesc<75?"warn":"crit"));
+  tiles.innerHTML=grp("an_g_flight",g1)+grp("an_g_air",g2)+grp("an_g_gps",g3)+grp("an_g_elec",g4);
+
+  // barra delle fasi
+  const COL=["var(--line)","var(--motor)","var(--good)","var(--accent-2)"], NAME=[t("ph_ground"),t("ph_motor"),t("ph_therm"),t("ph_glide")];
+  let segs="", i=0; while(i<A.N){ let j=i; while(j+1<A.N&&A.ph[j+1]===A.ph[i]) j++; const w=(j-i+1)/A.N*100;
+    segs+=`<i style="width:${w.toFixed(3)}%;background:${COL[A.ph[i]]}" title="${NAME[A.ph[i]]} · ${hhmmss(f.t[i])}–${hhmmss(f.t[j])}"></i>`; i=j+1; }
+  const total=f.t[A.N-1]||1, steps=[10,20,30,60,120,300,600], step=steps.find(x=>total/x<=10)||600; let ticks="";
+  for(let x=0;x<=total;x+=step) ticks+=`<span style="left:${(x/total*100).toFixed(2)}%">${hhmmss(x)}</span>`;
+  const leg=[0,1,2,3].filter(k=>k>0).map(k=>`<span><span class="swatch" style="background:${COL[k]}"></span>${NAME[k]} <span class="mono" style="opacity:.8">${hhmmss(A.secs[k])} · ${pct(A.secs[k])}</span></span>`).join("");
+  $("#anaPhases").innerHTML=`<div class="phasebar">${segs}</div><div class="phaseticks">${ticks}</div><div class="legend">${leg}</div>`;
+
+  // termiche
+  if(!th.length) $("#thermWrap").innerHTML=`<p class="empty" style="padding:14px">${t("an_nothermals")}</p>`;
+  else $("#thermWrap").innerHTML=`<table><thead><tr><th>${t("th_col_n")}</th><th>${t("th_col_t0")}</th><th>${t("th_col_dur")}</th><th>${t("th_col_gain")}</th><th>${t("th_col_rate")}</th><th>${t("th_col_max")}</th><th>${t("th_col_in")}</th>${A.hasGps?`<th>${t("th_col_drift")}</th>`:""}</tr></thead><tbody>`+
+    th.map((x,k)=>`<tr><td>#${k+1}</td><td class="mono">${hhmmss(x.t0)}</td><td class="mono">${fmt(x.dur,0)}</td><td class="mono">+${fmt(x.gain,0)}</td><td class="mono">+${fmt(x.rate,1)}</td><td class="mono">+${fmt(x.vmax,1)}</td><td class="mono">${fmt(x.alt0,0)}</td>${A.hasGps?`<td class="mono">${x.drift!=null?fmt(x.drift,0):"—"}</td>`:""}</tr>`).join("")+`</tbody></table>`;
+
+  // istogrammi
+  const histo=(title,bins,colFn,fmtLabel)=>{ if(!bins) return ""; const mx=Math.max(...bins.map(b=>b.s))||1, every=Math.ceil(bins.length/9);
+    return `<div class="histt">${t(title)}</div><div class="hist">`+bins.map(b=>`<div class="hb" style="height:${(b.s/mx*100).toFixed(1)}%;background:${colFn(b)}" title="${fmtLabel(b)}: ${fmt(b.s,0)} s"></div>`).join("")+`</div><div class="histx">`+bins.map((b,k)=>`<span>${k%every===0?fmtLabel(b,true):""}</span>`).join("")+`</div>`; };
+  $("#histSpeed").innerHTML=histo("an_h_speed",A.hs,b=>"var(--accent-2)",(b,short)=>short?String(b.lo):`${b.lo}–${b.hi} km/h`);
+  $("#histVario").innerHTML=histo("an_h_vario",A.hvar,b=>`hsl(${Math.round(Math.max(0,Math.min(1,((b.lo+b.hi)/2+2)/4))*120)} 85% 50%)`,(b,short)=>short?fmt(b.lo,1):`${fmt(b.lo,1)}…${fmt(b.hi,1)} m/s`);
+}
 function renderVerdict(f){
+  renderAnalysis(f);
   const chips=[], paras=[], cells=f.cells||4, C=f.climbs;
   const LG=(it,en,fr)=>lang==="en"?en:lang==="fr"?fr:it;
   const cap=pick(f,["Cap.","Cap"]), te=pick(f,["TempESC"]);
   const totMah = C.reduce((a,c)=>a+(c.mah||0),0);
   const totAlt = C.reduce((a,c)=>a+(Math.max(0,c.dalt||0)),0);
-  const spec = totAlt>5 ? totMah/totAlt*100 : null;
-  const minCell = C.length? Math.min(...C.filter(c=>c.umin).map(c=>c.umin/cells)) : null;
+  const spec = (totAlt>5&&totMah>0) ? totMah/totAlt*100 : null;
+  const minCell = (()=>{ const a=C.filter(c=>c.umin).map(c=>c.umin/cells); return a.length?Math.min(...a):null; })();
   const capEnd = cap?Math.max(...cap.vals):null;
   const tescMax = te?Math.max(...te.vals):null;
   const minAlt = (()=>{const a=altSeries(f);if(!a)return null;const end=f.dur-15;let m=1e9;for(let i=0;i<f.t.length;i++){if(f.t[i]>5&&f.t[i]<end)m=Math.min(m,a.vals[i]);}return m<1e9?m:null;})();
@@ -2148,7 +2356,7 @@ function polarData(f,bw){
   const minN=Math.max(10,Math.round(2/DT)), bins=[];
   Object.keys(B).map(Number).sort((x,y)=>x-y).forEach(k=>{ const b=B[k]; if(b.s.length<minN) return;
     bins.push({v:b.v.reduce((p,q)=>p+q,0)/b.v.length, s:median(b.s), n:b.s.length}); });
-  const out={pv,ps,bins,fit:null,res:null};
+  const out={pv,ps,bins,fit:null,res:null,bw,minN};
   if(bins.length<4) return out;
   // parabola pesata  s(v)=a+b·v+c·v²  (v in m/s)
   const M=[[0,0,0],[0,0,0],[0,0,0]], R=[0,0,0];
@@ -2164,14 +2372,15 @@ function polarData(f,bw){
   for(let g=0;g<=G;g++){ const v=vmin+(vmax-vmin)*g/G, x=v/3.6, s=co[0]+co[1]*x+co[2]*x*x; cx.push(v); cy.push(s);
     if(s<cy[iS]) iS=g; if(s>0.02&&x/s>bestG){ bestG=x/s; iG=g; } }
   if(iG<0) return out;
-  out.fit={cx,cy};
+  let sw=0,sr=0; for(const b of bins){ const x=b.v/3.6, e=b.s-(co[0]+co[1]*x+co[2]*x*x); sw+=b.n; sr+=b.n*e*e; }
+  out.fit={cx,cy,co,rmse:Math.sqrt(sr/sw)};
   out.res={sinkMin:cy[iS],vSink:cx[iS],edgeS:iS===0||iS===G, glide:bestG,vGlide:cx[iG],sGlide:cy[iG],edgeG:iG===0||iG===G};
   return out;
 }
 function renderPolar(){
   if(!polarVisible()) return;
   const f=VF(), cv=$("#polarChart"), wrap=$("#poWrap"), empty=$("#poEmpty");
-  const msg=m=>{ empty.hidden=false; empty.textContent=t(m); wrap.style.display="none"; $("#poRes").innerHTML=""; $("#poLegend").innerHTML=""; };
+  const msg=m=>{ empty.hidden=false; empty.textContent=t(m); wrap.style.display="none"; $("#poRes").innerHTML=""; $("#poLegend").innerHTML=""; $("#poRows").innerHTML=""; $("#poFit").innerHTML=""; $("#poBands").innerHTML=""; };
   if(!f||!f.series["Speed"]) return msg("po_nospeed");
   const P=polarData(f,+$("#poBin").value||3);
   if(!P||!P.bins.length||!P.fit) return msg("po_nodata");
@@ -2192,11 +2401,24 @@ function renderPolar(){
     mark(r.vSink,r.sinkMin,"--good"); mark(r.vGlide,r.sGlide,"--motor");
     g.restore();
   };
-  drawChart(cv,{series,height:chartH(360,520),xTimeAxis:false,sharedY:true,after});
+  drawChart(cv,{series,height:chartH(380,440),xTimeAxis:false,sharedY:true,after});
   $("#poRes").innerHTML=
     `<span class="chip good">${t("po_sinkmin")} ${fmt(r.sinkMin,2)} m/s @ ${fmtV(r.vSink)} km/h${r.edgeS?" ("+t("po_edge")+")":""}</span>`+
-    `<span class="chip warn">${t("po_glidemax")} ${fmt(r.glide,1)}:1 @ ${fmtV(r.vGlide)} km/h${r.edgeG?" ("+t("po_edge")+")":""}</span>`+
-    `<span class="chip">${P.pv.length} ${t("po_used")} · ${P.bins.length} ${t("po_bands")}</span>`;
+    `<span class="chip warn">${t("po_glidemax")} ${fmt(r.glide,1)}:1 @ ${fmtV(r.vGlide)} km/h${r.edgeG?" ("+t("po_edge")+")":""}</span>`;
+  const row=(k,v,u)=>`<div class="trv"><span class="k">${k}</span><span class="v mono">${v}</span><span class="u">${u||""}</span></div>`;
+  const gr=(v,s)=>(v/3.6)/s, sv=P.bins.map(b=>b.v), co=P.fit.co;
+  $("#poRows").innerHTML=
+    row(t("po_r_sink"),fmt(r.sinkMin,2),"m/s")+row(t("po_r_vsink"),fmt(r.vSink,0),"km/h")+
+    row(t("po_r_glide"),fmt(r.glide,1),":1")+row(t("po_r_vglide"),fmt(r.vGlide,0),"km/h")+row(t("po_r_sglide"),fmt(r.sGlide,2),"m/s")+
+    row(t("po_r_samples"),fmt(P.pv.length,0),t("po_used"))+row(t("po_bands").replace(/^./,c=>c.toUpperCase()),fmt(P.bins.length,0),"")+
+    row(t("po_r_range"),fmt(Math.min(...sv),0)+"–"+fmt(Math.max(...sv),0),"km/h")+row(t("po_r_medspd"),fmt(median(P.pv),0),"km/h")+row(t("po_r_medsink"),fmt(median(P.ps),2),"m/s")+
+    row(t("po_r_bw"),fmt(P.bw,0),"km/h")+row(t("po_r_minn"),fmt(P.minN,0),"");
+  $("#poFit").innerHTML=`<div class="trnote mono" style="color:var(--fg)">${t("po_f_eq")}</div>`+
+    row("a",fmt(co[0],4),"m/s")+row("b",fmt(co[1],4),"s/m·m/s")+row("c",fmt(co[2],5),"s/m²·m/s")+
+    row(t("po_f_rmse"),fmt(P.fit.rmse,3),"m/s")+row(t("po_f_valid"),fmt(Math.min(...sv),0)+"–"+fmt(Math.max(...sv),0),"km/h");
+  const iS=P.bins.reduce((m,b,k)=>Math.abs(b.v-r.vSink)<Math.abs(P.bins[m].v-r.vSink)?k:m,0), iG=P.bins.reduce((m,b,k)=>Math.abs(b.v-r.vGlide)<Math.abs(P.bins[m].v-r.vGlide)?k:m,0);
+  $("#poBands").innerHTML=`<table><thead><tr><th>${t("po_b_v")}</th><th>${t("po_b_s")}</th><th>${t("po_b_gr")}</th><th>${t("po_b_n")}</th></tr></thead><tbody>`+
+    P.bins.map((b,k)=>`<tr class="${k===iS?"hlS":k===iG?"hlG":""}"><td class="mono">${fmt(b.v,0)}</td><td class="mono">${fmt(b.s,2)}</td><td class="mono">${fmt(gr(b.v,b.s),1)}</td><td class="mono">${b.n}</td></tr>`).join("")+`</tbody></table>`;
   const sw=(c,txt)=>`<span><span class="swatch" style="background:${c}"></span>${txt}</span>`;
   $("#poLegend").innerHTML=sw("var(--muted)",t("po_l_pts"))+sw("var(--accent-2)",t("po_l_bins"))+sw("var(--accent)",t("po_l_fit"))+sw("var(--motor)",t("po_l_tan"))+`<span class="mono" style="opacity:.8">${t("po_axes")}</span>`;
 }
