@@ -43,7 +43,7 @@ for name,dur,spd,turn,lift,motor,extra in ph:
         lines.append(f"$GNGNS,{ts},,,,,AAN,12,0.8,{alt+120:.1f},,,*00")
         lines.append(f"$GNVTG,{crs:.1f},T,,M,{sp/1.852:.2f},N,{sp:.2f},K,A*00")
         lines.append(f"$SMGPS,{ts},{vr+random.gauss(0,0.08):.2f},4.9,0.000*00")
-        lines.append(f"$SMGPS2,{ts},0.0,0.0,1.0,{enl},0,0,1000.0*00")
+        lines.append(f"$SMGPS2,0.00,0.00,1.00,{enl},0,0,1000.0*00")   # accX,accY,accZ,ENL,-,-,pressione (formato atteso da parseNMEA)
         t+=dt
         if name=="atterraggio" and alt<=0:
             tail+=1

@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.17**
+- Versione corrente: **v1.18**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -156,10 +156,10 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
   ombra della traccia, asse della quota, partenza (○) e fine (□).
 - **Colore dal vario** (`varioOf`, media ±2 campioni): scala asimmetrica con lo zero al centro (giallo);
   la discesa satura il **rosso** all'80° percentile del sink (min 0,5 m/s), la salita il **verde** al 95° percentile (min 1 m/s).
-- **Layout PC (≥ 900 px):** colonna sinistra (290 px) con tutti i comandi e i valori, grafico 3D a destra a tutta altezza. Colonna: **Vista** (Dall'alto/Laterale/3D, zoom −/+, Quota ×, Segui),
-  **Riproduzione** (▶, velocità 1×/5×/10×/30×, cursore), **Colore = vario** (scala), **Aliante** (tempo, quota, vario colorato, velocità, rotta, assetto, inclinazione,
-  distanza dalla partenza, percorso) e **Canali del log** (tutte le variabili del file con il valore all'istante corrente). Su schermi stretti la colonna va sotto il grafico.
-- Interazione: trascina = ruota, rotella o pulsanti **− / +** = zoom da ×0,4 a **×40** (con indicatore del livello), due dita su touch = zoom a pizzico, doppio clic = reset; pulsanti *Dall'alto / Laterale / 3D*; **Quota ×1/2/3/5** per esagerare la
+- **Layout PC (≥ 1200 px): tre colonne** — a sinistra i **comandi** (Vista: Dall'alto/Laterale/3D, zoom −/+, Quota ×, Segui · Riproduzione: ▶, velocità 1×/5×/10×/30×, cursore ·
+  Colore = vario), al centro il grafico 3D a tutta altezza, a destra i **dati del volo** (Aliante: tempo, quota, vario colorato, velocità, rotta, assetto, inclinazione,
+  distanza dalla partenza, percorso · Canali del log: tutte le variabili del file all'istante corrente). Tra 900 e 1200 px i dati vanno sotto; su schermi stretti il grafico è per primo, poi comandi e dati.
+- **Mouse:** tasto **sinistro** trascinato = ruota; tasto **destro** (o centrale, o Maiusc+sinistro) trascinato = **pan** (sposta la vista); **rotella** = zoom **verso il cursore**; doppio clic = reset (anche del pan). Menu contestuale del browser disattivato sul grafico. Altri comandi: trascina = rotella o pulsanti **− / +** = zoom da ×0,4 a **×40** (con indicatore del livello), due dita su touch = zoom a pizzico, doppio clic = reset; pulsanti *Dall'alto / Laterale / 3D*; **Quota ×1/2/3/5** per esagerare la
   scala verticale; cursore + ▶ (riproduzione 10×) con marker e lettura di tempo, quota, vario e velocità. Rispetta il **Focus**.
 - **Aliante 3D** al posto del marker: sagoma (ali, piani di coda, deriva, fusoliera) con ombra sul suolo e filo a piombo, colorata col vario del
   momento. È orientata su **rotta** (direzione di moto su ±1 s), **angolo di traiettoria** (salita/discesa) e **inclinazione in virata**
@@ -300,6 +300,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.18** — Traiettoria: layout a **tre colonne** (comandi a sinistra, dati del volo a destra) e **pan col tasto destro** del mouse; zoom con la rotella verso il cursore. File di esempio corretto (la riga `$SMGPS2` ora ha il formato atteso dal lettore: la salita a motore viene riconosciuta).
 - **v1.17** — scheda Traiettoria: comandi e variabili in **colonna a sinistra** sul PC (vista, zoom, riproduzione con velocità, legenda, valori dell'aliante e di tutti i canali) e grafico a tutta altezza. **Bugfix**: i menu "Dettaglio" non si influenzano più con gli altri menu (Fascia della Polare, Quota ×, velocità) che prima ne alteravano il valore.
 - **v1.16** — scheda Grafico: **grafici live**, pannello Variabili a sinistra con spunte/colori/ricerca/X/tipo, report "● Live" ricordato, "Salva come report".
 - **v1.15** — drill-through: **← Indietro** dal Grafico torna alla scheda da cui si è partiti (es. la Panoramica), non solo al report precedente.
