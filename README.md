@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.18**
+- Versione corrente: **v1.19**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -31,7 +31,7 @@ Interfaccia **trilingue IT / EN / FR**, tema scuro antracite con colori personal
    - **Demo** → carica dati fittizi + 2 grafici d'esempio.
 
    Il menu si chiude con Esc, con un clic fuori o dopo la scelta; è navigabile da tastiera (↓ ↑ Invio). Accanto c'è **Set up** (ingranaggio).
-3. Schede: **Panoramica · Giudizio · Grafico · Tabella · Polare · Traiettoria · Archivio**, più **Set up** (ingranaggio) e guida **?**.
+3. Schede: **Panoramica · Analisi volo · Grafico · Tabella · Polare · Traiettoria · Archivio**, più **Set up** (ingranaggio) e guida **?**.
 4. Lingua con le bandierine 🇮🇹 🇬🇧 🇫🇷; logo cliccabile in alto a sinistra.
 
 ### Installazione su iPhone / iPad
@@ -131,8 +131,16 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 - **Popup salita**: clic su una banda → riepilogo (durata, Δquota, I picco/media, V/cella, mAh).
 - Interazioni in `setupMainInteractions()`.
 
-**Giudizio (`ju`)**
-- `renderVerdict(DATA)`: giudizio automatico "a bordo pista" (sempre su volo intero), chip colorati + prosa + tabella salite. Testi trilingui via helper `LG(it,en,fr)`.
+**Analisi volo (`ju`, ex "Giudizio")** — `analyzeFlight(f)` + `renderAnalysis(f)` (sempre sul volo intero)
+- **Riepilogo a schede** per gruppo: *Volo* (durata, tempo in volo, quota max, quota a fine motore, guadagno a motore e in termica, tempo motore/termica/planata con %),
+  *Termiche e planata* (numero, miglior termica, rateo medio, sink medio, efficienza mediana, % vario > 0 in planata), *Velocità e percorso (GPS)* (max/media/mediana,
+  percorso, distanza max e dal punto di partenza all'atterraggio), *Motore e batteria* (mAh, Wh, corrente e potenza max, V/cella min con semaforo, Rint, mAh/100 m, ESC max).
+  I gruppi e le schede compaiono solo se i canali necessari esistono (un log GPS non mostra la batteria e viceversa).
+- **Fasi del volo**: barra temporale a colori (A terra · Motore · Termica · Planata) con tempi e percentuali. Volo = dal primo all'ultimo istante sopra 3 m.
+- **Termiche rilevate**: tratti a motore spento (esclusi i 3 s dopo lo spegnimento) con vario medio ±3 s > **+0,3 m/s** per almeno **12 s** (pause < 6 s unite, mai attraverso il motore),
+  guadagno ≥ 3 m. Tabella: inizio, durata, guadagno (quota max − quota di ingresso), rateo, vario max, quota di ingresso e, col GPS, **deriva** orizzontale.
+- **Distribuzioni**: istogrammi del tempo per velocità (in planata, fasce da 10 km/h) e per vario (a motore spento, fasce da 0,5 m/s).
+- **Commento automatico** (il vecchio giudizio, su due colonne da 1100 px) e tabella delle **salite a motore**. I chip e i paragrafi su mAh/100 m e sag compaiono solo con dati elettrici.
 
 **Grafico (`gr`)**
 - **Pannello Variabili (live)** a sinistra (sopra il grafico su schermi stretti): elenco verticale di tutte le variabili del volo con spunta,
@@ -168,6 +176,9 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 - Funzioni: `trackData`, `renderTrack`, `drawTrack`, `trVarioCol`. Solo log GPS: con Jeti (senza posizione) compare un messaggio.
 
 **Polare (`po`)** — richiede un log con `Speed` (GPS SM Modellbau)
+- **Layout:** grafico a sinistra, **colonna destra con tutti i dati** (Risultati · Curva polare · Fasce di velocità · Legenda · Note): sink minimo e finesse massima con le velocità,
+  campioni usati, intervallo e velocità mediana, **coefficienti** `a, b, c` della parabola con scarto medio (RMS), tabella delle fasce (velocità, sink mediano, finesse, n) con le fasce
+  del sink minimo e della finesse massima evidenziate. Sotto i 1000 px la colonna va sotto il grafico.
 - Grafico velocità [km/h] / vario TE [m/s] dei soli tratti di **planata a motore spento** (come in `glideStats`: dalla 1ª salita
   all'ultimo istante sopra 3 m, escludendo 3 s dopo lo spegnimento), con quota > 8 m e velocità ≥ 10 km/h.
 - Scartati: punti con |accelerazione| > 1 m/s² (manovre; accelerazione su ±1 s) e punti con vario TE ≥ 0 (salita).
@@ -300,6 +311,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.19** — scheda **Giudizio → Analisi volo** ampliata (riepilogo a schede, fasi del volo, termiche rilevate, distribuzioni, commento, salite); scheda **Polare** con colonna destra di dati e info (risultati, coefficienti della curva, tabella delle fasce). Corretti i chip "0 mAh/100m" e "sag min —" che comparivano per i log senza dati elettrici.
 - **v1.18** — Traiettoria: layout a **tre colonne** (comandi a sinistra, dati del volo a destra) e **pan col tasto destro** del mouse; zoom con la rotella verso il cursore. File di esempio corretto (la riga `$SMGPS2` ora ha il formato atteso dal lettore: la salita a motore viene riconosciuta).
 - **v1.17** — scheda Traiettoria: comandi e variabili in **colonna a sinistra** sul PC (vista, zoom, riproduzione con velocità, legenda, valori dell'aliante e di tutti i canali) e grafico a tutta altezza. **Bugfix**: i menu "Dettaglio" non si influenzano più con gli altri menu (Fascia della Polare, Quota ×, velocità) che prima ne alteravano il valore.
 - **v1.16** — scheda Grafico: **grafici live**, pannello Variabili a sinistra con spunte/colori/ricerca/X/tipo, report "● Live" ricordato, "Salva come report".
