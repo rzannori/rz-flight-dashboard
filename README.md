@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.20**
+- Versione corrente: **v1.21**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -175,6 +175,11 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 - **Layout PC (≥ 1200 px): tre colonne** — a sinistra i **comandi** (Vista: Dall'alto/Laterale/3D, zoom −/+, Quota ×, Segui · Riproduzione: ▶, velocità 1×/5×/10×/30×, cursore ·
   Colore = vario), al centro il grafico 3D a tutta altezza, a destra i **dati del volo** (Aliante: tempo, quota, vario colorato, velocità, rotta, assetto, inclinazione,
   distanza dalla partenza, percorso · Canali del log: tutte le variabili del file all'istante corrente). Tra 900 e 1200 px i dati vanno sotto; su schermi stretti il grafico è per primo, poi comandi e dati.
+- **Sfondo mappa gratuito** (`#trMap`, scelta ricordata in `localStorage` `fd_map`): *Nessuno* · *Strade (OSM)* · *Satellite (Esri)*. Nessuna chiave né account. I tasselli Web Mercator
+  (`tile.openstreetmap.org`, `server.arcgisonline.com`) sono disegnati sul "pavimento" della scena con **una sola trasformazione affine per tassello** (la proiezione ortografica di un piano è lineare:
+  `drawMapFloor`), quindi seguono rotazione, zoom e pan e funzionano anche in vista *Dall'alto* (che diventa la mappa 2D). Lo zoom dei tasselli si adatta alla risoluzione a schermo (z 8–19, max 48 tasselli);
+  l'origine è il primo punto GPS. Attribuzione a schermo obbligatoria (© OpenStreetMap contributors / Esri, Maxar, Earthstar Geographics). Serve internet (i tasselli non sono nella cache offline).
+  Uso personale e leggero: rispettare le condizioni dei fornitori (OSM *Tile Usage Policy*, termini Esri). Il pavimento è piano: non rappresenta il rilievo del terreno.
 - **Mouse:** tasto **sinistro** trascinato = ruota; tasto **destro** (o centrale, o Maiusc+sinistro) trascinato = **pan** (sposta la vista); **rotella** = zoom **verso il cursore**; doppio clic = reset (anche del pan). Menu contestuale del browser disattivato sul grafico. Altri comandi: trascina = rotella o pulsanti **− / +** = zoom da ×0,4 a **×40** (con indicatore del livello), due dita su touch = zoom a pizzico, doppio clic = reset; pulsanti *Dall'alto / Laterale / 3D*; **Quota ×1/2/3/5** per esagerare la
   scala verticale; cursore + ▶ (riproduzione 10×) con marker e lettura di tempo, quota, vario e velocità. Rispetta il **Focus**.
 - **Aliante 3D** al posto del marker: sagoma (ali, piani di coda, deriva, fusoliera) con ombra sul suolo e filo a piombo, colorata col vario del
@@ -319,6 +324,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.21** — Traiettoria: **sfondo mappa gratuito** (strade OpenStreetMap o satellite Esri) sotto la traccia, anche in vista dall'alto; allineamento verificato con tasselli di prova (scarto ≈ 1 px).
 - **v1.20** — **Analisi volo**: in alto la narrativa **"Analisi"** (descrittiva, più estesa) con **giudizio finale** (livello, punti di forza, cose da tenere d'occhio, consiglio); i gruppi di dati sono in riquadri bordati con titolo in grassetto. Corretto il falso "passaggio molto basso (0 m)" che contava i secondi a terra.
 - **v1.19** — scheda **Giudizio → Analisi volo** ampliata (riepilogo a schede, fasi del volo, termiche rilevate, distribuzioni, commento, salite); scheda **Polare** con colonna destra di dati e info (risultati, coefficienti della curva, tabella delle fasce). Corretti i chip "0 mAh/100m" e "sag min —" che comparivano per i log senza dati elettrici.
 - **v1.18** — Traiettoria: layout a **tre colonne** (comandi a sinistra, dati del volo a destra) e **pan col tasto destro** del mouse; zoom con la rotella verso il cursore. File di esempio corretto (la riga `$SMGPS2` ora ha il formato atteso dal lettore: la salita a motore viene riconosciuta).

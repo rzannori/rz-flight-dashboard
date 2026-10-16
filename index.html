@@ -400,7 +400,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.20</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.21</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -612,6 +612,8 @@
             </div>
             <div class="trrow"><span data-i18n="tr_zoom">Zoom</span><span class="trzoom"><button class="btn ghost trbtn" id="trZm" aria-label="zoom −">−</button><span class="mono" id="trZoom">×1</span><button class="btn ghost trbtn" id="trZp" aria-label="zoom +">+</button></span></div>
             <div class="trrow"><span data-i18n="tr_exag">Quota ×</span><select id="trExag" class="resSel"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="5">5</option></select></div>
+            <div class="trrow"><span data-i18n="tr_map">Sfondo</span><select id="trMap" class="resSel"><option value="none" data-i18n="map_none">Nessuno</option><option value="osm" data-i18n="map_osm">Strade (OSM)</option><option value="esri" data-i18n="map_esri">Satellite (Esri)</option></select></div>
+            <div class="trnote" data-i18n="tr_map_note"></div>
             <label class="trrow chk"><input type="checkbox" id="trFollow"><span data-i18n="tr_follow">Segui</span></label>
           </div>
           <div class="trsec">
@@ -970,6 +972,11 @@ const T_TV={
   tv_dist:["Dist. dalla partenza","Dist. from start","Dist. du départ"], tv_path:["Percorso","Path length","Parcours"]
 };
 for(const k in T_TV){ T.it[k]=T_TV[k][0]; T.en[k]=T_TV[k][1]; T.fr[k]=T_TV[k][2]; }
+const T_MAP={
+  tr_map:["Sfondo","Background","Fond"], map_none:["Nessuno","None","Aucun"], map_osm:["Strade (OSM)","Streets (OSM)","Plan (OSM)"], map_esri:["Satellite (Esri)","Satellite (Esri)","Satellite (Esri)"],
+  tr_map_note:["Mappa gratuita (serve internet): appare sotto la traccia, anche in vista dall'alto. Fonti: © OpenStreetMap, Esri.","Free map (needs internet): shown under the track, also in top view. Sources: © OpenStreetMap, Esri.","Carte gratuite (internet requis) : affichée sous la trace, aussi en vue de dessus. Sources : © OpenStreetMap, Esri."]
+};
+for(const k in T_MAP){ T.it[k]=T_MAP[k][0]; T.en[k]=T_MAP[k][1]; T.fr[k]=T_MAP[k][2]; }
 for(const k in T_TR){ T.it[k]=T_TR[k][0]; T.en[k]=T_TR[k][1]; T.fr[k]=T_TR[k][2]; }
 const T_PO2={
   po_sec_res:["Risultati","Results","Résultats"], po_sec_curve:["Curva polare","Polar curve","Courbe polaire"], po_sec_bands:["Fasce di velocità","Speed bands","Tranches de vitesse"],
@@ -2590,7 +2597,51 @@ function trackData(f,exag){
   let last=NaN; for(let i=0;i<N;i++){ if(Number.isFinite(hd[i])) last=hd[i]; else hd[i]=last; }
   last=NaN; for(let i=N-1;i>=0;i--){ if(Number.isFinite(hd[i])) last=hd[i]; else hd[i]=last; }
   for(let i=0;i<N;i++) if(!Number.isFinite(hd[i])) hd[i]=0;
-  return {x,y,z,v,hd,gm,bk,hs,cum,t:f.t,N,Spos,Sneg,exag,xmn,xmx,ymn,ymx,zmn,zmx,sp:f.series["Speed"]||null,ser:f.series,keys:Object.keys(f.series)};
+  return {x,y,z,v,hd,gm,bk,hs,cum,lat0,lon0,t:f.t,N,Spos,Sneg,exag,xmn,xmx,ymn,ymx,zmn,zmx,sp:f.series["Speed"]||null,ser:f.series,keys:Object.keys(f.series)};
+}
+/* ---- sfondo mappa gratuito: tasselli Web Mercator (OpenStreetMap / Esri) proiettati sul "pavimento" ----
+   Il pavimento è un piano: la proiezione ortografica è lineare, quindi ogni tassello si disegna con una sola trasformazione affine. */
+const MAP_PROV={
+  osm:{url:(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`, attr:"© OpenStreetMap contributors"},
+  esri:{url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`, attr:"Esri, Maxar, Earthstar Geographics"}
+};
+let trMap=(()=>{ try{ const v=localStorage.getItem("fd_map"); return (v==="osm"||v==="esri")?v:"none"; }catch(e){ return "none"; } })();
+const tileCache=new Map(); let trRedrawPending=false;
+function scheduleTrRedraw(){ if(trRedrawPending) return; trRedrawPending=true; requestAnimationFrame(()=>{ trRedrawPending=false; if(trVisible()) drawTrack(); }); }
+function getTile(prov,z,x,y){
+  const key=prov+"/"+z+"/"+x+"/"+y; let img=tileCache.get(key); if(img) return img;
+  img=new Image(); img.onload=scheduleTrRedraw; img.onerror=()=>{ img._err=true; }; img.src=MAP_PROV[prov].url(z,x,y);
+  tileCache.set(key,img); if(tileCache.size>700) tileCache.delete(tileCache.keys().next().value);
+  return img;
+}
+function drawMapFloor(g,P,W,H,sc,D){
+  const prov=MAP_PROV[trMap]; if(!prov||D.lat0==null||!Number.isFinite(D.lat0)) return false;
+  const o=P(0,0,0), e1=P(1,0,0), e2=P(0,1,0), ax=e1[0]-o[0], ay=e1[1]-o[1], bx=e2[0]-o[0], by=e2[1]-o[1], det=ax*by-bx*ay;
+  // zona da coprire: attorno al volo, e (se la vista lo permette) solo ciò che si vede
+  const span=Math.max(D.xmx-D.xmn,D.ymx-D.ymn), pad=Math.max(400,0.35*span);
+  let X0=D.xmn-pad, X1=D.xmx+pad, Y0=D.ymn-pad, Y1=D.ymx+pad;
+  if(Math.abs(det)>0.04*sc*sc){
+    const xs=[],ys=[]; for(const [cx,cy] of [[0,0],[W,0],[0,H],[W,H]]){ const dx=cx-o[0], dy=cy-o[1]; xs.push((by*dx-bx*dy)/det); ys.push((-ay*dx+ax*dy)/det); }
+    X0=Math.max(X0,Math.min(...xs)); X1=Math.min(X1,Math.max(...xs)); Y0=Math.max(Y0,Math.min(...ys)); Y1=Math.min(Y1,Math.max(...ys));
+  }
+  if(!(X1>X0&&Y1>Y0)) return true;
+  const latR=D.lat0*Math.PI/180, C=40075016.686*Math.cos(latR);
+  let z=Math.max(8,Math.min(19,Math.round(Math.log2(C*sc/256)))), T;
+  for(;;){                                                              // meno tasselli possibile: abbassa lo zoom se sono troppi
+    const n=256*2**z, px0=(D.lon0+180)/360*n, py0=(1-Math.log(Math.tan(latR)+1/Math.cos(latR))/Math.PI)/2*n, res=C/n;
+    const tx0=Math.floor((px0+X0/res)/256), tx1=Math.floor((px0+X1/res)/256), ty0=Math.floor((py0-Y1/res)/256), ty1=Math.floor((py0-Y0/res)/256);
+    T={n,px0,py0,res,tx0,tx1,ty0,ty1}; if((tx1-tx0+1)*(ty1-ty0+1)<=48||z<=8) break; z--;
+  }
+  g.save(); g.globalAlpha=0.92; g.imageSmoothingEnabled=true;
+  const world=2**z;
+  for(let ty=Math.max(0,T.ty0);ty<=Math.min(world-1,T.ty1);ty++) for(let tx=T.tx0;tx<=T.tx1;tx++){
+    const img=getTile(trMap,z,((tx%world)+world)%world,ty); if(!img.complete||!img.naturalWidth) continue;
+    const tl=P((tx*256-T.px0)*T.res,-(ty*256-T.py0)*T.res,0);
+    g.save(); g.transform(ax*T.res,ay*T.res,-bx*T.res,-by*T.res,tl[0],tl[1]); g.drawImage(img,0,0,256.6,256.6); g.restore();   // +0,6 px: niente fessure tra i tasselli
+  }
+  g.restore();
+  g.fillStyle=cssv("--muted"); g.font='10px "IBM Plex Sans",sans-serif'; g.textAlign="right"; g.textBaseline="bottom"; g.fillText("© "+prov.attr.replace(/^©\s*/,""),W-8,H-6);
+  return true;
 }
 const TR_ZMAX=40, TR_ZMIN=0.4;
 /* zoom: (cx,cy) = punto fisso sullo schermo rispetto al centro del grafico (rotella: il cursore; pulsanti/pizzico: il centro) */
@@ -2613,10 +2664,11 @@ function drawTrack(){
   const cyw=Math.cos(trView.yaw), syw=Math.sin(trView.yaw), ce=Math.cos(trView.el), se=Math.sin(trView.el);
   const P=(x,y,z)=>{ const dx=x-cx, dy=y-cy0, dz=z-cz, x1=dx*cyw-dy*syw, y1=dx*syw+dy*cyw; return [W/2+trView.px+x1*sc, H/2+trView.py-(dz*ce+y1*se)*sc]; };
   const Z=i=>(D.z[i]-D.zmn)*ex, muted=cssv("--muted"), grid=cssv("--line");
+  const mapOn=drawMapFloor(g,P,W,H,sc,D);
   // griglia al suolo (passo "tondo")
   const span=Math.max(xr,yr), steps=[10,20,50,100,200,500,1000,2000,5000], step=steps.find(s=>span/s<=8)||5000;
   const gx0=Math.floor(D.xmn/step)*step-step, gx1=Math.ceil(D.xmx/step)*step+step, gy0=Math.floor(D.ymn/step)*step-step, gy1=Math.ceil(D.ymx/step)*step+step;
-  g.strokeStyle=grid; g.globalAlpha=.55; g.lineWidth=1; g.beginPath();
+  g.strokeStyle=grid; g.globalAlpha=mapOn?.2:.55; g.lineWidth=1; g.beginPath();
   for(let X=gx0;X<=gx1+1e-6;X+=step){ const a=P(X,gy0,0), b=P(X,gy1,0); g.moveTo(a[0],a[1]); g.lineTo(b[0],b[1]); }
   for(let Y=gy0;Y<=gy1+1e-6;Y+=step){ const a=P(gx0,Y,0), b=P(gx1,Y,0); g.moveTo(a[0],a[1]); g.lineTo(b[0],b[1]); }
   g.stroke(); g.globalAlpha=1;
@@ -2730,6 +2782,8 @@ function toggleTrackPlay(){
   $("#tr3d").addEventListener("click",()=>{ trView={...TR_VIEW0}; drawTrack(); });
   $("#trExag").addEventListener("change",renderTrack);
   $("#trFollow").addEventListener("change",()=>{ trView.px=trView.py=0; drawTrack(); });
+  $("#trMap").value=trMap;
+  $("#trMap").addEventListener("change",e=>{ trMap=e.target.value; try{ localStorage.setItem("fd_map",trMap); }catch(_){} drawTrack(); });
   $("#trZp").addEventListener("click",()=>trZoomBy(1.5)); $("#trZm").addEventListener("click",()=>trZoomBy(1/1.5));
   $("#trSlider").addEventListener("input",e=>{ stopTrackPlay(); trIdx=+e.target.value; drawTrack(); });
   $("#trPlay").addEventListener("click",toggleTrackPlay);

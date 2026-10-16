@@ -40,3 +40,5 @@ Include tutti i canali: velocità, posizione, quota GPS e relativa, satelliti, H
 | **Archivio** | (Chrome/Edge su PC) salva il volo con modello e pacco: stessa durata e canali ricaricati identici |
 
 > Il vario del file è "barometrico": dopo una decelerazione brusca (90 → 48 km/h) mostra una piccola salita per lo scambio velocità/quota. Per questo la termica 2 ha un vario massimo apparente di ~3,8 m/s: è normale.
+
+> **Sfondo mappa (v1.21):** i file di esempio sono posizionati a circa 45,60° N, 9,20° E (zona del lago di Como/Lecco). Scegliendo *Sfondo → Strade/Satellite* nella scheda Traiettoria si vede la mappa reale di quel punto sotto il volo inventato (serve internet).
