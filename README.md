@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.15**
+- Versione corrente: **v1.16**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -133,6 +133,13 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 - `renderVerdict(DATA)`: giudizio automatico "a bordo pista" (sempre su volo intero), chip colorati + prosa + tabella salite. Testi trilingui via helper `LG(it,en,fr)`.
 
 **Grafico (`gr`)**
+- **Pannello Variabili (live)** a sinistra (sopra il grafico su schermi stretti): elenco verticale di tutte le variabili del volo con spunta,
+  colore, unità e badge ƒ; ricerca; **X** (tempo o variabile) e **Tipo** (linea/area/dispersione). Il grafico si ricostruisce a ogni spunta.
+- Le scelte vanno nel report speciale **● Live** (ultima voce del menu *Report*; non salvato tra i report standard, ma la selezione è ricordata in
+  `localStorage` `fd_live` e riproposta ai caricamenti successivi per le variabili presenti). Se è selezionato un report salvato e si tocca il pannello,
+  parte una **copia in Live** e l'originale resta intatto.
+- **Salva come report** trasforma il Live in un report standard (come quelli del Set up); **Azzera** svuota la selezione.
+- Funzioni: `ensureLive`, `toLive`, `syncLive`, `buildVarList`, `syncVarChecks`.
 - Report selezionabili (menu). **Multi-asse**: un asse per variabile (sx = 1ª, dx impilati). Colore per curva (legenda). **Dettaglio** = risoluzione (decimazione min/max che preserva i picchi).
 - **Zoom rotella** + **barra di scorrimento** (pan) + **⟲** reset (`setupViewInteractions`, stato `gZoom`).
 - **Drill**: clic su una curva (o sul nome in legenda) → la isola; pulsante **← Indietro** torna al report precedente (`drillReturn`) e, se il drill è partito da un'altra scheda (es. clic su una KPI della Panoramica), **alla scheda di partenza** (`drillOrigin`).
@@ -288,6 +295,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.16** — scheda Grafico: **grafici live**, pannello Variabili a sinistra con spunte/colori/ricerca/X/tipo, report "● Live" ricordato, "Salva come report".
 - **v1.15** — drill-through: **← Indietro** dal Grafico torna alla scheda da cui si è partiti (es. la Panoramica), non solo al report precedente.
 - **v1.14** — **ottimizzazione PC**: la pagina usa tutta la larghezza dello schermo (prima colonna fissa di 1040 px; ora fino a 2000 px, con tetto per i monitor enormi);
   i grafici (Panoramica, Grafico, Polare, Traiettoria) si adattano all'**altezza** della finestra (`chartH`) per riempire lo schermo senza scorrere;
