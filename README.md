@@ -44,6 +44,8 @@ Gli aggiornamenti pubblicati su GitHub arrivano da soli: l'app scarica la nuova 
 
 ---
 
+> **Prova rapida:** nella cartella [`esempi/`](esempi/) c'è un log GPS sintetico (`polare-traiettoria-test.nmea`) per provare Polare e Traiettoria, con i valori attesi.
+
 ## 3. Architettura
 
 File del repository:
