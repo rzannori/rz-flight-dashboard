@@ -402,7 +402,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.23</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.24</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -456,6 +456,7 @@
       <div class="legend">
         <span><span class="swatch" style="background:var(--accent)"></span><span data-i18n="leg_alt">Quota relativa</span> <span class="mono" id="mainRange" style="opacity:.8"></span></span>
         <span><span class="swatch band"></span><span data-i18n="leg_motor">Salita a motore (corrente assorbita)</span></span>
+        <span id="phaseLeg" style="display:contents"></span>
       </div>
     </div>
   </section>
@@ -922,6 +923,8 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  an_g_phase:["Modalità di volo (interruttori)","Flight modes (switches)","Modes de vol (interrupteurs)"],
+  ph_normal:["Normale","Normal","Normal"], ph_thermal:["Termica","Thermal","Thermique"], ph_speed:["Velocità","Speed","Vitesse"], ph_land:["Atterraggio","Landing","Atterrissage"],
   an_sec_phases:["Fasi del volo","Flight phases","Phases du vol"], an_sec_thermals:["Termiche rilevate","Detected thermals","Ascendances détectées"],
   an_sec_dist:["Distribuzioni","Distributions","Distributions"], an_sec_comment:["Commento automatico","Automatic commentary","Commentaire automatique"],
   an_sec_climbs:["Salite a motore","Motor climbs","Montées moteur"],
@@ -1078,7 +1081,7 @@ function parseRaw(text){
     }
     if(dev==="0000000000") continue;   // alarms / events
     const t=+ts; if(!isFinite(t)) continue;
-    const body=p.slice(2);
+    const body=p.slice(2); while(body.length&&body[body.length-1].trim()==='') body.pop();   // alcune righe (es. interruttori Tx) terminano con ";"
     if(body.length%4!==0) continue;
     const pairs=[];
     for(let i=0;i<body.length;i+=4){
@@ -1093,6 +1096,37 @@ function parseRaw(text){
   return buildFrame(defs, rawRows, model);
 }
 
+/* fasi di volo comandate da interruttori della radio (log Jeti con canali "Comando Sa/Sb"):
+   Sa a 3 posizioni: 0 = termica, 50 = normale, 100 = velocità · Sb: ≥50 = atterraggio (ha la precedenza).
+   Per cambiare l'assegnazione basta modificare PHASE_SA / PHASE_SB. */
+const PHASES=[
+  {k:1,id:"ph_normal",col:"#3fb68b"}, {k:2,id:"ph_thermal",col:"#a56be0"}, {k:3,id:"ph_speed",col:"#4c9be8"}, {k:4,id:"ph_land",col:"#d9534f"}
+];
+const PHASE_SA=v=>v<25?2:(v<75?1:3), PHASE_SB=v=>v>=50;
+function derivePhases(f){
+  // i canali "Comando Sa" duplicati (stesso interruttore su più canali) si fondono in uno
+  const keep=[];
+  for(const k of Object.keys(f.series)){
+    if(!/^Comando\s+S/i.test(k)) continue;
+    const v=f.series[k].vals, dup=keep.find(q=>{ const w=f.series[q].vals; return w.length===v.length && w.every((x,i)=>x===v[i]); });
+    if(dup) delete f.series[k]; else keep.push(k);
+  }
+  const A=keep.find(k=>/^Comando\s+Sa/i.test(k)), B=keep.find(k=>/^Comando\s+Sb/i.test(k));
+  for(const k of keep){ const n=k.replace(/\s*\(.*\)$/,""); if(n!==k && !f.series[n]){ f.series[n]=f.series[k]; delete f.series[k]; } }
+  if(!A&&!B) return;
+  const sa=A&&f.series[A.replace(/\s*\(.*\)$/,"")]||(A&&f.series[A]), sb=B&&(f.series[B.replace(/\s*\(.*\)$/,"")]||f.series[B]);
+  const N=f.t.length, ph=new Array(N); let la=1;
+  for(let i=0;i<N;i++){
+    const b=sb?sb.vals[i]:NaN, a=sa?sa.vals[i]:NaN;
+    if(Number.isFinite(b)&&PHASE_SB(b)) ph[i]=4;
+    else if(Number.isFinite(a)) ph[i]=PHASE_SA(a); else ph[i]=la;
+    la=ph[i];
+  }
+  f.series["Fase volo"]={unit:"",vals:ph,derived:true};
+  const segs=[]; let i0=0;
+  for(let i=1;i<=N;i++) if(i===N||ph[i]!==ph[i0]){ segs.push({k:ph[i0],i0,i1:i-1,t0:f.t[i0],t1:f.t[Math.min(i,N-1)]}); i0=i; }
+  f.phases=segs;
+}
 /* nomi canonici dei canali: sensori e regolatori diversi (Jeti MiVario, MEZON, …) chiamano le stesse grandezze in modi diversi */
 const LABEL_ALIAS={
   "Altitudine":"Rel. altit", "U Batteria":"UBat", "I Batteria":"IBat", "U Accu":"UBat", "I Accu":"IBat",
@@ -1115,6 +1149,7 @@ function buildFrame(defs, rows, model){
     }
   }
   const fr=frameFromSeries(seriesRaw, model, (rows[rows.length-1].t-t0)/1000);
+  derivePhases(fr);
   fr.devices=Object.keys(defs).map(k=>defs[k][0]&&defs[k][0].label.trim()).filter(n=>n&&!/^(tx|rx|rxb|rx\d*)$/i.test(n));   // sensori presenti (es. MiVario, MEZON 120)
   return fr;
 }
@@ -1419,7 +1454,7 @@ function analyzeFlight(f){
   const altMax=Math.max(...a.vals.slice(i0,i1+1)), lastClimb=C.length?C[C.length-1]:null;
   return {N,DT,i0,i1,air,ph,secs,th,C,altMax,launchAlt:lastClimb?a.vals[Math.min(N-1,lastClimb.i1)]:null,
     gainMotor:C.reduce((p,c)=>p+Math.max(0,c.dalt||0),0),gainTherm:th.reduce((p,x)=>p+x.gain,0),
-    sink:ns?ss/ns:null,gr,liftPct:n3?np/n3*100:null,sv,path,dmax,dend,hs,hvar,el,hasGps:!!X};
+    sink:ns?ss/ns:null,gr,liftPct:n3?np/n3*100:null,sv,path,dmax,dend,hs,hvar,el,hasGps:!!X,tOn:f.t[i0],tOff:f.t[i1]};
 }
 function renderAnalysis(f){
   const A=analyzeFlight(f), tiles=$("#anaTiles");
@@ -1449,7 +1484,10 @@ function renderAnalysis(f){
   if(E.vcell!=null) g4.push(tile(t("an_vcell"),fmt(E.vcell,2),"V",""+"",E.vcell>=3.55?"good":E.vcell>=3.45?"warn":"crit"));
   if(E.rint!=null) g4.push(tile(t("an_rint"),fmt(E.rint,0),"mΩ")); if(E.spec!=null) g4.push(tile(t("an_spec"),fmt(E.spec,0),"",""));
   if(E.tesc!=null) g4.push(tile(t("an_tesc"),fmt(E.tesc,0),"°C","",E.tesc<60?"good":E.tesc<75?"warn":"crit"));
-  tiles.innerHTML=grp("an_g_flight",g1)+grp("an_g_air",g2)+grp("an_g_gps",g3)+grp("an_g_elec",g4);
+  const g5=[];
+  if(f.phases){ const tot={}; for(const p of f.phases){ if(p.t1<=A.tOn||p.t0>=A.tOff) continue; const a=Math.max(p.t0,A.tOn),b=Math.min(p.t1,A.tOff); tot[p.k]=(tot[p.k]||0)+(b-a); }
+    for(const P of PHASES) if(tot[P.k]>0) g5.push(tile(t(P.id),hhmmss(tot[P.k]),"",pct(tot[P.k]))); }
+  tiles.innerHTML=grp("an_g_flight",g1)+grp("an_g_air",g2)+grp("an_g_gps",g3)+grp("an_g_elec",g4)+grp("an_g_phase",g5);
 
   // barra delle fasi
   const COL=["var(--line)","var(--motor)","var(--good)","var(--accent-2)"], NAME=[t("ph_ground"),t("ph_motor"),t("ph_therm"),t("ph_glide")];
@@ -1727,6 +1765,11 @@ function drawChart(canvas, cfg){
   const X=v=>padL+(v-xmin)/(xmax-xmin)*W;
   const Yof=(s,v)=>padT+H-(v-s._min)/(s._max-s._min)*H;
 
+  // fasi di volo (fasce colorate leggere, sotto le fasce motore)
+  if(cfg.phases) for(const b of cfg.phases){
+    const x0=Math.max(padL,X(b.x0)),x1=Math.min(padL+W,X(b.x1)); if(x1<=x0) continue;
+    g.fillStyle=b.col; g.globalAlpha=0.17; g.fillRect(x0,padT,x1-x0,H); g.globalAlpha=1;
+  }
   // motor bands (full plot height)
   if(cfg.bands) for(const b of cfg.bands){
     const x0=X(b.x0),x1=X(b.x1);
@@ -1973,6 +2016,15 @@ function setupViewInteractions(){
 }
 
 /* ---------- page 1 chart ---------- */
+function phaseBands(f){
+  if(!f.phases) return null;
+  return f.phases.map(p=>({x0:p.t0,x1:p.t1,col:PHASES.find(x=>x.k===p.k).col}));
+}
+function phaseLegend(f){
+  if(!f.phases) return "";
+  const used=new Set(f.phases.map(p=>p.k));
+  return PHASES.filter(p=>used.has(p.k)).map(p=>`<span><span class="swatch" style="background:${p.col};opacity:.55"></span>${t(p.id)}</span>`).join("");
+}
 function renderMain(){
   const f=DATA; if(!f) return;
   const alt=altSeries(f); if(!alt){ return; }
@@ -1980,10 +2032,11 @@ function renderMain(){
   const bands=f.climbs.map((c,i)=>({x0:c.t0,x1:c.t1,label:c.dalt!=null?("+"+Math.round(c.dalt)):""}));
   drawChart($("#mainChart"),{
     series:[{xs:d.xs,ys:d.ys,color:"--accent",type:"area",name:"Quota",unit:"m"}],
-    bands, height:chartH(340,610), xTimeAxis:true
+    bands, phases:phaseBands(f), height:chartH(340,610), xTimeAxis:true
   });
   const r=rangeOf(alt.vals);
   $("#mainRange").textContent = `${Math.round(r.dmin)}…${Math.round(r.dmax)} m`;
+  $("#phaseLeg").innerHTML=phaseLegend(f);
   paintFocus();
 }
 
@@ -2072,7 +2125,7 @@ function renderView(){
     $("#viewChart")._full={tmin,tmax,isTime:true};
     renderViewScroll(tmin,tmax,win);
   } else { $("#viewChart")._full={isTime:false}; renderViewScroll(0,0,null); }
-  drawChart($("#viewChart"),Object.assign({series, height:chartH(340,470), xTimeAxis:isTime}, cfgx));
+  drawChart($("#viewChart"),Object.assign({series, phases:isTime?phaseBands(f):null, height:chartH(340,470), xTimeAxis:isTime}, cfgx));
   $("#viewLegend").innerHTML=legend.join("");
 }
 
