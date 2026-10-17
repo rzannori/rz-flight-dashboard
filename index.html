@@ -92,7 +92,8 @@
   .helpcard li b{color:var(--fg)}
   .helpcard .fx{color:var(--motor)}
   .soontag{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--motor);border:1px solid var(--motor);border-radius:999px;padding:0 5px;margin-left:7px}
-  input[type=file]#file,input[type=file]#fileSM{display:none}
+  input[type=file]#file{display:none}
+  .demobtn{background:var(--surface-2);color:var(--text);border:1px solid var(--line)}
   .menu .mi:active{background:var(--surface-2)}
   .fname{color:var(--muted);font-size:.78rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .demo-flag{font-size:.68rem;font-weight:700;color:var(--warn);border:1px solid var(--warn);border-radius:999px;padding:2px 9px;letter-spacing:.5px}
@@ -401,7 +402,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.22</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.23</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -418,19 +419,8 @@
         <button class="helpbtn" id="helpBtn" data-i18n-title="help" title="Guida">?</button>
       </div>
       <div class="actions">
-        <div class="loadmenu" id="loadMenu">
-          <button class="filebtn" id="loadBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="loadList">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span data-i18n="load_btn">Carica</span>
-            <svg class="caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-          <div class="menu" id="loadList" role="menu">
-            <label class="mi" role="menuitem" tabindex="0" data-i18n-title="load_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="mt">Jeti Log<small data-i18n="mi_jeti">log .log o CSV</small></span><input type="file" id="file" accept=".log,.csv,.txt"></label>
-            <label class="mi" role="menuitem" tabindex="0" id="loadSM" data-i18n-title="sm_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="mt">SM Modellbau<small data-i18n="mi_sm">GPS · .nmea</small></span><input type="file" id="fileSM" accept=".nmea,.txt,.log"></label>
-            <button class="mi soon" role="menuitem" type="button" id="loadRZ" data-i18n-title="rz_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="mt">RZ GPS</span><span class="soontag" data-i18n="soon">presto</span></button>
-            <div class="sep" role="separator"></div>
-            <button class="mi demo" role="menuitem" type="button" id="demoBtn" data-i18n-title="demo_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg><span class="mt"><span data-i18n="demo">Demo</span><small data-i18n="mi_demo">dati di esempio</small></span></button>
-          </div>
-        </div>
+        <label class="filebtn" id="loadBtn" tabindex="0" data-i18n-title="load_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span data-i18n="load_btn">Carica</span><input type="file" id="file"></label>
+      <button class="filebtn demobtn" id="demoBtn" type="button" data-i18n-title="demo_title"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg><span data-i18n="demo">Demo</span></button>
       <button class="setupbtn" id="setupBtn" title="Set up">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.6H3a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 4.7 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 3V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></svg>
         <span data-i18n="setup">Set up</span>
@@ -1314,7 +1304,7 @@ function parseFilename(name){
   if(!name) return {dateObj:null,time:null,dateKnown:false};
   const dm=name.match(/(\d{4})-(\d{2})-(\d{2})/);
   const rest=dm?name.replace(dm[0],""):name;
-  const tm=rest.match(/(\d{2})[-:_.](\d{2})[-:_.](\d{2})/);
+  const tm=rest.match(/(?<!\d)(\d{2})[-:_.](\d{2})[-:_.](\d{2})/);
   const time=tm?`${tm[1]}:${tm[2]}:${tm[3]}`:null;
   let dateObj=null;
   if(dm) dateObj=new Date(+dm[1],+dm[2]-1,+dm[3], tm?+tm[1]:0, tm?+tm[2]:0, tm?+tm[3]:0);
@@ -1331,7 +1321,20 @@ function renderFlightHead(f){
   $("#flightHead").innerHTML =
     `<span class="fh-model${model?'':' na'}">${model?escapeHtml(model):t("model_unknown")}</span>`+
     `<span class="fh-date">${escapeHtml(dline)}</span>`+
-    (f.devices&&f.devices.length?`<span class="fh-dev">${escapeHtml(f.devices.join(" · "))}</span>`:"");
+    (()=>{ const sp=setupPhrase(f); return sp?`<span class="fh-dev">${escapeHtml(sp)}</span>`:""; })();
+}
+/* nomi leggibili dei dispositivi: [espressione sul nome nel log, nome da mostrare]. Aggiungere qui i nuovi sensori. */
+const DEVICE_NAMES=[
+  [/^mezon\s*(\d+)/i,m=>"Jeti Mezon "+m[1]], [/^mvario|^mivario/i,()=>"MiVario"], [/^spin\s*(\d+)/i,m=>"Jeti Spin "+m[1]],
+  [/^central\s*box/i,()=>"Central Box"], [/^mgps|^gps/i,()=>"GPS Jeti"], [/^mui/i,()=>"MUI"], [/^mpxspeed|^mspeed/i,()=>"MSpeed"]
+];
+function setupPhrase(f){
+  const out=[];
+  for(const d of (f.devices||[])){ let n=d; for(const [re,fn] of DEVICE_NAMES){ const m=d.match(re); if(m){ n=fn(m); break; } } if(!out.includes(n)) out.push(n); }
+  if(f.cells>=2 && f.series["UBat"]) out.push(f.cells+"S");
+  const gps=f.series["Lat"]&&f.series["Lon"];
+  if(gps && !out.some(x=>/gps/i.test(x)) && !/gps/i.test(f.model||"")) out.push("GPS");
+  return out.join(" · ");
 }
 
 const ICON={
@@ -2819,19 +2822,21 @@ $("#setupBtn").addEventListener("click",()=>{
 });
 
 $("#file").addEventListener("change",e=>{
-  const file=e.target.files[0]; if(!file) return;
+  const file=e.target.files[0]; e.target.value=""; if(!file) return;
   const rd=new FileReader();
   rd.onload=()=>{
     const txt=String(rd.result);
-    let f=null;
-    // decide: raw has "000000000;" definition lines; csv starts with JetiAdapter / header with [unit]
+    let f=null; const nmea=/^\$G[NPLAB]RMC|^\$SMGPS/m.test(txt);
+    // riconoscimento dal contenuto: NMEA (GPS SM), Jeti raw (righe di definizione "000000000;"), altrimenti CSV
     try{
-      if(/\n000000000;|\b000000000;/.test(txt) || /^#/.test(txt)) f=parseRaw(txt);
+      if(nmea) f=parseNMEA(txt);
+      else if(/\b000000000;/.test(txt) || /^#/.test(txt)) f=parseRaw(txt);
       else f=parseCsv(txt);
-      if(!f) f=parseRaw(txt)||parseCsv(txt);
+      if(!f && !nmea) f=parseRaw(txt)||parseCsv(txt);
     }catch(err){ f=null; }
     if(!f || !altSeries(f)){ alert(t("file_err")); return; }
-    f.meta=parseFilename(file.name); f._src=file.name;
+    if(!f.meta) f.meta=parseFilename(file.name); else if(!f.meta.time&&!f.meta.dateKnown) f.meta=parseFilename(file.name);
+    f._src=file.name;
     focusRange=null; reports=reports.filter(r=>!r.tmp);
     DATA=f; isDemo=false; $("#fname").textContent=file.name; renderAll();
   };
@@ -2907,41 +2912,7 @@ let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(red
 const mo=new MutationObserver(redrawAll); mo.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 if(window.matchMedia) matchMedia("(prefers-color-scheme:dark)").addEventListener("change",redrawAll);
 
-/* menu "Carica" a tendina */
-(function(){
-  const box=$("#loadMenu"), btn=$("#loadBtn"), list=$("#loadList");
-  const items=()=>[...list.querySelectorAll(".mi")];
-  const open=(focusFirst)=>{ box.classList.add("open"); btn.setAttribute("aria-expanded","true"); if(focusFirst){ const f=items()[0]; if(f) f.focus(); } };
-  const close=(back)=>{ box.classList.remove("open"); btn.setAttribute("aria-expanded","false"); if(back) btn.focus(); };
-  btn.addEventListener("click",()=>{ box.classList.contains("open")?close():open(); });
-  // chiusura dopo la scelta (con un attimo di ritardo: il selettore file deve aprirsi prima)
-  list.addEventListener("click",()=>setTimeout(close,150));
-  list.addEventListener("change",()=>close());
-  document.addEventListener("click",e=>{ if(!box.contains(e.target)) close(); });
-  document.addEventListener("keydown",e=>{
-    if(!box.classList.contains("open")){ if(e.target===btn&&e.key==="ArrowDown"){ e.preventDefault(); open(true); } return; }
-    if(e.key==="Escape"){ close(true); return; }
-    const it=items(), i=it.indexOf(document.activeElement);
-    if(e.key==="ArrowDown"){ e.preventDefault(); it[(i+1)%it.length].focus(); }
-    else if(e.key==="ArrowUp"){ e.preventDefault(); it[(i<=0?it.length:i)-1].focus(); }
-    else if((e.key==="Enter"||e.key===" ")&&document.activeElement&&document.activeElement.tagName==="LABEL"){ e.preventDefault(); document.activeElement.click(); }
-  });
-})();
-function showSoon(name){ const el=$("#fname"); el.textContent=name+": "+t("soon_msg"); setTimeout(()=>{ if(el.textContent.indexOf(name)===0) el.textContent=""; },2400); }
-$("#loadRZ").addEventListener("click",()=>showSoon("RZ GPS"));
 $("#demoBtn").addEventListener("click",()=>{ focusRange=null; reports=reports.filter(r=>!r.tmp); DATA=makeDemo(); isDemo=true; $("#fname").textContent=""; seedDemoReports(); renderAll(); });
-$("#fileSM").addEventListener("change",e=>{
-  const file=e.target.files[0]; if(!file) return;
-  const rd=new FileReader();
-  rd.onload=()=>{
-    let f=null; try{ f=parseNMEA(String(rd.result)); }catch(err){ f=null; }
-    if(!f || !altSeries(f)){ alert(t("file_err")); return; }
-    if(!f.meta) f.meta=parseFilename(file.name); f._src=file.name;
-    focusRange=null; reports=reports.filter(r=>!r.tmp);
-    DATA=f; isDemo=false; $("#fname").textContent=file.name; renderAll();
-  };
-  rd.readAsText(file);
-});
 $("#themeCtl").addEventListener("input",e=>{ const t=e.target; if(!t.classList||!t.classList.contains("thcol"))return; themeOverrides[t.dataset.k]=t.value; saveTheme(); applyTheme(); redrawAll(); });
 $("#themeReset").addEventListener("click",()=>{ themeOverrides={}; saveTheme(); applyTheme(); renderThemeControls(); redrawAll(); });
 $("#flagIt").addEventListener("click",()=>setLang("it"));
@@ -2959,7 +2930,7 @@ $("#logoFile").addEventListener("change",e=>{ const f=e.target.files[0]; if(!f)r
 (function(){ const nj=document.getElementById("nojs"); if(nj) nj.remove(); })();   // JS is running → hide the fallback notice
 // iOS: il selettore File disattiva le estensioni che non conosce (.nmea, a volte .log) → niente filtro su iPhone/iPad
 if(/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1)){
-  ["#file","#fileSM"].forEach(s=>{ const el=$(s); if(el) el.removeAttribute("accept"); });
+  ["#file"].forEach(s=>{ const el=$(s); if(el) el.removeAttribute("accept"); });
 }
 // PWA: service worker per l'uso offline (solo se servita via http/https, non da file locale)
 if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){

@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.22**
+- Versione corrente: **v1.23**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -324,6 +324,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.23** — **Un solo pulsante "Carica"** (più "Demo"): il tipo di file (log Jeti raw, CSV, NMEA dello SM GPS) è riconosciuto dal contenuto. Sotto il nome del modello compare la **frase dell'assetto** (es. "Jeti Mezon 120 · MiVario · 6S": regolatore e sensori dai nomi nel log, numero di celle dalla tensione, GPS se presente). I nomi leggibili si aggiungono nella tabella `DEVICE_NAMES` in `index.html`. Corretta la lettura dell'ora dal nome file quando è preceduto da altre cifre.
 - **v1.22** — Supporto ai log Jeti con regolatore **MEZON** e sensore **MiVario** (es. ARCUS): i nomi dei canali in italiano (Altitudine, U/I Batteria, Capacita, Giri, Acc_X…) sono mappati sui nomi standard; i canali con lo stesso nome su dispositivi diversi ricevono il suffisso del dispositivo; "Temp." del regolatore diventa TempESC; l'intestazione mostra i dispositivi rilevati. Nota: se il canale `Velocita` non è una velocità reale, Polare e Traiettoria non sono disponibili.
 - **v1.21** — Traiettoria: **sfondo mappa gratuito** (strade OpenStreetMap o satellite Esri) sotto la traccia, anche in vista dall'alto; allineamento verificato con tasselli di prova (scarto ≈ 1 px).
 - **v1.20** — **Analisi volo**: in alto la narrativa **"Analisi"** (descrittiva, più estesa) con **giudizio finale** (livello, punti di forza, cose da tenere d'occhio, consiglio); i gruppi di dati sono in riquadri bordati con titolo in grassetto. Corretto il falso "passaggio molto basso (0 m)" che contava i secondi a terra.
