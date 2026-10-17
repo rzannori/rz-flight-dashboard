@@ -172,7 +172,8 @@
     background:linear-gradient(135deg,var(--hero1),var(--hero2))}
   .fh-model{font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;font-size:clamp(2rem,6.5vw,2.8rem);line-height:1;letter-spacing:.5px}
   .fh-model.na{color:var(--muted);font-weight:600}
-  .fh-dev{flex-basis:100%;color:var(--muted);font:500 .74rem "IBM Plex Mono",monospace;letter-spacing:.3px;margin-top:2px}
+  .fh-dev{flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 22px;color:var(--text);font:600 .95rem "IBM Plex Mono",monospace;margin-top:6px}
+  .fh-r{color:var(--muted);font-weight:500;font-size:.78rem;text-transform:uppercase;letter-spacing:.6px;margin-right:4px}
   .fh-date{color:var(--muted);font-size:1rem;letter-spacing:.3px;text-transform:capitalize}
   .fh-demo{font-size:.68rem;font-weight:700;color:var(--warn);border:1px solid var(--warn);border-radius:999px;padding:2px 9px;letter-spacing:.6px;text-transform:uppercase;align-self:center}
 
@@ -402,7 +403,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.25</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.26</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -923,6 +924,8 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  sr_esc:["Regolatore","ESC","Variateur"], sr_vario:["Vario","Vario","Vario"], sr_gps:["GPS","GPS","GPS"], sr_rx:["Ricevente","Receiver","Récepteur"],
+  sr_bat:["Batteria","Battery","Batterie"], sr_other:["Sensore","Sensor","Capteur"],
   an_g_phase:["Modalità di volo (interruttori)","Flight modes (switches)","Modes de vol (interrupteurs)"],
   ph_normal:["Normale","Normal","Normal"], ph_thermal:["Termica","Thermal","Thermique"], ph_speed:["Velocità","Speed","Vitesse"], ph_land:["Atterraggio","Landing","Atterrissage"],
   an_sec_phases:["Fasi del volo","Flight phases","Phases du vol"], an_sec_thermals:["Termiche rilevate","Detected thermals","Ascendances détectées"],
@@ -1151,6 +1154,10 @@ function buildFrame(defs, rows, model){
   const fr=frameFromSeries(seriesRaw, model, (rows[rows.length-1].t-t0)/1000);
   derivePhases(fr);
   fr.devices=Object.keys(defs).map(k=>defs[k][0]&&defs[k][0].label.trim()).filter(n=>n&&!/^(tx|rx|rxb|rx\d*)$/i.test(n));   // sensori presenti (es. MiVario, MEZON 120)
+  fr.devRoles=Object.keys(defs).map(k=>{ const d=defs[k], name=d[0]&&d[0].label.trim(); if(!name||/^(tx|rxb|rx\d*)$/i.test(name)) return null;
+    const labs=Object.values(d).map(x=>canonLabel(x.label));
+    const role=/^rx\b/i.test(name)?"rx":labs.some(l=>/^(RPM|UBat|IBat|PWM)$/.test(l))?"esc":labs.some(l=>/^(Lat|Lon|Latitude|Longitude)/i.test(l))?"gps":labs.some(l=>/vario/i.test(l))?"vario":"other";
+    return {role,name}; }).filter(Boolean);
   return fr;
 }
 
@@ -1356,20 +1363,26 @@ function renderFlightHead(f){
   $("#flightHead").innerHTML =
     `<span class="fh-model${model?'':' na'}">${model?escapeHtml(model):t("model_unknown")}</span>`+
     `<span class="fh-date">${escapeHtml(dline)}</span>`+
-    (()=>{ const sp=setupPhrase(f); return sp?`<span class="fh-dev">${escapeHtml(sp)}</span>`:""; })();
+    (()=>{ const sp=setupPhrase(f); return sp?`<span class="fh-dev">${sp}</span>`:""; })();
 }
 /* nomi leggibili dei dispositivi: [espressione sul nome nel log, nome da mostrare]. Aggiungere qui i nuovi sensori. */
 const DEVICE_NAMES=[
   [/^mezon\s*(\d+)/i,m=>"Jeti Mezon "+m[1]], [/^mvario|^mivario/i,()=>"MiVario"], [/^spin\s*(\d+)/i,m=>"Jeti Spin "+m[1]],
   [/^central\s*box/i,()=>"Central Box"], [/^mgps|^gps/i,()=>"GPS Jeti"], [/^mui/i,()=>"MUI"], [/^mpxspeed|^mspeed/i,()=>"MSpeed"]
 ];
+function devName(d){ for(const [re,fn] of DEVICE_NAMES){ const m=d.match(re); if(m) return fn(m); } return d; }
+/* assetto del modello: [{role, name}] — regolatore, vario, GPS, ricevitore, batteria, altri sensori */
+function setupItems(f){
+  const out=[], seen=new Set();
+  for(const d of (f.devRoles||(f.devices||[]).map(n=>({role:"other",name:n})))){ const n=devName(d.name); if(seen.has(n)) continue; seen.add(n); out.push({role:d.role,name:n}); }
+  const order={esc:0,vario:1,gps:2,rx:3,other:4};
+  out.sort((a,b)=>order[a.role]-order[b.role]);
+  if(f.cells>=2 && f.series["UBat"]) out.push({role:"bat",name:f.cells+"S"});
+  if(f.series["Lat"]&&f.series["Lon"]&&!out.some(x=>x.role==="gps")&&!/gps/i.test(f.model||"")) out.push({role:"gps",name:"GPS"});
+  return out;
+}
 function setupPhrase(f){
-  const out=[];
-  for(const d of (f.devices||[])){ let n=d; for(const [re,fn] of DEVICE_NAMES){ const m=d.match(re); if(m){ n=fn(m); break; } } if(!out.includes(n)) out.push(n); }
-  if(f.cells>=2 && f.series["UBat"]) out.push(f.cells+"S");
-  const gps=f.series["Lat"]&&f.series["Lon"];
-  if(gps && !out.some(x=>/gps/i.test(x)) && !/gps/i.test(f.model||"")) out.push("GPS");
-  return out.join(" · ");
+  return setupItems(f).map(x=>`<span class="fh-it"><span class="fh-r">${escapeHtml(t("sr_"+x.role))}</span> ${escapeHtml(x.name)}</span>`).join("");
 }
 
 const ICON={
