@@ -2,7 +2,7 @@
    Strategia "stale-while-revalidate": risponde subito dalla cache e intanto
    scarica la versione aggiornata, che sarà usata all'apertura successiva.
    Cambiare CACHE a ogni versione per eliminare i file vecchi. */
-const CACHE = "rz-fd-v1.24";
+const CACHE = "rz-fd-v1.25";
 const SHELL = [
   "./",
   "./index.html",

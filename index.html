@@ -402,7 +402,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.24</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.25</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -1765,10 +1765,10 @@ function drawChart(canvas, cfg){
   const X=v=>padL+(v-xmin)/(xmax-xmin)*W;
   const Yof=(s,v)=>padT+H-(v-s._min)/(s._max-s._min)*H;
 
-  // fasi di volo (fasce colorate leggere, sotto le fasce motore)
+  // fasi di volo: barra orizzontale alla base del grafico
   if(cfg.phases) for(const b of cfg.phases){
     const x0=Math.max(padL,X(b.x0)),x1=Math.min(padL+W,X(b.x1)); if(x1<=x0) continue;
-    g.fillStyle=b.col; g.globalAlpha=0.17; g.fillRect(x0,padT,x1-x0,H); g.globalAlpha=1;
+    g.fillStyle=b.col; g.fillRect(x0,padT+H-8,x1-x0,8);
   }
   // motor bands (full plot height)
   if(cfg.bands) for(const b of cfg.bands){
