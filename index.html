@@ -414,7 +414,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.31</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.32</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -655,6 +655,7 @@
     </div>
     <div class="card" id="arSaveCard">
       <h2><span data-i18n="ar_save_h">Salva il volo corrente</span></h2>
+      <div class="scorebest" id="arScore" style="margin-bottom:10px" hidden></div>
       <div class="row">
         <div class="fieldl"><label for="arModel" data-i18n="ar_model">Modello</label><input type="text" id="arModel" list="arModels" autocomplete="off"></div>
         <div class="fieldl" style="flex:1;min-width:200px"><label for="arNote" data-i18n="ar_note">Note</label><input type="text" id="arNote" autocomplete="off"></div>
@@ -934,6 +935,7 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  sc_saved:["viene registrato in archivio insieme al volo","saved to the archive with the flight","enregistré dans l'archive avec le vol"],
   sc_h2:["Indice di volo","Flight index","Indice de vol"],
   sc_free:["Quota gratis (termiche)","Free altitude (thermals)","Altitude gratuite (thermiques)"], sc_motor:["Uso del motore","Motor use","Usage du moteur"],
   sc_glide:["Qualità della planata","Glide quality","Qualité du plané"], sc_dur:["Durata del volo","Flight duration","Durée du vol"],
@@ -2494,6 +2496,8 @@ function renderArchSave(){
   const ready=ARCH_OK&&archDir&&archPerm==="granted";
   const ins=["#arModel","#arNote"].map(s=>$(s)), btn=$("#arSave"), msg=$("#arMsg");
   const uniq=k=>[...new Set(ARCH.map(e=>e[k]).filter(Boolean))].sort();
+  { const sb=$("#arScore"); let q=null; if(DATA&&!isDemo){ if(DATA._scoreQ===undefined){ try{ DATA._scoreQ=flightScore(DATA); }catch(e){ DATA._scoreQ=null; } } q=DATA._scoreQ; }
+    sb.hidden=!q; if(q) sb.innerHTML=`${t("sc_h2")}: <b>${Math.round(q.score)}</b> /100 · ${scoreLevel(q.score)} <span style="color:var(--muted)">— ${t("sc_saved")}</span>`; }
   $("#arModels").innerHTML=uniq("model").map(v=>`<option value="${escapeHtml(v)}">`).join("");
   if(!DATA||isDemo){ ins.forEach(i=>{i.disabled=true;i.value="";}); btn.disabled=true; btn.textContent=t("ar_save"); msg.textContent=t("ar_demo"); archFormFor=null; return; }
   if(archFormFor!==DATA){   // nuovo volo caricato: precompila i campi
