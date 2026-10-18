@@ -250,6 +250,17 @@
   }
 
   /* analisi volo */
+  .scoregrid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 26px;align-items:center}
+  .scorebig{font:700 3.4rem/1 "Barlow Semi Condensed",sans-serif;color:var(--accent)} .scorebig small{font-size:1.1rem;color:var(--muted);font-weight:500}
+  .scorelvl{font:600 .85rem "IBM Plex Mono",monospace;color:var(--muted);margin-top:4px}
+  .scorebars{display:flex;flex-direction:column;gap:7px}
+  .sbrow{display:grid;grid-template-columns:150px minmax(0,1fr) 92px;gap:10px;align-items:center;font-size:.82rem}
+  .sbtrack{height:9px;border-radius:5px;background:var(--surface-2);overflow:hidden} .sbfill{height:100%;background:var(--accent)}
+  .sbrow .mono{color:var(--muted);text-align:right}
+  .scorebest{grid-column:1/-1;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:.86rem;background:var(--surface-2)}
+  .scorebest b{color:var(--good)}
+  .scorenote{grid-column:1/-1;font-size:.8rem;color:var(--muted);line-height:1.5}
+  @media(max-width:640px){ .scoregrid{grid-template-columns:1fr} .sbrow{grid-template-columns:110px minmax(0,1fr) 70px} }
   .agroups{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
   @media(min-width:1100px){ .agroups{grid-template-columns:repeat(2,minmax(0,1fr))} }
   .agroup{border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-left:5px solid var(--accent);border-radius:12px;padding:12px 14px 14px;
@@ -403,7 +414,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.28</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.29</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -464,6 +475,10 @@
 
   <!-- PAGE: GIUDIZIO -->
   <section data-page="ju" hidden>
+    <div class="card" id="scoreCard">
+      <h2><span data-i18n="sc_h2">Indice di volo</span> <span class="tag">RANK</span></h2>
+      <div id="scoreBody"></div>
+    </div>
     <div class="card verdict">
       <h2><span data-i18n="ju_h2">Analisi</span> <span class="tag">AUTO</span></h2>
       <div class="chips" id="chips"></div>
@@ -653,6 +668,7 @@
         <span class="resctl"><span data-i18n="ar_model">Modello</span><select id="arFModel" class="resSel"></select></span>
       </h2>
       <p class="hint" style="margin-top:-4px" data-i18n="ar_sel_hint">Seleziona da 2 a 4 voli per confrontarli.</p>
+      <div class="scorebest" id="arBest" style="margin-bottom:10px"></div>
       <div class="tablewrap" id="arList"></div>
     </div>
     <div class="card" id="cmpCard" hidden>
@@ -918,6 +934,16 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  sc_h2:["Indice di volo","Flight index","Indice de vol"],
+  sc_free:["Quota gratis (termiche)","Free altitude (thermals)","Altitude gratuite (thermiques)"], sc_motor:["Uso del motore","Motor use","Usage du moteur"],
+  sc_glide:["Qualità della planata","Glide quality","Qualité du plané"], sc_dur:["Durata del volo","Flight duration","Durée du vol"],
+  sc_l1:["Da migliorare","Needs work","À améliorer"], sc_l2:["Discreto","Fair","Correct"], sc_l3:["Buono","Good","Bon"], sc_l4:["Ottimo","Excellent","Excellent"],
+  sc_best:["Miglior volo registrato","Best recorded flight","Meilleur vol enregistré"], sc_cur:["questo volo","this flight","ce vol"],
+  sc_isbest:["è questo!","this is it!","c'est celui-ci !"], sc_nobest:["Miglior volo registrato: nessun volo in archivio","Best recorded flight: no flight in the archive","Meilleur vol enregistré : aucun vol dans l'archive"],
+  sc_noth:["Nessuna termica incontrata: il punteggio non valuta la quota gratis e dà più peso a planata e durata. In aria assente non è un voto al pilota.","No thermal met: the score skips free altitude and weights glide and duration more. In dead air it is not a mark for the pilot.","Aucune ascendance rencontrée : le score ignore l'altitude gratuite et donne plus de poids au plané et à la durée. En air mort ce n'est pas une note pour le pilote."],
+  sc_note_th:["Come si calcola: punteggio da 0 a 100, media pesata di quattro voci (0–100). Quota gratis 40 % = quota guadagnata in termica sul totale (60 % = massimo). Planata 30 % = sink in planata (≤0,4 m/s = massimo, ≥1,5 m/s = 0) e, con il GPS, vicinanza della velocità alla massima efficienza della Polare. Durata 25 % = tempo in volo (3→20 min) e minuti per ogni salita a motore (2→10). Uso del motore 5 % = tempo a motore sul volo (≤5 % = massimo, ≥30 % = 0). Confronta voli dello stesso modello.","How it is computed: a 0–100 score, weighted mean of four items (0–100). Free altitude 40 % = thermal gain over total gain (60 % = full marks). Glide 30 % = glide sink (≤0.4 m/s = full, ≥1.5 m/s = 0) and, with GPS, how close the speed is to the Polar best-glide speed. Duration 25 % = airtime (3→20 min) and minutes per motor climb (2→10). Motor use 5 % = motor time over flight time (≤5 % = full, ≥30 % = 0). Compare flights of the same model.","Calcul : score de 0 à 100, moyenne pondérée de quatre critères (0–100). Altitude gratuite 40 % = gain en thermique sur le gain total (60 % = maximum). Plané 30 % = chute en plané (≤0,4 m/s = maximum, ≥1,5 m/s = 0) et, avec le GPS, proximité de la vitesse de finesse max de la Polaire. Durée 25 % = temps de vol (3→20 min) et minutes par montée moteur (2→10). Usage du moteur 5 % = temps moteur sur temps de vol (≤5 % = maximum, ≥30 % = 0). Compare des vols du même modèle."],
+  sc_note_no:["Come si calcola (senza termiche): punteggio da 0 a 100, media pesata di tre voci. Planata 55 % = sink in planata (≤0,4 m/s = massimo, ≥1,5 m/s = 0) e, con il GPS, vicinanza della velocità alla massima efficienza della Polare. Durata 35 % = tempo in volo (3→20 min) e minuti per ogni salita a motore (2→10). Uso del motore 10 % = tempo a motore sul volo (≤5 % = massimo, ≥30 % = 0). Confronta voli dello stesso modello.","How it is computed (no thermals): a 0–100 score, weighted mean of three items. Glide 55 % = glide sink (≤0.4 m/s = full, ≥1.5 m/s = 0) and, with GPS, speed closeness to the Polar best-glide speed. Duration 35 % = airtime (3→20 min) and minutes per motor climb (2→10). Motor use 10 % = motor time over flight time (≤5 % = full, ≥30 % = 0). Compare flights of the same model.","Calcul (sans thermique) : score de 0 à 100, moyenne pondérée de trois critères. Plané 55 % = chute en plané (≤0,4 m/s = maximum, ≥1,5 m/s = 0) et, avec le GPS, proximité de la vitesse de finesse max de la Polaire. Durée 35 % = temps de vol (3→20 min) et minutes par montée moteur (2→10). Usage du moteur 10 % = temps moteur sur temps de vol (≤5 % = maximum, ≥30 % = 0). Compare des vols du même modèle."],
+  ar_index:["Indice","Index","Indice"], ar_bestbanner:["Miglior volo registrato","Best recorded flight","Meilleur vol enregistré"],
   sr_esc:["Regolatore","ESC","Variateur"], sr_vario:["Vario","Vario","Vario"], sr_gps:["GPS","GPS","GPS"], sr_rx:["Ricevente","Receiver","Récepteur"],
   sr_bat:["Batteria","Battery","Batterie"], sr_other:["Sensore","Sensor","Capteur"],
   an_g_phase:["Modalità di volo (interruttori)","Flight modes (switches)","Modes de vol (interrupteurs)"],
@@ -1463,6 +1489,22 @@ function analyzeFlight(f){
     gainMotor:C.reduce((p,c)=>p+Math.max(0,c.dalt||0),0),gainTherm:th.reduce((p,x)=>p+x.gain,0),
     sink:ns?ss/ns:null,gr,liftPct:n3?np/n3*100:null,sv,path,dmax,dend,hs,hvar,el,hasGps:!!X,tOn:f.t[i0],tOff:f.t[i1]};
 }
+function bestFlight(){ let b=null; for(const e of ARCH) if(num(e.sum&&e.sum.score)&&(!b||e.sum.score>b.sum.score)) b=e; return b; }
+function scoreLevel(v){ return v>=80?t("sc_l4"):v>=60?t("sc_l3"):v>=40?t("sc_l2"):t("sc_l1"); }
+function renderScore(f){
+  const body=$("#scoreBody"); if(!body) return;
+  let q=null; try{ q=flightScore(f); }catch(e){}
+  if(!q){ body.innerHTML=`<p class="empty">${t("an_noair")}</p>`; return; }
+  const rows=q.comps.map(c=>`<div class="sbrow"><span>${t("sc_"+c.id)}</span><div class="sbtrack"><div class="sbfill" style="width:${c.v.toFixed(0)}%"></div></div><span class="mono">${fmt(c.v,0)} · ${fmt(c.w*100,0)} %</span></div>`).join("");
+  const b=bestFlight(), cur=Math.round(q.score);
+  let best="";
+  if(b){ const bs=Math.round(b.sum.score); best=`<div class="scorebest">${t("sc_best")}: <b>${bs}</b> · ${escapeHtml(archLabel(b))}${cur>=bs?" — "+t("sc_isbest"):" ("+t("sc_cur")+" "+cur+")"}</div>`; }
+  else best=`<div class="scorebest">${t("sc_nobest")}</div>`;
+  body.innerHTML=`<div class="scoregrid"><div><div class="scorebig">${cur}<small> /100</small></div><div class="scorelvl">${scoreLevel(q.score)}</div></div>
+    <div class="scorebars">${rows}</div>${best}
+    ${q.hasTh?"":`<div class="scorenote">⚠ ${t("sc_noth")}</div>`}
+    <div class="scorenote">${t(q.hasTh?"sc_note_th":"sc_note_no")}</div></div>`;
+}
 function renderAnalysis(f){
   const A=analyzeFlight(f), tiles=$("#anaTiles");
   if(!A){ tiles.innerHTML=`<p class="empty">${t("an_noair")}</p>`; $("#anaPhases").innerHTML=""; $("#thermWrap").innerHTML=""; $("#histSpeed").innerHTML=""; $("#histVario").innerHTML=""; return null; }
@@ -1618,7 +1660,7 @@ function renderNarrative(f,A,tech,lowPara,minAlt){
     `<div><div class="vl">${t("nar_watch")}</div><ul class="w">${neg.length?neg.map(x=>`<li>${x}</li>`).join(""):'<li class="none">—</li>'}</ul></div></div><p>${concl}</p>${tips.length>1?`<p>${tips.slice(1,3).map(x=>"• "+x.charAt(0).toUpperCase()+x.slice(1)).join("<br>")}</p>`:""}</div>`;
 }
 function renderVerdict(f){
-  const A=renderAnalysis(f);
+  const A=renderAnalysis(f); renderScore(f);
   const chips=[], paras=[], cells=f.cells||4, C=f.climbs; let lowPara=null;
   const LG=(it,en,fr)=>lang==="en"?en:lang==="fr"?fr:it;
   const cap=pick(f,["Cap.","Cap"]), te=pick(f,["TempESC"]);
@@ -2256,6 +2298,7 @@ const ARCH_OK=("showDirectoryPicker" in window);
 let archDir=null, archPerm="none", archBusy=false;
 let ARCH=[];                       // [{file,model,pack,note,source,f,sum,ts}]
 const archSel=new Set();           // file selezionati per il confronto (max 4)
+let archSortScore=false;
 const archF={model:"",pack:""};    // filtri elenco
 let archMsg="", archFormFor=null;
 
@@ -2288,6 +2331,29 @@ function glideStats(f){
   if(gl){ const arr=[]; for(let i=i0;i<=i1;i++) if(!motor[i]&&Number.isFinite(gl.vals[i])) arr.push(gl.vals[i]); gr=median(arr); }
   return {glideT:n*f.DT, netVario:n?sum/n:null, sink:ns?ss/ns:null, liftPct:n?nl/n*100:null, glideRatio:gr};
 }
+/* ---------- indice di volo (0–100) ---------- */
+const SCORE_W_TH={free:0.40,motor:0.05,glide:0.30,dur:0.25};     // con termiche
+const SCORE_W_NO={motor:0.10,glide:0.55,dur:0.35};               // senza termiche: contano di più planata e durata
+function flightScore(f){
+  const A=analyzeFlight(f); if(!A||!(A.air>0)) return null;
+  const cl=x=>Math.max(0,Math.min(1,x));
+  const gm=Math.max(0,A.gainMotor||0), gt=Math.max(0,A.gainTherm||0), hasTh=A.th.length>0&&gt>0;
+  const c={};
+  if(hasTh) c.free=cl((gt/((gt+gm)||1))/0.6)*100;                  // 60 % di quota gratis = massimo
+  c.motor=cl((0.30-A.secs[1]/A.air)/0.25)*100;                     // motore ≤5 % del volo = 100, ≥30 % = 0
+  const gp=[];
+  if(A.sink!=null) gp.push(cl((1.5+A.sink)/1.1)*100);              // sink ≤0,4 m/s = 100, ≥1,5 m/s = 0
+  if(A.sv&&A.sv.med!=null){ try{ const P=polarData(f,3), R=P&&P.res; if(R&&R.vGlide) gp.push(cl(1-Math.abs(A.sv.med-R.vGlide)/30)*100); }catch(e){} }   // velocità vicina alla massima efficienza
+  if(gp.length) c.glide=gp.reduce((p,q)=>p+q,0)/gp.length;
+  const min=A.air/60, nC=A.C.length;
+  const d1=cl((min-3)/17)*100, d2=nC?cl((min/nC-2)/8)*100:null;    // durata: 3→20 min; minuti per salita: 2→10
+  c.dur=d2==null?d1:(d1+d2)/2;
+  const W=hasTh?SCORE_W_TH:SCORE_W_NO; let tw=0,ts=0; const comps=[];
+  for(const k of Object.keys(W)){ if(c[k]==null) continue; tw+=W[k]; ts+=W[k]*c[k]; comps.push({id:k,v:c[k],w:W[k]}); }
+  if(!tw) return null;
+  for(const q of comps) q.w=q.w/tw;
+  return {score:ts/tw,comps,hasTh,air:A.air};
+}
 function flightSummary(f){
   const C=f.climbs||[], cells=f.cells||0, a=altSeries(f);
   const avg=x=>x.length?x.reduce((p,q)=>p+q,0)/x.length:null;
@@ -2301,7 +2367,7 @@ function flightSummary(f){
     imean:avg(C.filter(c=>num(c.imean)).map(c=>c.imean)),
     spec:sp.length?sp.reduce((p,c)=>p+c.mah,0)/sp.reduce((p,c)=>p+c.dalt,0)*100:null,
     vcell:(um.length&&cells)?Math.min(...um.map(c=>c.umin))/cells:null,
-    rint:ri
+    rint:ri, score:(()=>{ try{ const q=flightScore(f); return q?q.score:null; }catch(e){ return null; } })()
   }, glideStats(f));
 }
 
@@ -2448,17 +2514,19 @@ function renderArchFilters(){
   fill($("#arFModel"),"model");
 }
 function renderArchList(){
-  const el=$("#arList"), L=archFiltered();
+  const el=$("#arList"); let L=archFiltered();
+  { const b=bestFlight(), bb=$("#arBest"); bb.hidden=!b; if(b) bb.innerHTML=`${t("ar_bestbanner")}: <b>${Math.round(b.sum.score)}</b> /100 · ${escapeHtml(archLabel(b))}`; }
+  if(archSortScore) L=L.slice().sort((a,b)=>(num(b.sum.score)?b.sum.score:-1)-(num(a.sum.score)?a.sum.score:-1));
   if(!L.length){ el.innerHTML=`<p class="empty">${ARCH.length?"—":t("ar_empty")}</p>`; return; }
   const rows=L.map(e=>{ const s=e.sum, f=escapeHtml(e.file), sel=archSel.has(e.file);
     return `<tr class="${sel?"sel":""}${DATA&&DATA._arch===e.file?" cur":""}">
       <td><input type="checkbox" data-sel="${f}"${sel?" checked":""} aria-label="${escapeHtml(archLabel(e))}"></td>
       <td class="mono txt">${archDate(e)}</td><td class="txt">${escapeHtml(e.model||"—")}</td>
-      <td class="mono">${hhmmss(s.dur)}</td><td class="mono">${fmt(s.altMax,0)}</td><td class="mono">${s.nClimbs}</td>
+      <td class="mono"><b>${num(s.score)?Math.round(s.score):"—"}</b></td><td class="mono">${hhmmss(s.dur)}</td><td class="mono">${fmt(s.altMax,0)}</td><td class="mono">${s.nClimbs}</td>
       <td class="mono">${fmt(s.rate,1)}</td><td class="mono">${fmt(s.spec,0)}</td><td class="mono">${fmt(s.sink,2)}</td>
       <td class="note" title="${escapeHtml(e.note)}">${escapeHtml(e.note)}</td>
       <td class="act"><button data-open="${f}">${t("ar_open")}</button><button class="del" data-del="${f}" title="${t("ar_del")}" aria-label="${t("ar_del")}">✕</button></td></tr>`; }).join("");
-  el.innerHTML=`<table><thead><tr><th></th><th>${t("m_date")}</th><th>${t("ar_model")}</th><th>${t("m_dur")}</th>
+  el.innerHTML=`<table><thead><tr><th></th><th>${t("m_date")}</th><th>${t("ar_model")}</th><th class="sortidx" data-sortidx style="cursor:pointer" title="↓">${t("ar_index")}${archSortScore?" ▼":""}</th><th>${t("m_dur")}</th>
     <th>${t("m_altmax")} m</th><th>${t("m_nclimb")}</th><th>${t("m_rate")} m/s</th><th>mAh/100m</th><th>${t("m_sink")} m/s</th><th>${t("ar_note")}</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 function renderCompare(){
@@ -2520,6 +2588,7 @@ $("#arList").addEventListener("change",e=>{
   renderArchList(); renderCompare();
 });
 $("#arList").addEventListener("click",e=>{
+  if(e.target.closest("[data-sortidx]")){ archSortScore=!archSortScore; renderArchList(); return; }
   const o=e.target.closest("button[data-open]"); if(o) return archOpen(o.dataset.open);
   const d=e.target.closest("button[data-del]"); if(d) archDelete(d.dataset.del);
 });
