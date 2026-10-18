@@ -403,7 +403,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.26</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.27</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -651,8 +651,7 @@
     </div>
     <div class="card">
       <h2><span data-i18n="ar_list_h">Voli in archivio</span>
-        <span class="resctl"><span data-i18n="ar_model">Modello</span><select id="arFModel" class="resSel"></select>
-          <span data-i18n="ar_pack">Pacco</span><select id="arFPack" class="resSel"></select></span>
+        <span class="resctl"><span data-i18n="ar_model">Modello</span><select id="arFModel" class="resSel"></select></span>
       </h2>
       <p class="hint" style="margin-top:-4px" data-i18n="ar_sel_hint">Seleziona da 2 a 4 voli per confrontarli.</p>
       <div class="tablewrap" id="arList"></div>
@@ -2255,7 +2254,7 @@ function makeDemo(){
 }
 
 /* ---------- archivio voli (cartella sul PC) + confronto ----------
-   Ogni volo è un file "<data>_<modello>_<pacco>.rzf.json" nella cartella scelta.
+   Ogni volo è un file "<gg-mm-aaaa_hh-mm>_<modello>_<pacco>.rzf.json" nella cartella scelta.
    Si salvano solo i canali registrati: derivate e salite si ricalcolano all'apertura. */
 const ARCH_EXT=".rzf.json";
 const ARCH_OK=("showDirectoryPicker" in window);
@@ -2332,7 +2331,7 @@ function frameFromJson(o){
 function slug(s){ return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,30); }
 function archBaseName(f,model,pack){
   const p=n=>String(n).padStart(2,"0"), m=f.meta||{};
-  const stamp=d=>`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  const stamp=d=>`${p(d.getDate())}-${p(d.getMonth()+1)}-${d.getFullYear()}_${p(d.getHours())}-${p(d.getMinutes())}`;   // gg-mm-aaaa_hh-mm
   const ds=(m.dateObj&&m.dateKnown)?stamp(m.dateObj):"volo_"+stamp(new Date());
   return [ds,slug(model),slug(pack)].filter(Boolean).join("_");
 }
@@ -2418,7 +2417,7 @@ function archDate(e,short){
                                   : d.toLocaleDateString(locale(),{day:"2-digit",month:"2-digit",year:"numeric"})+(m.time?" "+m.time.slice(0,5):"");
   return m.time?m.time.slice(0,5):"—";
 }
-function archLabel(e){ return [archDate(e,true),e.model,e.pack].filter(Boolean).join(" · "); }
+function archLabel(e){ return [archDate(e),e.model,e.pack].filter(Boolean).join(" · "); }
 function cmpColor(i){ return DEFCOLORS[i%DEFCOLORS.length]; }
 
 function renderArchFolder(){
@@ -2452,7 +2451,7 @@ function renderArchFilters(){
     if(archF[key]&&!vals.includes(archF[key])) archF[key]="";
     sel.innerHTML=`<option value="">${t("ar_all")}</option>`+vals.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
     sel.value=archF[key]; };
-  fill($("#arFModel"),"model"); fill($("#arFPack"),"pack");
+  fill($("#arFModel"),"model");
 }
 function renderArchList(){
   const el=$("#arList"), L=archFiltered();
@@ -2542,7 +2541,6 @@ $("#arList").addEventListener("click",e=>{
   const d=e.target.closest("button[data-del]"); if(d) archDelete(d.dataset.del);
 });
 $("#arFModel").addEventListener("change",e=>{ archF.model=e.target.value; renderArchList(); renderPacks(); });
-$("#arFPack").addEventListener("change",e=>{ archF.pack=e.target.value; renderArchList(); renderPacks(); });
 ["#cmpVar","#cmpAlign","#cmpWin"].forEach(s=>$(s).addEventListener("change",renderCompare));
 $("#cmpClear").addEventListener("click",()=>{ archSel.clear(); renderArchList(); renderCompare(); });
 

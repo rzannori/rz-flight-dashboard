@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.26**
+- Versione corrente: **v1.27**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
