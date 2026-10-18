@@ -403,7 +403,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.27</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.28</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -642,11 +642,10 @@
       <h2><span data-i18n="ar_save_h">Salva il volo corrente</span></h2>
       <div class="row">
         <div class="fieldl"><label for="arModel" data-i18n="ar_model">Modello</label><input type="text" id="arModel" list="arModels" autocomplete="off"></div>
-        <div class="fieldl"><label for="arPack" data-i18n="ar_pack">Pacco</label><input type="text" id="arPack" list="arPacks" autocomplete="off"></div>
         <div class="fieldl" style="flex:1;min-width:200px"><label for="arNote" data-i18n="ar_note">Note</label><input type="text" id="arNote" autocomplete="off"></div>
         <div class="fieldl"><label>&nbsp;</label><button class="btn" id="arSave">Salva</button></div>
       </div>
-      <datalist id="arModels"></datalist><datalist id="arPacks"></datalist>
+      <datalist id="arModels"></datalist>
       <p class="hint" id="arMsg"></p>
     </div>
     <div class="card">
@@ -670,10 +669,6 @@
       <div class="legend" id="cmpLegend"></div>
       <div class="scroll-x" id="cmpTable" style="margin-top:14px"></div>
       <p class="hint" data-i18n="best_note">In verde il valore migliore di ogni riga.</p>
-    </div>
-    <div class="card" id="pkCard" hidden>
-      <h2><span data-i18n="pk_h2">Riepilogo per pacco</span> <span class="tag">PACK</span></h2>
-      <div class="scroll-x" id="pkTable"></div>
     </div>
   </section>
 
@@ -2254,7 +2249,7 @@ function makeDemo(){
 }
 
 /* ---------- archivio voli (cartella sul PC) + confronto ----------
-   Ogni volo è un file "<gg-mm-aaaa_hh-mm>_<modello>_<pacco>.rzf.json" nella cartella scelta.
+   Ogni volo è un file "<gg-mm-aaaa_hh-mm>_<modello>.rzf.json" nella cartella scelta.
    Si salvano solo i canali registrati: derivate e salite si ricalcolano all'apertura. */
 const ARCH_EXT=".rzf.json";
 const ARCH_OK=("showDirectoryPicker" in window);
@@ -2378,7 +2373,7 @@ async function archSave(){
   if(!DATA||isDemo) return;
   if(!archDir){ archMsg=t("ar_needfolder"); return renderArchSave(); }
   if(archPerm!=="granted"){ await archReconnect(); if(archPerm!=="granted") return; }
-  const model=$("#arModel").value.trim(), pack=$("#arPack").value.trim(), note=$("#arNote").value.trim();
+  const model=$("#arModel").value.trim(), pack="", note=$("#arNote").value.trim();
   try{
     let file=DATA._arch;
     if(!file){ const dup=archFindDup(DATA); if(dup) file=dup.file; }
@@ -2410,14 +2405,14 @@ function archOpen(file){
 
 /* rendering */
 function archVisible(){ const s=$('section[data-page="ar"]'); return s&&!s.hidden; }
-function archFiltered(){ return ARCH.filter(e=>(!archF.model||e.model===archF.model)&&(!archF.pack||e.pack===archF.pack)); }
+function archFiltered(){ return ARCH.filter(e=>(!archF.model||e.model===archF.model)); }
 function archDate(e,short){
   const m=e.f.meta||{}, d=m.dateObj;
   if(d&&m.dateKnown) return short ? d.toLocaleDateString(locale(),{day:"2-digit",month:"2-digit"})
                                   : d.toLocaleDateString(locale(),{day:"2-digit",month:"2-digit",year:"numeric"})+(m.time?" "+m.time.slice(0,5):"");
   return m.time?m.time.slice(0,5):"—";
 }
-function archLabel(e){ return [archDate(e),e.model,e.pack].filter(Boolean).join(" · "); }
+function archLabel(e){ return [archDate(e),e.model].filter(Boolean).join(" · "); }
 function cmpColor(i){ return DEFCOLORS[i%DEFCOLORS.length]; }
 
 function renderArchFolder(){
@@ -2430,17 +2425,16 @@ function renderArchFolder(){
 }
 function renderArchSave(){
   const ready=ARCH_OK&&archDir&&archPerm==="granted";
-  const ins=["#arModel","#arPack","#arNote"].map(s=>$(s)), btn=$("#arSave"), msg=$("#arMsg");
+  const ins=["#arModel","#arNote"].map(s=>$(s)), btn=$("#arSave"), msg=$("#arMsg");
   const uniq=k=>[...new Set(ARCH.map(e=>e[k]).filter(Boolean))].sort();
   $("#arModels").innerHTML=uniq("model").map(v=>`<option value="${escapeHtml(v)}">`).join("");
-  $("#arPacks").innerHTML=uniq("pack").map(v=>`<option value="${escapeHtml(v)}">`).join("");
   if(!DATA||isDemo){ ins.forEach(i=>{i.disabled=true;i.value="";}); btn.disabled=true; btn.textContent=t("ar_save"); msg.textContent=t("ar_demo"); archFormFor=null; return; }
   if(archFormFor!==DATA){   // nuovo volo caricato: precompila i campi
     archFormFor=DATA; archMsg="";
     if(!DATA._arch){ const d=archFindDup(DATA); if(d) DATA._arch=d.file; }   // log già archiviato: riprende i suoi dati
     const e=DATA._arch&&ARCH.find(x=>x.file===DATA._arch);
     ins[0].value=e?e.model:(DATA.model&&DATA.model!=="SM GPS"?DATA.model:"");
-    ins[1].value=e?e.pack:""; ins[2].value=e?e.note:"";
+    ins[1].value=e?e.note:"";
   }
   ins.forEach(i=>i.disabled=false);
   btn.disabled=!ready; btn.textContent=DATA._arch?t("ar_update"):t("ar_save");
@@ -2459,12 +2453,12 @@ function renderArchList(){
   const rows=L.map(e=>{ const s=e.sum, f=escapeHtml(e.file), sel=archSel.has(e.file);
     return `<tr class="${sel?"sel":""}${DATA&&DATA._arch===e.file?" cur":""}">
       <td><input type="checkbox" data-sel="${f}"${sel?" checked":""} aria-label="${escapeHtml(archLabel(e))}"></td>
-      <td class="mono txt">${archDate(e)}</td><td class="txt">${escapeHtml(e.model||"—")}</td><td class="txt">${escapeHtml(e.pack||"—")}</td>
+      <td class="mono txt">${archDate(e)}</td><td class="txt">${escapeHtml(e.model||"—")}</td>
       <td class="mono">${hhmmss(s.dur)}</td><td class="mono">${fmt(s.altMax,0)}</td><td class="mono">${s.nClimbs}</td>
       <td class="mono">${fmt(s.rate,1)}</td><td class="mono">${fmt(s.spec,0)}</td><td class="mono">${fmt(s.sink,2)}</td>
       <td class="note" title="${escapeHtml(e.note)}">${escapeHtml(e.note)}</td>
       <td class="act"><button data-open="${f}">${t("ar_open")}</button><button class="del" data-del="${f}" title="${t("ar_del")}" aria-label="${t("ar_del")}">✕</button></td></tr>`; }).join("");
-  el.innerHTML=`<table><thead><tr><th></th><th>${t("m_date")}</th><th>${t("ar_model")}</th><th>${t("ar_pack")}</th><th>${t("m_dur")}</th>
+  el.innerHTML=`<table><thead><tr><th></th><th>${t("m_date")}</th><th>${t("ar_model")}</th><th>${t("m_dur")}</th>
     <th>${t("m_altmax")} m</th><th>${t("m_nclimb")}</th><th>${t("m_rate")} m/s</th><th>mAh/100m</th><th>${t("m_sink")} m/s</th><th>${t("ar_note")}</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 function renderCompare(){
@@ -2494,7 +2488,7 @@ function renderCompare(){
 function renderCmpTable(sel){
   const R=[
     {g:"grp_gen"},
-    {l:t("m_date"),txt:e=>archDate(e)}, {l:t("ar_model"),txt:e=>escapeHtml(e.model||"—")}, {l:t("ar_pack"),txt:e=>escapeHtml(e.pack||"—")},
+    {l:t("m_date"),txt:e=>archDate(e)}, {l:t("ar_model"),txt:e=>escapeHtml(e.model||"—")},
     {l:t("m_dur"),k:"dur",fm:hhmmss,b:"max"}, {l:t("m_altmax")+" [m]",k:"altMax",d:0,b:"max"},
     {g:"grp_climb"},
     {l:t("m_nclimb"),k:"nClimbs",d:0}, {l:t("m_dalt")+" [m]",k:"dalt",d:0,b:"max"}, {l:t("m_rate")+" [m/s]",k:"rate",d:1,b:"max"},
@@ -2516,18 +2510,7 @@ function renderCmpTable(sel){
   }).join("");
   $("#cmpTable").innerHTML=`<table class="cmptbl"><thead>${head}</thead><tbody>${body}</tbody></table>`;
 }
-function renderPacks(){
-  const card=$("#pkCard"), L=archFiltered(); card.hidden=!L.length; if(!L.length) return;
-  const G={}; for(const e of L){ (G[e.pack]=G[e.pack]||[]).push(e); }
-  const avg=(a,k)=>{ const v=a.map(e=>e.sum[k]).filter(num); return v.length?v.reduce((p,q)=>p+q,0)/v.length:null; };
-  const rows=Object.keys(G).sort((a,b)=>a===""?1:b===""?-1:a.localeCompare(b)).map(k=>{ const a=G[k], last=a.reduce((p,e)=>e.ts>p.ts?e:p,a[0]);
-    return `<tr><td>${k?escapeHtml(k):`<i>${t("pk_none")}</i>`}</td><td class="mono">${a.length}</td><td class="mono">${archDate(last)}</td>
-      <td class="mono">${fmt(avg(a,"rate"),1)}</td><td class="mono">${fmt(avg(a,"spec"),0)}</td><td class="mono">${fmt(avg(a,"vcell"),2)}</td>
-      <td class="mono">${fmt(avg(a,"rint"),0)}</td><td class="mono">${fmt(avg(a,"sink"),2)}</td></tr>`; }).join("");
-  $("#pkTable").innerHTML=`<table><thead><tr><th>${t("ar_pack")}</th><th>${t("pk_n")}</th><th>${t("pk_last")}</th><th>${t("m_rate")} m/s</th>
-    <th>mAh/100m</th><th>${t("m_vcell")} V</th><th>${t("m_rint")} mΩ</th><th>${t("m_sink")} m/s</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
-function renderArchive(){ renderArchFolder(); renderArchSave(); renderArchFilters(); renderArchList(); renderCompare(); renderPacks(); }
+function renderArchive(){ renderArchFolder(); renderArchSave(); renderArchFilters(); renderArchList(); renderCompare(); }
 
 $("#arFolder").addEventListener("click",e=>{ const b=e.target.closest("button[data-ar]"); if(!b) return; if(b.dataset.ar==="pick") archPick(); else archReconnect(); });
 $("#arSave").addEventListener("click",archSave);
@@ -2540,7 +2523,7 @@ $("#arList").addEventListener("click",e=>{
   const o=e.target.closest("button[data-open]"); if(o) return archOpen(o.dataset.open);
   const d=e.target.closest("button[data-del]"); if(d) archDelete(d.dataset.del);
 });
-$("#arFModel").addEventListener("change",e=>{ archF.model=e.target.value; renderArchList(); renderPacks(); });
+$("#arFModel").addEventListener("change",e=>{ archF.model=e.target.value; renderArchList(); });
 ["#cmpVar","#cmpAlign","#cmpWin"].forEach(s=>$(s).addEventListener("change",renderCompare));
 $("#cmpClear").addEventListener("click",()=>{ archSel.clear(); renderArchList(); renderCompare(); });
 
