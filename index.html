@@ -414,7 +414,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.34</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.35</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -488,6 +488,12 @@
     <div class="card">
       <h2><span data-i18n="an_sec_summary">Riepilogo dati</span> <span class="tag">DATA</span></h2>
       <div id="anaTiles" class="agroups"></div>
+    </div>
+    <div class="card" id="radioCard" hidden>
+      <h2><span data-i18n="rd_h2">Radio e alimentazione</span> <span class="tag">LINK</span></h2>
+      <div class="agrid" id="radioTiles"></div>
+      <div class="scroll-x" id="radioEv"></div>
+      <p class="hint" data-i18n="rd_hint"></p>
     </div>
     <div class="card">
       <h2><span data-i18n="an_sec_phases">Fasi del volo</span> <span class="tag">TIMELINE</span></h2>
@@ -940,6 +946,10 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  rd_h2:["Radio e alimentazione","Radio & power","Radio et alimentation"], rd_hint:["Qualità del collegamento (Q), livello antenne (A1/A2, 0–9), tensione del ricevitore e del BEC durante il volo. Sono segnalati cali di Q sotto 80 %, antenna ≤1 per oltre 1,5 s e cadute di tensione di oltre 0,3–0,4 V rispetto al valore tipico.","Link quality (Q), antenna level (A1/A2, 0–9), receiver and BEC voltage during the flight. Flagged: Q below 80 %, antenna ≤1 for over 1.5 s and voltage drops above 0.3–0.4 V from the typical value.","Qualité de la liaison (Q), niveau d'antennes (A1/A2, 0–9), tension du récepteur et du BEC en vol. Signalés : Q sous 80 %, antenne ≤1 plus de 1,5 s et chutes de tension de plus de 0,3–0,4 V par rapport à la valeur typique."],
+  rd_qmin:["Q minima","Min Q","Q min."], rd_q90:["sotto 90 % per","below 90 % for","sous 90 % pendant"], rd_amin:["Antenne min.","Min antenna","Antenne min."], rd_rxmin:["Tensione Rx min.","Min Rx voltage","Tension Rx min."], rd_med:["tipica","typical","typique"], rd_bec:["BEC min.","Min BEC","BEC min."],
+  rd_event:["Evento","Event","Événement"], rd_val:["Valore","Value","Valeur"], rd_none:["Nessun calo di collegamento o di tensione rilevato.","No link or voltage dropout detected.","Aucune perte de liaison ou de tension détectée."],
+  rd_e_q:["Calo qualità collegamento","Link quality drop","Baisse de qualité de liaison"], rd_e_ant:["Antenna debole","Weak antenna","Antenne faible"], rd_e_rx:["Calo tensione ricevitore","Receiver voltage dip","Chute de tension du récepteur"], rd_e_bec:["Calo tensione BEC","BEC voltage dip","Chute de tension du BEC"],
   mg_ask:["Il file è del tipo complementare al volo aperto (Jeti + GPS). Unirli in un unico volo?","This file is the complementary type of the open flight (Jeti + GPS). Merge them into one flight?","Ce fichier est du type complémentaire du vol ouvert (Jeti + GPS). Les fusionner en un seul vol ?"],
   mg_fail:["Non riesco ad allineare i due file: le quote non coincidono abbastanza. Sono dello stesso volo?","Cannot align the two files: the altitudes do not match well enough. Are they from the same flight?","Impossible d'aligner les deux fichiers : les altitudes ne coïncident pas assez. Sont-ils du même vol ?"],
   mg_ok:["uniti","merged","fusionnés"],
@@ -1460,6 +1470,27 @@ function renderKpis(f){
 
 /* ---------- verdict ---------- */
 /* ---------- analisi del volo: fasi, termiche, distribuzioni, riepilogo ---------- */
+/* radiocollegamento e alimentazione: qualità del link (Q), antenne (A1/A2), tensione ricevente e BEC durante il volo */
+function radioStats(f,i0,i1){
+  const DT=f.DT, ev=[], st={};
+  const rng=a=>a.slice(i0,i1+1);
+  const runs=(vals,pred,minDur)=>{ const out=[]; let s0=-1; for(let i=0;i<=vals.length;i++){ const on=i<vals.length&&Number.isFinite(vals[i])&&pred(vals[i]); if(on&&s0<0) s0=i; if(!on&&s0>=0){ if((i-s0)*DT>=minDur) out.push([s0,i-1]); s0=-1; } } return out; };
+  const T=i=>f.t[i0+i];
+  const q=pick(f,["Q"]);
+  if(q){ const v=rng(q.vals), ok=v.filter(Number.isFinite); if(ok.length){ st.qmin=Math.min(...ok); st.q90=ok.filter(x=>x<90).length*DT;
+    for(const [a,b] of runs(v,x=>x<80,0.6)){ const m=Math.min(...v.slice(a,b+1)); ev.push({t:T(a),dur:(b-a+1)*DT,k:"q",val:m,lvl:m<50?"crit":"warn"}); } } }
+  const aa=["A1","A2"].map(k=>pick(f,[k])).filter(Boolean);
+  if(aa.length){ let mn=null; for(const a of aa){ const ok=rng(a.vals).filter(Number.isFinite); if(ok.length) mn=Math.min(mn==null?9:mn,Math.min(...ok)); } st.amin=mn;
+    for(const a of aa){ const v=rng(a.vals); for(const [x,y] of runs(v,z=>z<=1,1.5)) ev.push({t:T(x),dur:(y-x+1)*DT,k:"ant",val:Math.min(...v.slice(x,y+1)),name:a===aa[0]?"A1":"A2",lvl:"warn"}); } }
+  const rx=pick(f,["U Rx","RX voltage","U Rx (RxB)"]);
+  if(rx){ const v=rng(rx.vals), ok=v.filter(Number.isFinite); if(ok.length){ const md=median(ok); st.rxmin=Math.min(...ok); st.rxmed=md;
+    for(const [a,b] of runs(v,x=>x<md-0.4,0.4)){ const m=Math.min(...v.slice(a,b+1)); ev.push({t:T(a),dur:(b-a+1)*DT,k:"rx",val:m,lvl:md-m>=0.7?"crit":"warn"}); } } }
+  const bec=pick(f,["UBec"]);
+  if(bec){ const v=rng(bec.vals), ok=v.filter(Number.isFinite); if(ok.length){ const md=median(ok); st.becmin=Math.min(...ok);
+    for(const [a,b] of runs(v,x=>x<md-0.3,0.4)){ const m=Math.min(...v.slice(a,b+1)); ev.push({t:T(a),dur:(b-a+1)*DT,k:"bec",val:m,lvl:md-m>=0.6?"crit":"warn"}); } } }
+  ev.sort((x,y)=>x.t-y.t);
+  return (st.qmin==null&&st.amin==null&&st.rxmin==null&&st.becmin==null)?null:{st,ev};
+}
 function analyzeFlight(f){
   const a=altSeries(f), N=f.t.length, DT=f.DT; if(!a||N<10) return null;
   const va=varioOf(f), C=f.climbs||[], sp=f.series["Speed"], la=f.series["Lat"], lo=f.series["Lon"];
@@ -1513,7 +1544,7 @@ function analyzeFlight(f){
   const altMax=Math.max(...a.vals.slice(i0,i1+1)), lastClimb=C.length?C[C.length-1]:null;
   return {N,DT,i0,i1,air,ph,secs,th,C,altMax,launchAlt:lastClimb?a.vals[Math.min(N-1,lastClimb.i1)]:null,
     gainMotor:C.reduce((p,c)=>p+Math.max(0,c.dalt||0),0),gainTherm:th.reduce((p,x)=>p+x.gain,0),
-    sink:ns?ss/ns:null,gr,liftPct:n3?np/n3*100:null,sv,path,dmax,dend,hs,hvar,el,dives,hasGps:!!X,tOn:f.t[i0],tOff:f.t[i1]};
+    sink:ns?ss/ns:null,gr,liftPct:n3?np/n3*100:null,sv,path,dmax,dend,hs,hvar,el,radio:radioStats(f,i0,i1),dives,hasGps:!!X,tOn:f.t[i0],tOff:f.t[i1]};
 }
 function bestFlight(){ let b=null; for(const e of ARCH) if(num(e.sum&&e.sum.score)&&(!b||e.sum.score>b.sum.score)) b=e; return b; }
 function scoreLevel(v){ return v>=80?t("sc_l4"):v>=60?t("sc_l3"):v>=40?t("sc_l2"):t("sc_l1"); }
@@ -1530,6 +1561,18 @@ function renderScore(f){
     <div class="scorebars">${rows}</div>${best}
     ${q.hasTh?"":`<div class="scorenote">⚠ ${t("sc_noth")}</div>`}
     <div class="scorenote">${t(q.hasTh?"sc_note_th":"sc_note_no")}</div></div>`;
+}
+function renderRadio(f,A){
+  const card=$("#radioCard"), R=A.radio; card.hidden=!R; if(!R) return;
+  const S=R.st, tl=[];
+  const tile=(l,v,u,sub,cls)=>`<div class="atile ${cls||""}"><div class="al">${escapeHtml(l)}</div><div class="av">${v}${u?`<span class="u">${u}</span>`:""}</div>${sub?`<div class="as">${sub}</div>`:""}</div>`;
+  if(S.qmin!=null) tl.push(tile(t("rd_qmin"),fmt(S.qmin,0),"%",S.q90>0?`${t("rd_q90")} ${hhmmss(S.q90)}`:"",S.qmin<50?"crit":S.qmin<80?"warn":"good"));
+  if(S.amin!=null) tl.push(tile(t("rd_amin"),fmt(S.amin,0),"/9","",S.amin<=2?"warn":""));
+  if(S.rxmin!=null) tl.push(tile(t("rd_rxmin"),fmt(S.rxmin,2),"V",`${t("rd_med")} ${fmt(S.rxmed,2)} V`));
+  if(S.becmin!=null) tl.push(tile(t("rd_bec"),fmt(S.becmin,2),"V"));
+  $("#radioTiles").innerHTML=tl.join("");
+  const nm={q:"rd_e_q",ant:"rd_e_ant",rx:"rd_e_rx",bec:"rd_e_bec"}, un={q:"%",ant:"/9",rx:" V",bec:" V"};
+  $("#radioEv").innerHTML=R.ev.length?`<table><thead><tr><th>${t("th_col_t0")}</th><th>${t("rd_event")}</th><th>${t("th_col_dur")}</th><th>${t("rd_val")}</th></tr></thead><tbody>${R.ev.slice(0,15).map(e=>`<tr><td class="mono">${hhmmss(e.t)}</td><td class="txt">${e.lvl==="crit"?"⛔":"⚠"} ${t(nm[e.k])}${e.name?" "+e.name:""}</td><td class="mono">${fmt(e.dur,1)} s</td><td class="mono">${fmt(e.val,e.k==="q"||e.k==="ant"?0:2)}${un[e.k]}</td></tr>`).join("")}</tbody></table>`:`<p class="empty" style="padding:10px">${t("rd_none")}</p>`;
 }
 function renderAnalysis(f){
   const A=analyzeFlight(f), tiles=$("#anaTiles");
@@ -1575,6 +1618,7 @@ function renderAnalysis(f){
   $("#anaPhases").innerHTML=`<div class="phasebar">${segs}</div><div class="phaseticks">${ticks}</div><div class="legend">${leg}</div>`;
 
   // termiche
+  renderRadio(f,A);
   if(!th.length) $("#thermWrap").innerHTML=`<p class="empty" style="padding:14px">${t("an_nothermals")}</p>`;
   else $("#thermWrap").innerHTML=`<table><thead><tr><th>${t("th_col_n")}</th><th>${t("th_col_t0")}</th><th>${t("th_col_dur")}</th><th>${t("th_col_gain")}</th><th>${t("th_col_rate")}</th><th>${t("th_col_max")}</th><th>${t("th_col_in")}</th>${A.hasGps?`<th>${t("th_col_drift")}</th>`:""}</tr></thead><tbody>`+
     th.map((x,k)=>`<tr><td>#${k+1}</td><td class="mono">${hhmmss(x.t0)}</td><td class="mono">${fmt(x.dur,0)}</td><td class="mono">+${fmt(x.gain,0)}</td><td class="mono">+${fmt(x.rate,1)}</td><td class="mono">+${fmt(x.vmax,1)}</td><td class="mono">${fmt(x.alt0,0)}</td>${A.hasGps?`<td class="mono">${x.drift!=null?fmt(x.drift,0):"—"}</td>`:""}</tr>`).join("")+`</tbody></table>`;
@@ -1671,6 +1715,7 @@ function renderNarrative(f,A,tech,lowPara,minAlt){
   if(E.spec!=null){ if(E.spec<=120) pos.push(LG(`Salite efficienti (${n0(E.spec)} mAh/100 m)`,`Efficient climbs (${n0(E.spec)} mAh/100 m)`,`Montées efficaces (${n0(E.spec)} mAh/100 m)`)); else if(E.spec>140){ neg.push(LG(`Consumo alto in salita (${n0(E.spec)} mAh/100 m)`,`High climb consumption (${n0(E.spec)} mAh/100 m)`,`Consommation élevée en montée (${n0(E.spec)} mAh/100 m)`)); tips.push(LG("sali con meno gas: costa meno energia per ogni metro","climb with less throttle: it costs less energy per metre","monte avec moins de gaz : ça coûte moins d'énergie par mètre")); } }
   if(E.vcell!=null){ if(E.vcell>=3.55) pos.push(LG("Batteria in ottima forma sotto carico","Battery in great shape under load","Batterie en pleine forme sous charge")); else if(E.vcell<3.45){ neg.push(LG(`Tensione bassa sotto carico (${n2(E.vcell)} V/cella)`,`Low voltage under load (${n2(E.vcell)} V/cell)`,`Tension basse sous charge (${n2(E.vcell)} V/élément)`)); tips.push(LG("imposta un allarme di tensione a circa 3,5 V/cella","set a voltage alarm at about 3.5 V/cell","règle une alarme de tension à environ 3,5 V/élément")); } }
   if(E.tesc!=null&&E.tesc>=70){ neg.push(LG(`Regolatore caldo (${n0(E.tesc)} °C)`,`Hot ESC (${n0(E.tesc)} °C)`,`Variateur chaud (${n0(E.tesc)} °C)`)); tips.push(LG("lascia raffreddare il regolatore tra una salita e l'altra","let the ESC cool between climbs","laisse refroidir le variateur entre deux montées")); }
+  if(A&&A.radio){ const nc=A.radio.ev.filter(e=>e.lvl==="crit").length; if(nc){ neg.push(LG(`Cali del collegamento radio/alimentazione (${nc})`,`Radio link / supply dropouts (${nc})`,`Pertes de liaison radio / alimentation (${nc})`)); tips.push(LG("controlla antenne, posizione del ricevitore e alimentazione del ricevitore (vedi Radio e alimentazione)","check antennas, receiver position and receiver supply (see Radio & power)","vérifie les antennes, la position du récepteur et son alimentation (voir Radio et alimentation)")); } }
   if(lowPara&&minAlt!=null){ neg.push(LG(`Passaggio molto basso (${n0(minAlt)} m dal suolo)`,`Very low pass (${n0(minAlt)} m above ground)`,`Passage très bas (${n0(minAlt)} m du sol)`)); tips.push(LG("tieni più margine di quota: a pochi metri un problema al motore non lascia scampo","keep more altitude margin: a few metres up, a motor problem leaves no way out","garde plus de marge d'altitude : à quelques mètres, un souci moteur ne pardonne pas")); }
 
   box.innerHTML=S.map(([ti,txt,raw])=>`<div class="nsec"><h3>${ti}</h3>${raw||`<p>${txt}</p>`}</div>`).join("");
