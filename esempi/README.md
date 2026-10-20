@@ -42,3 +42,12 @@ Include tutti i canali: velocità, posizione, quota GPS e relativa, satelliti, H
 > Il vario del file è "barometrico": dopo una decelerazione brusca (90 → 48 km/h) mostra una piccola salita per lo scambio velocità/quota. Per questo la termica 2 ha un vario massimo apparente di ~3,8 m/s: è normale.
 
 > **Sfondo mappa (v1.21):** i file di esempio sono posizionati a circa 45,60° N, 9,20° E (zona del lago di Como/Lecco). Scegliendo *Sfondo → Strade/Satellite* nella scheda Traiettoria si vede la mappa reale di quel punto sotto il volo inventato (serve internet).
+
+## Log Jeti sintetico (v1.36)
+
+| File | Cosa contiene |
+|---|---|
+| `volo-completo-test.log` | log **Jeti raw** inventato dello stesso volo di `volo-completo-test.nmea`, con l'orologio sfasato di **37,4 s**: quota, regolatore Mezon 90 (giri, V, A), ricevente (U Rx, Q con un calo a ~5:00) e interruttori Sa/Sb (termica 5:00–8:40, poi normale) |
+| `genera-jeti-test.py` | lo script che lo produce |
+
+Caricando **insieme** `volo-completo-test.log` e `volo-completo-test.nmea` (selezione multipla in *Carica*) i due voli si uniscono: accanto al nome compare "uniti (+37,4 s, r=1,00)" e hai dati elettrici, polare e traiettoria nello stesso volo.

@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.35**
+- Versione corrente: **v1.36**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -366,3 +366,14 @@ python3 -m http.server 8000   # poi apri http://localhost:8000
 ```
 
 Oppure apri direttamente `index.html` con doppio clic (funziona offline; senza rete si usano i font di sistema).
+
+### Test automatici
+
+`tests/run.mjs` apre l'app in Chromium (Playwright), carica i file di `esempi/` e controlla i punti chiave: polare e indice del volo con l'NMEA, assetto/fasi/eventi radio con il log Jeti sintetico, **unione Jeti + NMEA** (l'offset ritrovato deve essere +37,4 s), impostazioni degli interruttori, archivio (miglior volo e andamento) e assenza di errori JavaScript.
+
+```bash
+npm i -g playwright          # una volta
+node tests/run.mjs           # PW_PATH=<cartella node_modules globale> se Playwright non è in /opt/node22/lib/node_modules
+```
+
+Serve a non rompere cose già funzionanti quando si aggiunge una funzione: si lancia prima di ogni pubblicazione. Per rigenerare il log Jeti di prova: `cd esempi && python3 genera-jeti-test.py`.

@@ -414,7 +414,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.35</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.36</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -693,6 +693,13 @@
       <div class="scroll-x" id="cmpTable" style="margin-top:14px"></div>
       <p class="hint" data-i18n="best_note">In verde il valore migliore di ogni riga.</p>
     </div>
+    <div class="card" id="tdCard" hidden>
+      <h2><span data-i18n="td_h2">Andamento nel tempo</span> <span class="tag">TREND</span>
+        <span class="resctl"><span data-i18n="ar_model">Modello</span><select id="tdModel" class="resSel"></select>
+          <span data-i18n="td_metric">Misura</span><select id="tdMetric" class="resSel"></select></span></h2>
+      <div class="chart-wrap"><canvas id="tdCanvas" style="width:100%;height:260px"></canvas></div>
+      <p class="hint" id="tdInfo"></p>
+    </div>
   </section>
 
   <!-- PAGE 3 -->
@@ -946,6 +953,12 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  td_h2:["Andamento nel tempo","Trend over time","Évolution dans le temps"], td_metric:["Misura","Measure","Mesure"],
+  td_score:["Indice di volo","Flight index","Indice de vol"], td_dur:["Durata (min)","Duration (min)","Durée (min)"], td_spec:["Consumo mAh/100 m","Use mAh/100 m","Conso mAh/100 m"],
+  td_sink:["Sink in planata (m/s)","Glide sink (m/s)","Chute en plané (m/s)"], td_rint:["Resistenza interna (mΩ)","Internal resistance (mΩ)","Résistance interne (mΩ)"],
+  td_vcell:["V/cella minima","Min V/cell","V/élément min."], td_rate:["Rateo di salita (m/s)","Climb rate (m/s)","Taux de montée (m/s)"], td_alt:["Quota massima (m)","Max altitude (m)","Altitude max (m)"],
+  td_few:["Servono almeno 2 voli con questa misura per tracciare l'andamento.","At least 2 flights with this measure are needed for the trend.","Il faut au moins 2 vols avec cette mesure pour le trend."],
+  td_best:["migliore","best","meilleur"], td_trend:["tendenza","trend","tendance"], td_flat:["stabile","flat","stable"], td_better:["in miglioramento","improving","en amélioration"], td_worse:["in peggioramento","getting worse","en dégradation"], td_perflight:["volo","flight","vol"],
   rd_h2:["Radio e alimentazione","Radio & power","Radio et alimentation"], rd_hint:["Qualità del collegamento (Q), livello antenne (A1/A2, 0–9), tensione del ricevitore e del BEC durante il volo. Sono segnalati cali di Q sotto 80 %, antenna ≤1 per oltre 1,5 s e cadute di tensione di oltre 0,3–0,4 V rispetto al valore tipico.","Link quality (Q), antenna level (A1/A2, 0–9), receiver and BEC voltage during the flight. Flagged: Q below 80 %, antenna ≤1 for over 1.5 s and voltage drops above 0.3–0.4 V from the typical value.","Qualité de la liaison (Q), niveau d'antennes (A1/A2, 0–9), tension du récepteur et du BEC en vol. Signalés : Q sous 80 %, antenne ≤1 plus de 1,5 s et chutes de tension de plus de 0,3–0,4 V par rapport à la valeur typique."],
   rd_qmin:["Q minima","Min Q","Q min."], rd_q90:["sotto 90 % per","below 90 % for","sous 90 % pendant"], rd_amin:["Antenne min.","Min antenna","Antenne min."], rd_rxmin:["Tensione Rx min.","Min Rx voltage","Tension Rx min."], rd_med:["tipica","typical","typique"], rd_bec:["BEC min.","Min BEC","BEC min."],
   rd_event:["Evento","Event","Événement"], rd_val:["Valore","Value","Valeur"], rd_none:["Nessun calo di collegamento o di tensione rilevato.","No link or voltage dropout detected.","Aucune perte de liaison ou de tension détectée."],
@@ -2679,7 +2692,47 @@ function renderCmpTable(sel){
   }).join("");
   $("#cmpTable").innerHTML=`<table class="cmptbl"><thead>${head}</thead><tbody>${body}</tbody></table>`;
 }
-function renderArchive(){ renderArchFolder(); renderArchSave(); renderArchFilters(); renderArchList(); renderCompare(); }
+/* andamento di una misura volo dopo volo (voli ordinati per data) */
+const TD_METRICS=[
+  {k:"score",l:"td_score",u:"/100",d:0,good:1}, {k:"dur",l:"td_dur",u:"min",d:0,good:1,f:v=>v/60},
+  {k:"spec",l:"td_spec",u:"mAh/100m",d:0,good:-1}, {k:"sink",l:"td_sink",u:"m/s",d:2,good:1,f:v=>-v},
+  {k:"rint",l:"td_rint",u:"mΩ",d:0,good:-1}, {k:"vcell",l:"td_vcell",u:"V",d:2,good:1},
+  {k:"rate",l:"td_rate",u:"m/s",d:1,good:1}, {k:"altMax",l:"td_alt",u:"m",d:0,good:1}
+];
+function renderTrend(){
+  const card=$("#tdCard"); if(!card) return;
+  card.hidden=ARCH.length<2; if(ARCH.length<2) return;
+  const msel=$("#tdModel"), xsel=$("#tdMetric");
+  const models=[...new Set(ARCH.map(e=>e.model||""))].sort();
+  if(!msel._init||msel._n!==models.join("|")){ msel._n=models.join("|"); const keep=msel.value;
+    msel.innerHTML=`<option value="*">${t("ar_all")}</option>`+models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m||"—")}</option>`).join(""); msel.value=models.includes(keep)||keep==="*"?(keep||"*"):"*"; msel._init=1; }
+  if(!xsel._init||xsel._lang!==lang){ const keep=xsel.value||"score"; xsel.innerHTML=TD_METRICS.map(m=>`<option value="${m.k}">${t(m.l)}</option>`).join(""); xsel.value=keep; xsel._init=1; xsel._lang=lang; }
+  const M=TD_METRICS.find(m=>m.k===xsel.value)||TD_METRICS[0];
+  const L=ARCH.filter(e=>msel.value==="*"||(e.model||"")===msel.value).map(e=>({e,v:e.sum[M.k]})).filter(o=>num(o.v)).map(o=>({e:o.e,v:M.f?M.f(o.v):o.v}))
+    .sort((a,b)=>(a.e.ts||0)-(b.e.ts||0));
+  const cv=$("#tdCanvas"), dpr=Math.min(2,window.devicePixelRatio||1), W0=cv.clientWidth||600, H0=260;
+  cv.width=Math.round(W0*dpr); cv.height=Math.round(H0*dpr); const g=cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W0,H0);
+  const info=$("#tdInfo");
+  if(L.length<2){ info.textContent=t("td_few"); return; }
+  const padL=48,padR=16,padT=14,padB=34, W=W0-padL-padR, H=H0-padT-padB;
+  let lo=Math.min(...L.map(o=>o.v)), hi=Math.max(...L.map(o=>o.v)); if(hi-lo<1e-9){ hi+=1; lo-=1; } const pd=(hi-lo)*0.12; lo-=pd; hi+=pd;
+  const X=i=>padL+(L.length===1?W/2:i/(L.length-1)*W), Y=v=>padT+H-(v-lo)/(hi-lo)*H;
+  const col=cssv("--accent"), mut=cssv("--muted"), line=cssv("--line");
+  g.font='11px "IBM Plex Mono",monospace'; g.textAlign="right"; g.fillStyle=mut; g.strokeStyle=line; g.lineWidth=1;
+  for(let k=0;k<=4;k++){ const v=lo+(hi-lo)*k/4, y=Y(v); g.beginPath(); g.moveTo(padL,y); g.lineTo(padL+W,y); g.stroke(); g.fillText(fmt(v,M.d),padL-6,y+4); }
+  g.textAlign="center"; const step=Math.max(1,Math.ceil(L.length/8));
+  L.forEach((o,i)=>{ if(i%step===0||i===L.length-1) g.fillText(archDate(o.e,true),X(i),H0-padB+16); });
+  // retta di tendenza (minimi quadrati sull'ordine dei voli)
+  const n=L.length, mx=(n-1)/2, my=L.reduce((p,o)=>p+o.v,0)/n; let sxy=0,sxx=0; L.forEach((o,i)=>{ sxy+=(i-mx)*(o.v-my); sxx+=(i-mx)*(i-mx); });
+  const sl=sxx?sxy/sxx:0, ic=my-sl*mx;
+  g.strokeStyle=mut; g.setLineDash([5,4]); g.beginPath(); g.moveTo(X(0),Y(ic)); g.lineTo(X(n-1),Y(ic+sl*(n-1))); g.stroke(); g.setLineDash([]);
+  g.strokeStyle=col; g.lineWidth=2; g.beginPath(); L.forEach((o,i)=>{ i?g.lineTo(X(i),Y(o.v)):g.moveTo(X(i),Y(o.v)); }); g.stroke();
+  const best=L.reduce((p,o,i)=>((M.good>0?o.v>L[p].v:o.v<L[p].v)?i:p),0);
+  L.forEach((o,i)=>{ g.fillStyle=i===best?cssv("--good"):col; g.beginPath(); g.arc(X(i),Y(o.v),i===best?5:3.4,0,7); g.fill(); });
+  const dir=Math.abs(sl)<(hi-lo)*0.01?t("td_flat"):((sl>0)===(M.good>0)?t("td_better"):t("td_worse"));
+  info.textContent=`${L.length} ${t("pk_n").toLowerCase()} · ${t("td_best")}: ${fmt(L[best].v,M.d)} ${M.u} (${archDate(L[best].e)}) · ${t("td_trend")}: ${dir} (${sl>=0?"+":""}${fmt(sl,M.d>1?M.d:2)} ${M.u}/${t("td_perflight")})`;
+}
+function renderArchive(){ renderArchFolder(); renderArchSave(); renderArchFilters(); renderArchList(); renderCompare(); renderTrend(); }
 
 $("#arFolder").addEventListener("click",e=>{ const b=e.target.closest("button[data-ar]"); if(!b) return; if(b.dataset.ar==="pick") archPick(); else archReconnect(); });
 $("#arSave").addEventListener("click",archSave);
@@ -2694,6 +2747,7 @@ $("#arList").addEventListener("click",e=>{
   const d=e.target.closest("button[data-del]"); if(d) archDelete(d.dataset.del);
 });
 $("#arFModel").addEventListener("change",e=>{ archF.model=e.target.value; renderArchList(); });
+$("#tdModel").addEventListener("change",renderTrend); $("#tdMetric").addEventListener("change",renderTrend);
 ["#cmpVar","#cmpAlign","#cmpWin"].forEach(s=>$(s).addEventListener("change",renderCompare));
 $("#cmpClear").addEventListener("click",()=>{ archSel.clear(); renderArchList(); renderCompare(); });
 
@@ -3168,7 +3222,7 @@ $("#copyCsv").addEventListener("click",async()=>{
   const old=btn.textContent; btn.textContent=ok?t("copied"):t("copyfail"); setTimeout(()=>{btn.textContent=old;},1500);
 });
 
-function redrawAll(){ if(!DATA)return; renderKpis(VF()); renderMain(); renderView(); if(archVisible()) renderCompare(); renderPolar(); if(trVisible()) drawTrack(); }
+function redrawAll(){ if(!DATA)return; try{ renderTrend(); }catch(e){} renderKpis(VF()); renderMain(); renderView(); if(archVisible()) renderCompare(); renderPolar(); if(trVisible()) drawTrack(); }
 let rt; window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(redrawAll,120);});
 const mo=new MutationObserver(redrawAll); mo.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 if(window.matchMedia) matchMedia("(prefers-color-scheme:dark)").addEventListener("change",redrawAll);
@@ -3187,6 +3241,9 @@ $("#helpOverlay").addEventListener("click",e=>{ if(e.target===$("#helpOverlay"))
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeHelp(); });
 $("#logo").addEventListener("click",()=>$("#logoFile").click());
 $("#logoFile").addEventListener("change",e=>{ const f=e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{ logoData=String(rd.result); try{localStorage.setItem("fd_logo",logoData);}catch(err){} renderLogo(); }; rd.readAsDataURL(f); });
+
+/* gancio per i test automatici (non usato dall'app): aggiunge un volo all'elenco dell'archivio senza cartella */
+window.__rz={ addFlight(text,name,model){ const f=parseAnyText(text,name); if(!f) return false; ARCH.push(archEntry(name+".rzf.json",{model},f)); renderArchive(); return true; } };
 
 /* boot */
 (function(){ const nj=document.getElementById("nojs"); if(nj) nj.remove(); })();   // JS is running → hide the fallback notice
