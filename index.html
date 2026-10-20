@@ -414,7 +414,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.33</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.34</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -431,7 +431,7 @@
         <button class="helpbtn" id="helpBtn" data-i18n-title="help" title="Guida">?</button>
       </div>
       <div class="actions">
-        <label class="filebtn" id="loadBtn" tabindex="0" data-i18n-title="load_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span data-i18n="load_btn">Carica</span><input type="file" id="file"></label>
+        <label class="filebtn" id="loadBtn" tabindex="0" data-i18n-title="load_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span data-i18n="load_btn">Carica</span><input type="file" id="file" multiple></label>
       <button class="filebtn demobtn" id="demoBtn" type="button" data-i18n-title="demo_title"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg><span data-i18n="demo">Demo</span></button>
       <button class="setupbtn" id="setupBtn" title="Set up">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.6H3a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 4.7 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 3V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></svg>
@@ -940,6 +940,9 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  mg_ask:["Il file è del tipo complementare al volo aperto (Jeti + GPS). Unirli in un unico volo?","This file is the complementary type of the open flight (Jeti + GPS). Merge them into one flight?","Ce fichier est du type complémentaire du vol ouvert (Jeti + GPS). Les fusionner en un seul vol ?"],
+  mg_fail:["Non riesco ad allineare i due file: le quote non coincidono abbastanza. Sono dello stesso volo?","Cannot align the two files: the altitudes do not match well enough. Are they from the same flight?","Impossible d'aligner les deux fichiers : les altitudes ne coïncident pas assez. Sont-ils du même vol ?"],
+  mg_ok:["uniti","merged","fusionnés"],
   pc_h2:["Interruttori delle fasi di volo","Flight-phase switches","Interrupteurs des phases de vol"],
   pc_hint:["Indica quale fase corrisponde a ogni posizione degli interruttori della radio (canali \"Comando\" dei log Jeti). Le barre colorate nei grafici e i tempi per fase usano queste impostazioni.","Pick the phase for each switch position on your radio (\"Comando\" channels of Jeti logs). The coloured bars in the charts and the time per phase use these settings.","Indique la phase de chaque position des interrupteurs de la radio (canaux \"Comando\" des logs Jeti). Les barres colorées des graphiques et les temps par phase utilisent ces réglages."],
   pc_ch3:["Interruttore a 3 posizioni","3-position switch","Interrupteur 3 positions"], pc_low:["Posizione bassa (0)","Low position (0)","Position basse (0)"], pc_mid:["Posizione centrale (50)","Centre position (50)","Position centrale (50)"], pc_high:["Posizione alta (100)","High position (100)","Position haute (100)"],
@@ -2990,26 +2993,70 @@ $("#setupBtn").addEventListener("click",()=>{
   refreshBuilder(); renderThemeControls(); renderPhaseCfg();
 });
 
+/* ---------- unione log Jeti + NMEA (GPS) dello stesso volo ---------- */
+/* orologi diversi: l'allineamento si trova confrontando le due quote (correlazione) */
+function alignLag(fj,fg){
+  const aj=altSeries(fj), ag=altSeries(fg); if(!aj||!ag) return null;
+  const rs=(f,a)=>{ const n=Math.floor(f.t[f.t.length-1])+1, o=new Array(n), k=Math.round(1/f.DT); for(let i=0;i<n;i++){ const v=a.vals[Math.min(a.vals.length-1,i*k)]; o[i]=Number.isFinite(v)?v:NaN; } return o; };
+  const J=rs(fj,aj), G=rs(fg,ag);
+  const corr=(lag,step)=>{ let n=0,sa=0,sb=0,saa=0,sbb=0,sab=0;
+    for(let i=0;i<J.length;i+=step){ const j=i+lag; if(j<0||j>=G.length) continue; const x=J[i], y=G[j]; if(!Number.isFinite(x)||!Number.isFinite(y)) continue; n++; sa+=x; sb+=y; saa+=x*x; sbb+=y*y; sab+=x*y; }
+    if(n<120/step) return -2; const va=saa-sa*sa/n, vb=sbb-sb*sb/n; return (va>1e-9&&vb>1e-9)?(sab-sa*sb/n)/Math.sqrt(va*vb):-2; };
+  let best=-2, bl=0; for(let lag=-1200;lag<=1200;lag++){ const c=corr(lag,1); if(c>best){ best=c; bl=lag; } }
+  // affinamento a 0,2 s sul segnale a piena risoluzione
+  const DT=fj.DT, k0=Math.round(bl/DT); let bf=-2, bk=k0;
+  const fine=(k)=>{ let n=0,sa=0,sb=0,saa=0,sbb=0,sab=0; for(let i=0;i<aj.vals.length;i+=2){ const j=i+k; if(j<0||j>=ag.vals.length) continue; const x=aj.vals[i], y=ag.vals[j]; if(!Number.isFinite(x)||!Number.isFinite(y)) continue; n++; sa+=x; sb+=y; saa+=x*x; sbb+=y*y; sab+=x*y; }
+    if(n<50) return -2; const va=saa-sa*sa/n, vb=sbb-sb*sb/n; return (va>1e-9&&vb>1e-9)?(sab-sa*sb/n)/Math.sqrt(va*vb):-2; };
+  for(let k=k0-Math.round(1.5/DT);k<=k0+Math.round(1.5/DT);k++){ const c=fine(k); if(c>bf){ bf=c; bk=k; } }
+  return {shift:bk, lag:bk*DT, r:Math.max(best,bf)};
+}
+function mergeFrames(fj,fg){
+  const al=alignLag(fj,fg); if(!al||al.r<0.6) return {err:true,r:al?al.r:null};
+  const f=Object.assign({},fj,{series:Object.assign({},fj.series)}), N=fj.t.length;
+  for(const k of Object.keys(f.series)) if(f.series[k].derived) delete f.series[k];
+  for(const k of Object.keys(fg.series)){ const g=fg.series[k]; if(g.derived) continue;
+    const name=f.series[k]?k+" (GPS)":k, vals=new Array(N);
+    for(let i=0;i<N;i++){ const j=i+al.shift; vals[i]=(j>=0&&j<g.vals.length)?g.vals[j]:NaN; }
+    f.series[name]={unit:g.unit,vals}; }
+  computeDerived(f);
+  f.climbs=fj.climbs; f._kind="merged";
+  f.devRoles=(fj.devRoles||[]).concat([{role:"gps",name:"SM GPS"}]);
+  f.devices=(fj.devices||[]).concat(["SM GPS"]);
+  const mj=fj.meta||{}, mg=fg.meta||{};
+  if(!mj.dateKnown&&mg.dateKnown&&mg.dateObj){ const d=new Date(mg.dateObj); if(mj.time){ const q=mj.time.split(":"); d.setHours(+q[0],+q[1],+q[2]||0); } f.meta={dateObj:d,time:mj.time||mg.time,dateKnown:true}; }
+  return {frame:f,al};
+}
+function parseAnyText(txt,name){
+  let f=null, kind="jeti"; const nmea=/^\$G[NPLAB]RMC|^\$SMGPS/m.test(txt);
+  try{
+    if(nmea){ kind="nmea"; f=parseNMEA(txt); }
+    else if(/\b000000000;/.test(txt) || /^#/.test(txt)) f=parseRaw(txt);
+    else f=parseCsv(txt);
+    if(!f && !nmea) f=parseRaw(txt)||parseCsv(txt);
+  }catch(err){ f=null; }
+  if(!f||!altSeries(f)) return null;
+  if(!f.meta||(!f.meta.time&&!f.meta.dateKnown)) f.meta=parseFilename(name);
+  f._src=name; f._kind=kind; return f;
+}
+function showFrame(f,label){ focusRange=null; reports=reports.filter(r=>!r.tmp); DATA=f; isDemo=false; $("#fname").textContent=label; renderAll(); }
+function tryMerge(f1,f2,label){
+  const fj=f1._kind==="nmea"?f2:f1, fg=f1._kind==="nmea"?f1:f2;
+  const m=mergeFrames(fj,fg);
+  if(m.err){ alert(t("mg_fail")); return false; }
+  m.frame._src=label; showFrame(m.frame,label);
+  $("#fname").textContent=label+" · "+t("mg_ok")+" ("+(m.al.lag>=0?"+":"")+fmt(m.al.lag,1)+" s, r="+fmt(m.al.r,2)+")"; return true;
+}
 $("#file").addEventListener("change",e=>{
-  const file=e.target.files[0]; e.target.value=""; if(!file) return;
-  const rd=new FileReader();
-  rd.onload=()=>{
-    const txt=String(rd.result);
-    let f=null; const nmea=/^\$G[NPLAB]RMC|^\$SMGPS/m.test(txt);
-    // riconoscimento dal contenuto: NMEA (GPS SM), Jeti raw (righe di definizione "000000000;"), altrimenti CSV
-    try{
-      if(nmea) f=parseNMEA(txt);
-      else if(/\b000000000;/.test(txt) || /^#/.test(txt)) f=parseRaw(txt);
-      else f=parseCsv(txt);
-      if(!f && !nmea) f=parseRaw(txt)||parseCsv(txt);
-    }catch(err){ f=null; }
-    if(!f || !altSeries(f)){ alert(t("file_err")); return; }
-    if(!f.meta) f.meta=parseFilename(file.name); else if(!f.meta.time&&!f.meta.dateKnown) f.meta=parseFilename(file.name);
-    f._src=file.name;
-    focusRange=null; reports=reports.filter(r=>!r.tmp);
-    DATA=f; isDemo=false; $("#fname").textContent=file.name; renderAll();
-  };
-  rd.readAsText(file,"latin1");
+  const files=[...e.target.files].slice(0,2); e.target.value=""; if(!files.length) return;
+  Promise.all(files.map(fl=>new Promise(res=>{ const rd=new FileReader(); rd.onload=()=>res(parseAnyText(String(rd.result),fl.name)); rd.onerror=()=>res(null); rd.readAsText(fl,"latin1"); }))).then(fr=>{
+    const ok=fr.filter(Boolean); if(!ok.length){ alert(t("file_err")); return; }
+    if(ok.length===2 && ok[0]._kind!==ok[1]._kind){ tryMerge(ok[0],ok[1],ok.map(x=>x._src).join(" + ")); return; }
+    const f=ok[0];
+    // un solo file: se il volo già aperto è del tipo complementare, propone di unirli
+    const cur=DATA&&!isDemo&&DATA._kind&&DATA._kind!=="merged"?DATA:null;
+    if(cur && cur._kind!==f._kind && confirm(t("mg_ask"))){ if(tryMerge(cur,f,cur._src+" + "+f._src)) return; }
+    showFrame(f,f._src);
+  });
 });
 
 $("#addBtn").addEventListener("click",()=>{
