@@ -414,7 +414,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.32</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.33</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -731,6 +731,11 @@
         <button class="btn ghost" id="themeReset" data-i18n="col_reset">Ripristina colori predefiniti</button>
       </div>
     </div>
+    <div class="card" id="phCard">
+      <h2><span data-i18n="pc_h2">Interruttori delle fasi di volo</span> <span class="tag">SW</span></h2>
+      <p class="hint" style="margin-top:-4px" data-i18n="pc_hint">Indica quale fase corrisponde a ogni posizione degli interruttori della radio (canali "Comando" dei log Jeti). Le barre colorate nei grafici e i tempi per fase usano queste impostazioni.</p>
+      <div class="row" id="phRow"></div>
+    </div>
   </section>
 
   <!-- HELP overlay -->
@@ -935,6 +940,11 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  pc_h2:["Interruttori delle fasi di volo","Flight-phase switches","Interrupteurs des phases de vol"],
+  pc_hint:["Indica quale fase corrisponde a ogni posizione degli interruttori della radio (canali \"Comando\" dei log Jeti). Le barre colorate nei grafici e i tempi per fase usano queste impostazioni.","Pick the phase for each switch position on your radio (\"Comando\" channels of Jeti logs). The coloured bars in the charts and the time per phase use these settings.","Indique la phase de chaque position des interrupteurs de la radio (canaux \"Comando\" des logs Jeti). Les barres colorées des graphiques et les temps par phase utilisent ces réglages."],
+  pc_ch3:["Interruttore a 3 posizioni","3-position switch","Interrupteur 3 positions"], pc_low:["Posizione bassa (0)","Low position (0)","Position basse (0)"], pc_mid:["Posizione centrale (50)","Centre position (50)","Position centrale (50)"], pc_high:["Posizione alta (100)","High position (100)","Position haute (100)"],
+  pc_ch2:["Interruttore a 2 posizioni","2-position switch","Interrupteur 2 positions"], pc_on:["Quando è acceso","When on","Quand actif"], pc_none:["(nessun canale)","(no channel)","(aucun canal)"],
+  an_dives:["Picchiate","Dives","Piqués"],
   sc_saved:["viene registrato in archivio insieme al volo","saved to the archive with the flight","enregistré dans l'archive avec le vol"],
   sc_h2:["Indice di volo","Flight index","Indice de vol"],
   sc_free:["Quota gratis (termiche)","Free altitude (thermals)","Altitude gratuite (thermiques)"], sc_motor:["Uso del motore","Motor use","Usage du moteur"],
@@ -1124,11 +1134,16 @@ function parseRaw(text){
 
 /* fasi di volo comandate da interruttori della radio (log Jeti con canali "Comando Sa/Sb"):
    Sa a 3 posizioni: 0 = termica, 50 = normale, 100 = velocità · Sb: ≥50 = atterraggio (ha la precedenza).
-   Per cambiare l'assegnazione basta modificare PHASE_SA / PHASE_SB. */
+   Assegnazione modificabile in Set up (phCfg). */
 const PHASES=[
   {k:1,id:"ph_normal",col:"#3fb68b"}, {k:2,id:"ph_thermal",col:"#a56be0"}, {k:3,id:"ph_speed",col:"#4c9be8"}, {k:4,id:"ph_land",col:"#d9534f"}
 ];
-const PHASE_SA=v=>v<25?2:(v<75?1:3), PHASE_SB=v=>v>=50;
+/* assegnazione degli interruttori (impostabile in Set up): canale a 3 posizioni (basso/centro/alto) e canale a 2 posizioni (acceso) */
+const PH_DEF={a:"",b:"",low:2,mid:1,high:3,bOn:4};
+function loadPh(){ try{ const o=JSON.parse(localStorage.getItem("fd_phases")); if(o) return Object.assign({},PH_DEF,o); }catch(e){} return Object.assign({},PH_DEF); }
+let phCfg=loadPh();
+function savePh(){ try{ localStorage.setItem("fd_phases",JSON.stringify(phCfg)); }catch(e){} }
+function switchCandidates(f){ return Object.keys(f.series).filter(k=>!f.series[k].derived&&/^Comando\s+S/i.test(k)); }
 function derivePhases(f){
   // i canali "Comando Sa" duplicati (stesso interruttore su più canali) si fondono in uno
   const keep=[];
@@ -1137,15 +1152,19 @@ function derivePhases(f){
     const v=f.series[k].vals, dup=keep.find(q=>{ const w=f.series[q].vals; return w.length===v.length && w.every((x,i)=>x===v[i]); });
     if(dup) delete f.series[k]; else keep.push(k);
   }
-  const A=keep.find(k=>/^Comando\s+Sa/i.test(k)), B=keep.find(k=>/^Comando\s+Sb/i.test(k));
   for(const k of keep){ const n=k.replace(/\s*\(.*\)$/,""); if(n!==k && !f.series[n]){ f.series[n]=f.series[k]; delete f.series[k]; } }
+  computePhases(f);
+}
+function computePhases(f){
+  delete f.series["Fase volo"]; f.phases=null;
+  const cand=switchCandidates(f);
+  const A=f.series[phCfg.a]||f.series[cand.find(k=>/Sa/i.test(k))], B=f.series[phCfg.b]||f.series[cand.find(k=>/Sb/i.test(k))];
   if(!A&&!B) return;
-  const sa=A&&f.series[A.replace(/\s*\(.*\)$/,"")]||(A&&f.series[A]), sb=B&&(f.series[B.replace(/\s*\(.*\)$/,"")]||f.series[B]);
   const N=f.t.length, ph=new Array(N); let la=1;
   for(let i=0;i<N;i++){
-    const b=sb?sb.vals[i]:NaN, a=sa?sa.vals[i]:NaN;
-    if(Number.isFinite(b)&&PHASE_SB(b)) ph[i]=4;
-    else if(Number.isFinite(a)) ph[i]=PHASE_SA(a); else ph[i]=la;
+    const b=B?B.vals[i]:NaN, a=A?A.vals[i]:NaN;
+    if(Number.isFinite(b)&&b>=50&&phCfg.bOn) ph[i]=phCfg.bOn;
+    else if(Number.isFinite(a)) ph[i]=a<25?phCfg.low:(a<75?phCfg.mid:phCfg.high); else ph[i]=la;
     la=ph[i];
   }
   f.series["Fase volo"]={unit:"",vals:ph,derived:true};
@@ -1469,7 +1488,8 @@ function analyzeFlight(f){
   const secs=[0,0,0,0]; for(let i=i0;i<=i1;i++) secs[ph[i]]++; for(let k=0;k<4;k++) secs[k]*=DT;
   const air=(i1-i0)*DT;
   // planata: sink medio, finesse, % vario>0
-  let ns=0,ss=0,np=0,n3=0; const gv=[]; for(let i=i0;i<=i1;i++) if(ph[i]===3){ n3++; const v=va[i]; if(Number.isFinite(v)){ if(v<0){ ns++; ss+=v; } if(v>0.2) np++; } }
+  const DV=diveRuns(f,va,i0,i1,mot), dives=DV.runs;
+  let ns=0,ss=0,np=0,n3=0; const gv=[]; for(let i=i0;i<=i1;i++) if(ph[i]===3&&!DV.mask[i]){ n3++; const v=va[i]; if(Number.isFinite(v)){ if(v<0){ ns++; ss+=v; } if(v>0.2) np++; } }
   const gl=f.series["Glide"]; let gr=null; if(gl){ const arr=[]; for(let i=i0;i<=i1;i++) if(ph[i]===3&&Number.isFinite(gl.vals[i])) arr.push(gl.vals[i]); gr=median(arr); }
   // velocità (planata + termica = motore spento)
   let sv=null; if(sp){ const arr=[]; for(let i=i0;i<=i1;i++) if(ph[i]>=2&&Number.isFinite(sp.vals[i])&&sp.vals[i]>5) arr.push(sp.vals[i]); sv={max:Math.max(...sp.vals.slice(i0,i1+1).filter(Number.isFinite)),avg:arr.length?arr.reduce((p,q)=>p+q,0)/arr.length:null,med:median(arr)}; }
@@ -1490,7 +1510,7 @@ function analyzeFlight(f){
   const altMax=Math.max(...a.vals.slice(i0,i1+1)), lastClimb=C.length?C[C.length-1]:null;
   return {N,DT,i0,i1,air,ph,secs,th,C,altMax,launchAlt:lastClimb?a.vals[Math.min(N-1,lastClimb.i1)]:null,
     gainMotor:C.reduce((p,c)=>p+Math.max(0,c.dalt||0),0),gainTherm:th.reduce((p,x)=>p+x.gain,0),
-    sink:ns?ss/ns:null,gr,liftPct:n3?np/n3*100:null,sv,path,dmax,dend,hs,hvar,el,hasGps:!!X,tOn:f.t[i0],tOff:f.t[i1]};
+    sink:ns?ss/ns:null,gr,liftPct:n3?np/n3*100:null,sv,path,dmax,dend,hs,hvar,el,dives,hasGps:!!X,tOn:f.t[i0],tOff:f.t[i1]};
 }
 function bestFlight(){ let b=null; for(const e of ARCH) if(num(e.sum&&e.sum.score)&&(!b||e.sum.score>b.sum.score)) b=e; return b; }
 function scoreLevel(v){ return v>=80?t("sc_l4"):v>=60?t("sc_l3"):v>=40?t("sc_l2"):t("sc_l1"); }
@@ -1527,6 +1547,7 @@ function renderAnalysis(f){
   if(th.length){ const best=th.reduce((p,x)=>x.rate>p.rate?x:p,th[0]); g2.push(tile(t("an_bestth"),"+"+fmt(best.rate,1),"m/s",`${hhmmss(best.t0)} · +${fmt(best.gain,0)} m`,"good"));
     g2.push(tile(t("an_avgth"),"+"+fmt(th.reduce((p,x)=>p+x.rate,0)/th.length,1),"m/s")); }
   if(A.sink!=null) g2.push(tile(t("an_sink"),fmt(A.sink,2),"m/s"));
+  if(A.dives.length){ const lost=A.dives.reduce((p,d)=>p+(d.lost||0),0), vm=Math.min(...A.dives.map(d=>d.vmin)); g2.push(tile(t("an_dives"),String(A.dives.length),"",`−${fmt(lost,0)} m · ${fmt(vm,0)} m/s`,"warn")); }
   if(A.gr!=null) g2.push(tile(t("an_gr"),fmt(A.gr,1),":1"));
   if(A.liftPct!=null) g2.push(tile(t("an_lift"),fmt(A.liftPct,0),"%"));
   if(A.sv){ g3.push(tile(t("an_vmax"),fmt(A.sv.max,0),"km/h")); if(A.sv.avg!=null) g3.push(tile(t("an_vavg"),fmt(A.sv.avg,0),"km/h")); if(A.sv.med!=null) g3.push(tile(t("an_vmed"),fmt(A.sv.med,0),"km/h")); }
@@ -2182,6 +2203,21 @@ function renderView(){
 }
 
 /* ---------- page 3 ---------- */
+function renderPhaseCfg(){
+  const row=$("#phRow"); if(!row) return;
+  const cand=DATA?switchCandidates(DATA):[];
+  const phOpts=sel=>`<option value="0"${!sel?" selected":""}>—</option>`+PHASES.map(p=>`<option value="${p.k}"${sel===p.k?" selected":""}>${t(p.id)}</option>`).join("");
+  const chOpts=(sel,def)=>cand.length?cand.map(k=>`<option value="${escapeHtml(k)}"${(sel||def)===k?" selected":""}>${escapeHtml(k)}</option>`).join(""):`<option value="">${t("pc_none")}</option>`;
+  const defA=cand.find(k=>/Sa/i.test(k)), defB=cand.find(k=>/Sb/i.test(k));
+  const fld=(l,id,html)=>`<div class="fieldl"><label for="${id}">${l}</label><select id="${id}" class="resSel">${html}</select></div>`;
+  row.innerHTML=fld(t("pc_ch3"),"phA",chOpts(phCfg.a,defA))+fld(t("pc_low"),"phLow",phOpts(phCfg.low))+fld(t("pc_mid"),"phMid",phOpts(phCfg.mid))+fld(t("pc_high"),"phHigh",phOpts(phCfg.high))
+    +fld(t("pc_ch2"),"phB",chOpts(phCfg.b,defB))+fld(t("pc_on"),"phOn",phOpts(phCfg.bOn));
+}
+function phChanged(){
+  const g=id=>$(id).value;
+  phCfg={a:g("#phA"),b:g("#phB"),low:+g("#phLow"),mid:+g("#phMid"),high:+g("#phHigh"),bOn:+g("#phOn")}; savePh();
+  if(DATA){ computePhases(DATA); renderAll(); renderPhaseCfg(); }
+}
 function refreshBuilder(){
   const f=DATA; if(!f) return;
   const vars=numericVars(f);
@@ -2320,6 +2356,17 @@ function varioOf(f){
   for(let i=0;i<N;i++){ const i0=Math.max(0,i-k), i1=Math.min(N-1,i+k); out[i]=(a.vals[i1]-a.vals[i0])/(((i1-i0)*f.DT)||1); }
   return out;
 }
+/* picchiate: vario medio (±1,5 s) sotto −4 m/s per almeno 3 s. Sono manovre vere (quota persa in fretta), non rumore:
+   si contano a parte e non entrano nel sink di planata. */
+const DIVE_RATE=-4;
+function diveRuns(f,va,i0,i1,skip){
+  const N=f.t.length, DT=f.DT, k=Math.max(1,Math.round(1.5/DT)), pre=new Array(N+1).fill(0);
+  for(let i=0;i<N;i++) pre[i+1]=pre[i]+(Number.isFinite(va[i])?va[i]:0);
+  const mask=new Uint8Array(N); let st=-1; const runs=[], a=altSeries(f);
+  const on=i=>{ const j0=Math.max(0,i-k), j1=Math.min(N-1,i+k); return (pre[j1+1]-pre[j0])/(j1-j0+1)<DIVE_RATE && !(skip&&skip[i]); };
+  for(let i=i0;i<=i1+1;i++){ const o=i<=i1&&on(i); if(o&&st<0) st=i; if(!o&&st>=0){ if((i-st)*DT>=3){ let mn=0; for(let q=st;q<i;q++){ mask[q]=1; mn=Math.min(mn,va[q]||0); } runs.push({i0:st,i1:i-1,t0:f.t[st],dur:(i-st)*DT,lost:a?a.vals[st]-a.vals[i-1]:null,vmin:mn}); } st=-1; } }
+  return {mask,runs};
+}
 /* planate: solo motore spento (+3 s dopo lo spegnimento), dalla 1ª salita all'ultimo istante sopra 3 m */
 function glideStats(f){
   const a=altSeries(f), va=varioOf(f), C=f.climbs||[], N=f.t.length;
@@ -2328,8 +2375,9 @@ function glideStats(f){
   let i1=N-1; while(i1>i0 && !(a.vals[i1]>3)) i1--;
   const motor=new Uint8Array(N), post=Math.round(3/f.DT);
   for(const c of C) for(let k=c.i0;k<=Math.min(N-1,c.i1+post);k++) motor[k]=1;
+  const dv=diveRuns(f,va,i0,i1,motor).mask;
   let n=0,sum=0,ns=0,ss=0,nl=0;
-  for(let i=i0;i<=i1;i++){ if(motor[i]) continue; const v=va[i]; if(!Number.isFinite(v)) continue; n++; sum+=v; if(v<0){ns++;ss+=v;} if(v>0.2) nl++; }
+  for(let i=i0;i<=i1;i++){ if(motor[i]||dv[i]) continue; const v=va[i]; if(!Number.isFinite(v)) continue; n++; sum+=v; if(v<0){ns++;ss+=v;} if(v>0.2) nl++; }
   const gl=f.series["Glide"]; let gr=null;
   if(gl){ const arr=[]; for(let i=i0;i<=i1;i++) if(!motor[i]&&Number.isFinite(gl.vals[i])) arr.push(gl.vals[i]); gr=median(arr); }
   return {glideT:n*f.DT, netVario:n?sum/n:null, sink:ns?ss/ns:null, liftPct:n?nl/n*100:null, glideRatio:gr};
@@ -2939,7 +2987,7 @@ $("#setupBtn").addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected","false"));
   $("#setupBtn").classList.add("active");
   document.querySelectorAll("section[data-page]").forEach(s=>s.hidden = s.dataset.page!=="re");
-  refreshBuilder(); renderThemeControls();
+  refreshBuilder(); renderThemeControls(); renderPhaseCfg();
 });
 
 $("#file").addEventListener("change",e=>{
@@ -3035,6 +3083,7 @@ if(window.matchMedia) matchMedia("(prefers-color-scheme:dark)").addEventListener
 
 $("#demoBtn").addEventListener("click",()=>{ focusRange=null; reports=reports.filter(r=>!r.tmp); DATA=makeDemo(); isDemo=true; $("#fname").textContent=""; seedDemoReports(); renderAll(); });
 $("#themeCtl").addEventListener("input",e=>{ const t=e.target; if(!t.classList||!t.classList.contains("thcol"))return; themeOverrides[t.dataset.k]=t.value; saveTheme(); applyTheme(); redrawAll(); });
+$("#phRow").addEventListener("change",phChanged);
 $("#themeReset").addEventListener("click",()=>{ themeOverrides={}; saveTheme(); applyTheme(); renderThemeControls(); redrawAll(); });
 $("#flagIt").addEventListener("click",()=>setLang("it"));
 $("#flagEn").addEventListener("click",()=>setLang("en"));
