@@ -414,7 +414,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.36</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.37</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -1258,6 +1258,41 @@ function parseCsv(text){
 }
 
 /* SM Modellbau GPS: NMEA 0183 (+ $SMGPS/$SMGPS2 proprietary) */
+/* CSV del GPS RZ (logger personale): date,time_utc,lat,lon,fix,sats,hdop,alt_baro_m,alt_gps_m,temp_c,speed_kmh,course_deg
+   Dati a ~1 Hz. All'accensione data/ora possono essere false (RTC non ancora sincronizzato) e lat/lon vuote finché manca il fix:
+   il tempo si ricostruisce con passi da 1 s dove l'orologio salta, la data è l'ultima plausibile. */
+function isRzGpsCsv(txt){ return /^\uFEFF?\s*date\s*,\s*time_utc\s*,\s*lat\s*,\s*lon/i.test(txt); }
+function parseRzGps(text){
+  const L=text.split(/\r?\n/).filter(x=>x.trim()); if(L.length<3) return null;
+  const H=L[0].replace(/^\uFEFF/,"").split(",").map(x=>x.trim().toLowerCase()), ix=k=>H.indexOf(k);
+  const S={}, put=(k,u,tt,v)=>{ if(v==null||!isFinite(v)) return; (S[k]=S[k]||{unit:u,pts:[]}).pts.push([tt,v]); };
+  const nv=x=>{ if(x==null||String(x).trim()==="") return null; const v=parseFloat(x); return isFinite(v)?v:null; };
+  const yNow=new Date().getFullYear(); let tcur=0, prev=null, validDate=null, validTime=null; const bar=[];
+  for(let i=1;i<L.length;i++){
+    const c=L[i].split(","), tm=(c[ix("time_utc")]||"").trim().match(/^(\d+):(\d+):(\d+)/); if(!tm) continue;
+    const ts=+tm[1]*3600+ +tm[2]*60+ +tm[3];
+    if(prev==null) tcur=0; else { const d=ts-prev; tcur+= (d>0&&d<=5)?d:(d===0?0.5:1); }
+    prev=ts;
+    const dt=(c[ix("date")]||"").trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(dt&&+dt[1]>=2020&&+dt[1]<=yNow+1&&validDate==null){ validDate=dt; validTime=tm; }
+    const lat=nv(c[ix("lat")]), lon=nv(c[ix("lon")]), baro=nv(c[ix("alt_baro_m")]);
+    if(lat!=null&&lon!=null&&lat!==0&&lon!==0){ put("Lat","°",tcur,lat); put("Lon","°",tcur,lon); }
+    const gp=nv(c[ix("alt_gps_m")]); if(gp!=null) put("Alt. MSL","m",tcur,gp);
+    if(baro!=null){ bar.push([tcur,baro]); put("Alt. baro","m",tcur,baro); }
+    put("Speed","km/h",tcur,nv(c[ix("speed_kmh")])); put("Course","°",tcur,nv(c[ix("course_deg")]));
+    put("Sat","",tcur,nv(c[ix("sats")])); put("HDOP","",tcur,nv(c[ix("hdop")])); put("Temp.","°C",tcur,nv(c[ix("temp_c")]));
+  }
+  if(!Object.keys(S).length||tcur<2) return null;
+  // quota relativa = barometro meno la mediana dei primi 5 campioni (il logger sta ancora a terra)
+  if(bar.length){ const b0=median(bar.slice(0,5).map(x=>x[1])); for(const [tt,v] of bar) put("Rel. altit","m",tt,v-b0); }
+  // vario dalla quota barometrica (differenza su ±2 campioni, ~±2 s a 1 Hz)
+  for(let i=0;i<bar.length;i++){ const j0=Math.max(0,i-2), j1=Math.min(bar.length-1,i+2), dt=bar[j1][0]-bar[j0][0]; if(dt>0) put("Vario","m/s",bar[i][0],(bar[j1][1]-bar[j0][1])/dt); }
+  const f=frameFromSeries(S,"RZ GPS",tcur);
+  f.devRoles=[{role:"gps",name:"RZ GPS"}]; f.devices=["RZ GPS"];
+  if(validDate){ const d=new Date(+validDate[1],+validDate[2]-1,+validDate[3],+validTime[1],+validTime[2],+validTime[3]);
+    f.meta={dateObj:d,time:`${String(validTime[1]).padStart(2,"0")}:${validTime[2]}:${validTime[3]}`,dateKnown:true}; }
+  return f;
+}
 function parseNMEA(text){
   const S={};
   const put=(k,u,tt,v)=>{ if(v==null||!isFinite(v))return; (S[k]=S[k]||{unit:u,pts:[]}).pts.push([tt,v]); };
@@ -2613,7 +2648,7 @@ function renderArchSave(){
     archFormFor=DATA; archMsg="";
     if(!DATA._arch){ const d=archFindDup(DATA); if(d) DATA._arch=d.file; }   // log già archiviato: riprende i suoi dati
     const e=DATA._arch&&ARCH.find(x=>x.file===DATA._arch);
-    ins[0].value=e?e.model:(DATA.model&&DATA.model!=="SM GPS"?DATA.model:"");
+    ins[0].value=e?e.model:(DATA.model&&!/^(SM|RZ) GPS$/.test(DATA.model)?DATA.model:"");
     ins[1].value=e?e.note:"";
   }
   ins.forEach(i=>i.disabled=false);
@@ -3119,16 +3154,18 @@ function mergeFrames(fj,fg){
     f.series[name]={unit:g.unit,vals}; }
   computeDerived(f);
   f.climbs=fj.climbs; f._kind="merged";
-  f.devRoles=(fj.devRoles||[]).concat([{role:"gps",name:"SM GPS"}]);
-  f.devices=(fj.devices||[]).concat(["SM GPS"]);
+  const gn=(fg.model&&fg.model!=="")?fg.model:"GPS";
+  f.devRoles=(fj.devRoles||[]).concat([{role:"gps",name:gn}]);
+  f.devices=(fj.devices||[]).concat([gn]);
   const mj=fj.meta||{}, mg=fg.meta||{};
   if(!mj.dateKnown&&mg.dateKnown&&mg.dateObj){ const d=new Date(mg.dateObj); if(mj.time){ const q=mj.time.split(":"); d.setHours(+q[0],+q[1],+q[2]||0); } f.meta={dateObj:d,time:mj.time||mg.time,dateKnown:true}; }
   return {frame:f,al};
 }
 function parseAnyText(txt,name){
-  let f=null, kind="jeti"; const nmea=/^\$G[NPLAB]RMC|^\$SMGPS/m.test(txt);
+  let f=null, kind="jeti"; const rz=isRzGpsCsv(txt), nmea=rz||/^\$G[NPLAB]RMC|^\$SMGPS/m.test(txt);
   try{
-    if(nmea){ kind="nmea"; f=parseNMEA(txt); }
+    if(rz){ kind="nmea"; f=parseRzGps(txt); }
+    else if(nmea){ kind="nmea"; f=parseNMEA(txt); }
     else if(/\b000000000;/.test(txt) || /^#/.test(txt)) f=parseRaw(txt);
     else f=parseCsv(txt);
     if(!f && !nmea) f=parseRaw(txt)||parseCsv(txt);

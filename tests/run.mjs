@@ -46,6 +46,18 @@ ok(!!m && parseFloat(m[2].replace(",", ".")) > 0.95, "correlazione > 0,95");
 await p.click("text=Polare"); await p.waitForTimeout(500);
 ok(/Sink minimo/.test(await text("body")), "volo unito: polare disponibile");
 
+console.log("GPS RZ (CSV a 1 Hz)");
+await fresh();
+await load(E("volo-completo-rzgps.csv"));
+ok(/RZ GPS/.test(await text("#flightHead")), "riconosciuto come GPS RZ");
+await p.click("text=Polare"); await p.waitForTimeout(500);
+ok(/Sink minimo 0,[2-5]\d m\/s/.test(await text("body")), "polare dal CSV 1 Hz (sink minimo plausibile)");
+await p.click("text=Analisi volo"); await p.waitForTimeout(400);
+ok(/Quota max|Quota massima/i.test(await text("#anaTiles")), "analisi volo disponibile");
+await fresh();
+await load([E("volo-completo-test.log"), E("volo-completo-rzgps.csv")]);
+ok(/uniti/.test(await text("#fname")), "unione Jeti + GPS RZ");
+
 console.log("Interruttori impostabili");
 await p.click("#setupBtn"); await p.waitForTimeout(300);
 ok(await p.locator("#phRow select").count() === 6, "impostazioni interruttori presenti");

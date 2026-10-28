@@ -51,3 +51,10 @@ Include tutti i canali: velocità, posizione, quota GPS e relativa, satelliti, H
 | `genera-jeti-test.py` | lo script che lo produce |
 
 Caricando **insieme** `volo-completo-test.log` e `volo-completo-test.nmea` (selezione multipla in *Carica*) i due voli si uniscono: accanto al nome compare "uniti (+37,4 s, r=1,00)" e hai dati elettrici, polare e traiettoria nello stesso volo.
+
+## CSV del GPS RZ (v1.37)
+
+| File | Cosa contiene |
+|---|---|
+| `volo-completo-rzgps.csv` | lo stesso volo sintetico di `volo-completo-test.nmea` nel formato CSV del GPS RZ, a 1 Hz, con le stranezze dei log reali (data 2080-01-05 e ora falsa all'accensione, coordinate vuote prima del fix, riga duplicata) |
+| `genera-rzgps-test.py` | lo script che lo produce |
