@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-XchtVJ5iRAWS4oJ8L0TMyuPInsxxzCSNhjdHa1zU0YQ='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-k0cnflSr44F69aiMo3qydpD2cZwhZ+RdqpFuuwMs988='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -29,6 +29,16 @@
     --h1:#0c1e30; --h2:#14405f; --shadow:0 4px 16px rgba(12,30,48,.08);
     --on-accent:#ffffff;
     color-scheme:light;
+  }
+  /* tema "Blu": sfondi blu, scritte azzurro-bluette (predefinito) */
+  :root[data-theme="blue"]{
+    --bg:#0b1a2b; --surface:#102a43; --surface-2:#163654; --fg:#cfe3ff; --muted:#8db1de;
+    --line:#26507a; --grid:#1d4166;
+    --accent:#58b4ff; --accent-2:#a99bff; --accent-3:#ff8fc2; --motor:#ffb347;
+    --good:#3ddc8a; --warn:#ffd23f; --crit:#ff6b60;
+    --chip-bg:#163654; --hero1:#15406a; --hero2:#102a43;
+    --h1:#081726; --h2:#0f3a63; --shadow:0 4px 16px rgba(0,0,0,.35); --on-accent:#06223a;
+    color-scheme:dark;
   }
   :root[data-theme="dark"]{
     --bg:#1b1f25; --surface:#242931; --surface-2:#2b313a; --fg:#eef3f9; --muted:#9aa9bb;
@@ -456,7 +466,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.39</span></div>
+      <div class="apptitle">RZ Flight Dashboard <span class="ver">v1.40</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -781,7 +791,7 @@
     <div class="card">
       <h2><span data-i18n="col_h2">Aspetto dashboard</span> <span class="tag">COLORS</span></h2>
       <p class="hint" style="margin-top:0" data-i18n="col_hint">Personalizza i colori principali: le modifiche si applicano subito e restano salvate su questo browser.</p>
-      <div class="row" style="margin-bottom:10px"><div class="fieldl"><label for="modeSel" data-i18n="md_label">Aspetto</label><select id="modeSel" class="resSel"><option value="light" data-i18n="md_light">Chiaro (stile RZ)</option><option value="dark" data-i18n="md_dark">Scuro</option></select></div></div>
+      <div class="row" style="margin-bottom:10px"><div class="fieldl"><label for="modeSel" data-i18n="md_label">Aspetto</label><select id="modeSel" class="resSel"><option value="blue" data-i18n="md_blue">Blu (predefinito)</option><option value="light" data-i18n="md_light">Chiaro (stile RZ)</option><option value="dark" data-i18n="md_dark">Scuro</option></select></div></div>
       <div class="ck" id="themeCtl"></div>
       <div class="row" style="margin-top:12px">
         <button class="btn ghost" id="themeReset" data-i18n="col_reset">Ripristina colori predefiniti</button>
@@ -996,7 +1006,7 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
-  md_label:["Aspetto","Appearance","Apparence"], md_light:["Chiaro (stile RZ)","Light (RZ style)","Clair (style RZ)"], md_dark:["Scuro","Dark","Sombre"],
+  md_label:["Aspetto","Appearance","Apparence"], md_blue:["Blu (predefinito)","Blue (default)","Bleu (par défaut)"], md_light:["Chiaro (stile RZ)","Light (RZ style)","Clair (style RZ)"], md_dark:["Scuro","Dark","Sombre"],
   td_h2:["Andamento nel tempo","Trend over time","Évolution dans le temps"], td_metric:["Misura","Measure","Mesure"],
   td_score:["Indice di volo","Flight index","Indice de vol"], td_dur:["Durata (min)","Duration (min)","Durée (min)"], td_spec:["Consumo mAh/100 m","Use mAh/100 m","Conso mAh/100 m"],
   td_sink:["Sink in planata (m/s)","Glide sink (m/s)","Chute en plané (m/s)"], td_rint:["Resistenza interna (mΩ)","Internal resistance (mΩ)","Résistance interne (mΩ)"],
@@ -3311,8 +3321,8 @@ if(window.matchMedia) matchMedia("(prefers-color-scheme:dark)").addEventListener
 $("#demoBtn").addEventListener("click",()=>{ focusRange=null; reports=reports.filter(r=>!r.tmp); DATA=makeDemo(); isDemo=true; $("#fname").textContent=""; seedDemoReports(); renderAll(); });
 $("#themeCtl").addEventListener("input",e=>{ const t=e.target; if(!t.classList||!t.classList.contains("thcol"))return; themeOverrides[t.dataset.k]=t.value; saveTheme(); applyTheme(); redrawAll(); });
 $("#phRow").addEventListener("change",phChanged);
-$("#modeSel").addEventListener("change",e=>{ const md=e.target.value==="dark"?"dark":"light";
-  if(md==="dark") document.documentElement.setAttribute("data-theme","dark"); else document.documentElement.removeAttribute("data-theme");
+$("#modeSel").addEventListener("change",e=>{ const md=["dark","light","blue"].includes(e.target.value)?e.target.value:"blue";
+  if(md!=="light") document.documentElement.setAttribute("data-theme",md); else document.documentElement.removeAttribute("data-theme");
   try{ localStorage.setItem("fd_mode",md); }catch(err){}
   themeOverrides={}; saveTheme(); applyTheme(); captureThemeDefaults(); renderThemeControls(); redrawAll(); });
 $("#themeReset").addEventListener("click",()=>{ themeOverrides={}; saveTheme(); applyTheme(); renderThemeControls(); redrawAll(); });
@@ -3340,8 +3350,8 @@ if(/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform==="MacIntel
 if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
   window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
 }
-{ let md="light"; try{ md=localStorage.getItem("fd_mode")==="dark"?"dark":"light"; }catch(e){}
-  if(md==="dark") document.documentElement.setAttribute("data-theme","dark"); $("#modeSel").value=md; }
+{ let md="blue"; try{ const v=localStorage.getItem("fd_mode"); if(v==="dark"||v==="light"||v==="blue") md=v; }catch(e){}
+  if(md!=="light") document.documentElement.setAttribute("data-theme",md); $("#modeSel").value=md; }
 captureThemeDefaults(); applyTheme(); renderThemeControls();
 renderLogo();
 DATA=makeDemo(); isDemo=true; renderAll();
