@@ -1,13 +1,18 @@
 # RZ Flight Dashboard
 
 Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radiocomandati.
-Nessuna dipendenza, nessun build: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
+Nessuna dipendenza, nessun build per usarla: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
 - Versione corrente: **v1.38**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
+
+> [!WARNING]
+> **Dopo OGNI modifica a `index.html` esegui `python3 tools/csp.py` prima di pubblicare.**
+> La pagina ha una Content-Security-Policy che autorizza lo script dell'app solo tramite il suo hash SHA-256. Se il codice cambia e l'hash no, il browser **blocca lo script e l'app resta completamente vuota**, anche se il file sembra corretto.
+> Il controllo è anche il primo di `node tests/run.mjs` (che va lanciato prima di ogni pubblicazione). Dettagli: [Sicurezza](#sicurezza-content-security-policy) in fondo.
 
 ---
 
@@ -363,6 +368,13 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 ```bash
 git clone <url-del-repo> && cd <repo>
 python3 -m http.server 8000   # poi apri http://localhost:8000
+```
+
+Prima di ogni commit che tocca `index.html`:
+
+```bash
+python3 tools/csp.py     # ricalcola l'hash della CSP (senza, l'app resta vuota)
+node tests/run.mjs       # test automatici (vedi sotto)
 ```
 
 Oppure apri direttamente `index.html` con doppio clic (funziona offline; senza rete si usano i font di sistema).
