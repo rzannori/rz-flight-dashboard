@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WfJ3iL2TifXycjJf3aAu5kz+Ia402QPi+8E6yMq8464='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/LjSh1gXfcP+h5hFPomLPoBg+k/R9FB9TNC0S7MCyi0='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -466,7 +466,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">Flight Dashboard <span class="ver">v1.42</span></div>
+      <div class="apptitle">Flight Dashboard <span class="ver">v1.43</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -797,6 +797,15 @@
         <button class="btn ghost" id="themeReset" data-i18n="col_reset">Ripristina colori predefiniti</button>
       </div>
     </div>
+    <div class="card" id="bkCard">
+      <h2><span data-i18n="bk_h2">Copia di sicurezza delle impostazioni</span> <span class="tag">BACKUP</span></h2>
+      <p class="hint" style="margin-top:0" data-i18n="bk_hint">Le impostazioni (lingua, aspetto, report, interruttori delle fasi, logo) stanno nella memoria di questo browser. Esportale in un file per non perderle (cambio browser o telefono, reinstallazione dell'app) e importale quando servono. I voli non ne fanno parte: restano nei file dell'archivio.</p>
+      <div class="row">
+        <button class="btn" id="bkExport" data-i18n="bk_export">Esporta impostazioni</button>
+        <label class="btn ghost" style="cursor:pointer"><span data-i18n="bk_import">Importa impostazioni</span><input type="file" id="bkFile" accept=".json,application/json" style="display:none"></label>
+      </div>
+      <p class="hint" id="bkMsg" role="status"></p>
+    </div>
     <div class="card" id="phCard">
       <h2><span data-i18n="pc_h2">Interruttori delle fasi di volo</span> <span class="tag">SW</span></h2>
       <p class="hint" style="margin-top:-4px" data-i18n="pc_hint">Indica quale fase corrisponde a ogni posizione degli interruttori della radio (canali "Comando" dei log Jeti). Le barre colorate nei grafici e i tempi per fase usano queste impostazioni.</p>
@@ -1006,6 +1015,13 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  bk_h2:["Copia di sicurezza delle impostazioni","Settings backup","Sauvegarde des réglages"],
+  bk_hint:["Le impostazioni (lingua, aspetto, report, interruttori delle fasi, logo) stanno nella memoria di questo browser. Esportale in un file per non perderle (cambio browser o telefono, reinstallazione dell'app) e importale quando servono. I voli non ne fanno parte: restano nei file dell'archivio.","Settings (language, appearance, reports, phase switches, logo) live in this browser's memory. Export them to a file so you do not lose them (new browser or phone, app reinstall) and import them when needed. Flights are not included: they stay in the archive files.","Les réglages (langue, apparence, rapports, interrupteurs de phases, logo) sont dans la mémoire de ce navigateur. Exportez-les dans un fichier pour ne pas les perdre (nouveau navigateur ou téléphone, réinstallation) et importez-les au besoin. Les vols n'en font pas partie : ils restent dans les fichiers d'archive."],
+  bk_export:["Esporta impostazioni","Export settings","Exporter les réglages"], bk_import:["Importa impostazioni","Import settings","Importer les réglages"],
+  bk_done:["File salvato con","File saved with","Fichier enregistré avec"], bk_items:["voci","items","éléments"],
+  bk_ok:["Impostazioni importate: la pagina si ricarica","Settings imported: the page is reloading","Réglages importés : la page se recharge"],
+  bk_bad:["File non valido: non è un'esportazione di RZ Flight Dashboard.","Invalid file: it is not an RZ Flight Dashboard export.","Fichier invalide : ce n'est pas une exportation de RZ Flight Dashboard."],
+  bk_empty:["Il file non contiene impostazioni utilizzabili.","The file has no usable settings.","Le fichier ne contient aucun réglage utilisable."],
   md_label:["Aspetto","Appearance","Apparence"], md_blue:["Blu (predefinito)","Blue (default)","Bleu (par défaut)"], md_light:["Chiaro (stile RZ)","Light (RZ style)","Clair (style RZ)"], md_dark:["Scuro","Dark","Sombre"],
   td_h2:["Andamento nel tempo","Trend over time","Évolution dans le temps"], td_metric:["Misura","Measure","Mesure"],
   td_score:["Indice di volo","Flight index","Indice de vol"], td_dur:["Durata (min)","Duration (min)","Durée (min)"], td_spec:["Consumo mAh/100 m","Use mAh/100 m","Conso mAh/100 m"],
@@ -2353,6 +2369,51 @@ function renderView(){
 }
 
 /* ---------- page 3 ---------- */
+/* ---------- copia di sicurezza delle impostazioni (esporta / importa) ---------- */
+const BK_FORMAT="rz-flight-settings";
+function bkExport(){
+  const data={}, J=k=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }, G=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
+  if(G("fd_lang")) data.lang=G("fd_lang"); if(G("fd_mode")) data.mode=G("fd_mode"); if(G("fd_map")) data.map=G("fd_map"); if(G("fd_logo")) data.logo=G("fd_logo");
+  const th=J("fd_theme"); if(th&&Object.keys(th).length) data.theme=th;
+  const rp=J("jeti_reports"); if(Array.isArray(rp)&&rp.length) data.reports=rp;
+  const lv=J("fd_live"); if(lv) data.live=lv;
+  const ph=J("fd_phases"); if(ph) data.phases=ph;
+  const o={format:BK_FORMAT,version:1,app:$(".ver").textContent,saved:new Date().toISOString(),data};
+  const blob=new Blob([JSON.stringify(o,null,1)],{type:"application/json"}), a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="rz-flight-dashboard-impostazioni-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  $("#bkMsg").textContent=t("bk_done")+" "+Object.keys(data).length+" "+t("bk_items");
+}
+/* il file importato non è fidato: ogni campo è controllato e riscritto, il resto viene scartato */
+function bkClean(o){
+  const out={}, str=(v,n)=>typeof v==="string"&&v.length<=n&&!/[\u0000-\u001f]/.test(v), hex=v=>typeof v==="string"&&/^#[0-9a-f]{6}$/i.test(v);
+  const types=["line","area","scatter"], d=o&&typeof o==="object"?o.data:null; if(!d||typeof d!=="object") return null;
+  if(["it","en","fr"].includes(d.lang)) out.fd_lang=d.lang;
+  if(["blue","light","dark"].includes(d.mode)) out.fd_mode=d.mode;
+  if(["none","osm","esri"].includes(d.map)) out.fd_map=d.map;
+  if(typeof d.logo==="string"&&d.logo.length<=2000000&&/^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(d.logo)) out.fd_logo=d.logo;
+  if(d.theme&&typeof d.theme==="object"){ const th={}; for(const tk of THEME_TOKENS) if(hex(d.theme[tk.k])) th[tk.k]=d.theme[tk.k]; if(Object.keys(th).length) out.fd_theme=JSON.stringify(th); }
+  const cols=a=>Array.isArray(a)?a.slice(0,12).map(c=>hex(c)?c:null):[];
+  if(Array.isArray(d.reports)){ const rp=[]; for(const r of d.reports.slice(0,100)){ if(!r||typeof r!=="object"||!str(r.name,120)||!str(r.x,120)||!Array.isArray(r.y)) continue;
+    const y=r.y.slice(0,12).filter(v=>str(v,120)); if(!y.length||!types.includes(r.type)) continue; rp.push({name:r.name,x:r.x,y,type:r.type,colors:cols(r.colors)}); }
+    if(rp.length) out.jeti_reports=JSON.stringify(rp); }
+  const lv=d.live; if(lv&&typeof lv==="object"&&Array.isArray(lv.y)&&str(lv.x||"__t__",120)&&types.includes(lv.type||"line")) out.fd_live=JSON.stringify({x:lv.x||"__t__",type:lv.type||"line",y:lv.y.slice(0,40).filter(v=>str(v,120)),colors:cols(lv.colors)});
+  const ph=d.phases; if(ph&&typeof ph==="object"){ const n=v=>Number.isInteger(v)&&v>=0&&v<=4;
+    out.fd_phases=JSON.stringify({a:str(ph.a,80)?ph.a:"",b:str(ph.b,80)?ph.b:"",low:n(ph.low)?ph.low:2,mid:n(ph.mid)?ph.mid:1,high:n(ph.high)?ph.high:3,bOn:n(ph.bOn)?ph.bOn:4}); }
+  return out;
+}
+function bkImport(file){
+  const msg=$("#bkMsg"); if(!file) return;
+  if(file.size>4000000){ msg.textContent=t("bk_bad"); return; }
+  const rd=new FileReader();
+  rd.onload=()=>{ let o=null; try{ o=JSON.parse(String(rd.result)); }catch(e){}
+    if(!o||o.format!==BK_FORMAT){ msg.textContent=t("bk_bad"); return; }
+    const c=bkClean(o); if(!c||!Object.keys(c).length){ msg.textContent=t("bk_empty"); return; }
+    try{ for(const k of Object.keys(c)) localStorage.setItem(k,c[k]); }catch(e){ msg.textContent=t("bk_bad"); return; }
+    msg.textContent=t("bk_ok")+" ("+Object.keys(c).length+" "+t("bk_items")+")";
+    setTimeout(()=>location.reload(),1200); };
+  rd.readAsText(file);
+}
 function renderPhaseCfg(){
   const row=$("#phRow"); if(!row) return;
   const cand=DATA?switchCandidates(DATA):[];
@@ -3321,6 +3382,8 @@ if(window.matchMedia) matchMedia("(prefers-color-scheme:dark)").addEventListener
 $("#demoBtn").addEventListener("click",()=>{ focusRange=null; reports=reports.filter(r=>!r.tmp); DATA=makeDemo(); isDemo=true; $("#fname").textContent=""; seedDemoReports(); renderAll(); });
 $("#themeCtl").addEventListener("input",e=>{ const t=e.target; if(!t.classList||!t.classList.contains("thcol"))return; themeOverrides[t.dataset.k]=t.value; saveTheme(); applyTheme(); redrawAll(); });
 $("#phRow").addEventListener("change",phChanged);
+$("#bkExport").addEventListener("click",bkExport);
+$("#bkFile").addEventListener("change",e=>{ const f=e.target.files[0]; e.target.value=""; bkImport(f); });
 $("#modeSel").addEventListener("change",e=>{ const md=["dark","light","blue"].includes(e.target.value)?e.target.value:"blue";
   if(md!=="light") document.documentElement.setAttribute("data-theme",md); else document.documentElement.removeAttribute("data-theme");
   try{ localStorage.setItem("fd_mode",md); }catch(err){}

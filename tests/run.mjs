@@ -2,7 +2,7 @@
    Uso:  node tests/run.mjs        (dalla cartella principale; serve Playwright: npm i -g playwright)
    Avvia un piccolo server locale, apre l'app e verifica i casi sui file di esempio. Esce con codice 1 se qualcosa fallisce. */
 import { createRequire } from "module";
-import crypto from "crypto";
+import crypto from "crypto"; import os from "os";
 import http from "http"; import fs from "fs"; import path from "path"; import { fileURLToPath } from "url";
 const require = createRequire(process.env.PW_PATH || "/opt/node22/lib/node_modules/");
 const { chromium } = require("playwright");
@@ -68,11 +68,36 @@ console.log("Interruttori impostabili");
 await p.click("#setupBtn"); await p.waitForTimeout(300);
 ok(await p.locator("#phRow select").count() === 6, "impostazioni interruttori presenti");
 
+console.log("Esporta / importa impostazioni");
+await fresh();
+await p.evaluate(() => { localStorage.setItem("fd_mode", "light"); localStorage.setItem("fd_lang", "en");
+  localStorage.setItem("jeti_reports", JSON.stringify([{ name: "Mio report", x: "__t__", y: ["Rel. altit", "Vario"], type: "line", colors: ["#112233", null] }])); });
+await p.reload(); await p.waitForTimeout(500); await p.click("#setupBtn"); await p.waitForTimeout(300);
+const [dl] = await Promise.all([p.waitForEvent("download"), p.click("#bkExport")]);
+const exp = JSON.parse(fs.readFileSync(await dl.path(), "utf8"));
+ok(exp.format === "rz-flight-settings" && exp.data.mode === "light" && exp.data.reports.length === 1 && exp.data.lang === "en", "esportazione: file con impostazioni e report");
+const evil = { format: "rz-flight-settings", version: 1, data: { lang: "xx", mode: "dark", map: "javascript:1", logo: "javascript:alert(1)",
+  theme: { "--accent": "#ff0000", "--bg": "url(evil)" },
+  reports: [{ name: '<img src=x onerror="window.__pwn=1">', x: "__t__", y: ["Vario"], type: "line", colors: ["#00ff00"] },
+            { name: "tipo falso", x: "__t__", y: ["Vario"], type: "script" }, { name: 5, x: "a", y: [] }, "stringa"],
+  phases: { a: "Comando Sa", low: 9, bOn: 4 } } };
+const tmp = path.join(os.tmpdir(), "rz-evil-settings.json"); fs.writeFileSync(tmp, JSON.stringify(evil));
+await p.setInputFiles("#bkFile", tmp); await p.waitForTimeout(2500);
+const st = await p.evaluate(() => ({ lang: localStorage.getItem("fd_lang"), mode: localStorage.getItem("fd_mode"), map: localStorage.getItem("fd_map"), logo: localStorage.getItem("fd_logo"),
+  theme: localStorage.getItem("fd_theme"), rep: JSON.parse(localStorage.getItem("jeti_reports") || "[]"), ph: JSON.parse(localStorage.getItem("fd_phases") || "{}"), pwn: window.__pwn || 0 }));
+ok(st.lang === "en" && st.map === null && st.logo === null, "importazione: lingua/mappa/logo non validi scartati");
+ok(st.mode === "dark" && st.theme === '{"--accent":"#ff0000"}', "importazione: aspetto valido applicato, colore non valido scartato");
+ok(st.rep.length === 1 && st.rep[0].type === "line" && st.rep[0].colors[0] === "#00ff00", "importazione: report malformati scartati, quello valido tenuto");
+ok(st.ph.low === 2 && st.ph.bOn === 4 && st.ph.a === "Comando Sa", "importazione: interruttori con valori fuori scala corretti");
+await p.click("#setupBtn"); await p.waitForTimeout(400);
+ok((await p.evaluate(() => window.__pwn || 0)) === 0, "importazione: nome di report con codice non eseguito");
+fs.unlinkSync(tmp);
+
 console.log("Archivio (senza cartella)");
 const jeti = fs.readFileSync(E("volo-completo-test.log"), "latin1");
 await p.evaluate(t => { window.__rz.addFlight(t, "2026-10-01_a.log", "Prova"); window.__rz.addFlight(t, "2026-10-02_b.log", "Prova"); }, jeti);
-await p.click("text=Archivio"); await p.waitForTimeout(500);
-ok(/Miglior volo registrato: \d+/.test(await text("#arBest")), "miglior volo registrato mostrato");
+await p.click('.tab[data-p="ar"]'); await p.waitForTimeout(500);
+ok(/(Miglior volo registrato|Best recorded flight): \d+/.test(await text("#arBest")), "miglior volo registrato mostrato");
 ok(!(await p.locator("#tdCard").isHidden()), "grafico andamento visibile con 2 voli");
 
 const viol = await p.evaluate(() => window.__v || []);
