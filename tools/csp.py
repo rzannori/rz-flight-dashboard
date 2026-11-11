@@ -13,8 +13,7 @@ if not m or len(re.findall(r"<script\b", s)) != 1:
 h = "sha256-" + base64.b64encode(hashlib.sha256(m.group(1).encode("utf-8")).digest()).decode()
 csp = ("default-src 'none'; "
        f"script-src '{h}'; "
-       "style-src 'unsafe-inline' https://fonts.googleapis.com; "
-       "font-src https://fonts.gstatic.com; "
+       "style-src 'unsafe-inline'; "
        "img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; "
        "connect-src 'self'; manifest-src 'self'; worker-src 'self'; "
        "base-uri 'none'; form-action 'none'; object-src 'none'")

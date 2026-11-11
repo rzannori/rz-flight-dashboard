@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build per usarla: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.38**
+- Versione corrente: **v1.39**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -394,4 +394,4 @@ Serve a non rompere cose già funzionanti quando si aggiunge una funzione: si la
 
 `index.html` contiene una CSP (meta) che autorizza **solo** lo script inline dell'app tramite il suo hash. Conseguenza importante per chi modifica il codice: **dopo ogni modifica a `index.html` esegui `python3 tools/csp.py`**, che ricalcola l'hash e aggiorna la meta. Se si dimentica, il browser blocca lo script e l'app resta vuota (`tests/run.mjs` lo segnala per primo).
 
-Politica: nessun contenuto di default; script solo con hash; stili inline + `fonts.googleapis.com`; caratteri da `fonts.gstatic.com`; immagini da se stessa, `data:` e dai tile `tile.openstreetmap.org` / `server.arcgisonline.com`; connessioni, manifest e service worker solo da se stessa; niente `eval`, frame, form o oggetti. Se si aggiunge un nuovo servizio esterno (altra mappa, altro font) va aggiunto in `tools/csp.py`.
+Politica: nessun contenuto di default; script solo con hash; stili inline; nessun carattere esterno (si usano i caratteri di sistema); immagini da se stessa, `data:` e dai tile `tile.openstreetmap.org` / `server.arcgisonline.com`; connessioni, manifest e service worker solo da se stessa; niente `eval`, frame, form o oggetti. Se si aggiunge un nuovo servizio esterno (altra mappa, altro font) va aggiunto in `tools/csp.py`.
