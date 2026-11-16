@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build per usarla: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.45**
+- Versione corrente: **v1.46**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -29,13 +29,12 @@ Interfaccia **trilingue IT / EN / FR**, tema scuro antracite con colori personal
 ## 2. Come si usa (utente finale)
 
 1. Salva il file `.html` e aprilo con doppio clic (funziona offline).
-2. In alto a destra il pulsante **Carica ▾** apre un menu con:
-   - **Jeti Log** → log Jeti grezzo `.log` o CSV esportato;
-   - **SM Modellbau** → file GPS `.nmea`;
-   - **RZ GPS** → *placeholder, non ancora implementato*;
-   - **Demo** → carica dati fittizi + 2 grafici d'esempio.
+2. In alto a destra il pulsante **Apri ▾** (dalla v1.46) apre un menu con:
+   - **Dal computer / telefono** → log Jeti (`.log` grezzo o CSV esportato), file NMEA dell'SM GPS, CSV del GPS RZ (il formato si riconosce da solo);
+   - **Da Google Drive** → elenco dei log nella cartella «RZ Dati / voli» del Drive dedicato;
+   - **Demo** → dati fittizi + 2 grafici d'esempio.
 
-   Il menu si chiude con Esc, con un clic fuori o dopo la scelta; è navigabile da tastiera (↓ ↑ Invio). Accanto c'è **Set up** (ingranaggio).
+   Il menu si chiude con Esc, con un clic fuori o dopo la scelta. Accanto c'è **Set up** (ingranaggio). La pagina di benvenuto ha le stesse tre scelte nella scheda «Apri un volo».
 3. Schede: **Panoramica · Analisi volo · Grafico · Tabella · Polare · Traiettoria · Archivio**, più **Set up** (ingranaggio) e guida **?**.
 4. Lingua con le bandierine 🇮🇹 🇬🇧 🇫🇷; logo cliccabile in alto a sinistra.
 
@@ -209,7 +208,7 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 - Limiti: la velocità GPS è **al suolo** (con vento forte i punti si disperdono); la polare è più fedele con planate a velocità
   costante e diverse tra loro, in aria calma. Punti anomali oltre `1,5×` il sink massimo delle fasce non vengono disegnati.
 
-**Archivio (`ar`)** — solo Chrome/Edge su PC (File System Access API)
+**Archivio (`ar`)** — cartella sul PC (solo Chrome/Edge, File System Access API) e/o Google Drive (vedi sopra)
 - **Cartella**: scelta con `showDirectoryPicker`; l'handle è salvato in IndexedDB (`rzfd` → `kv` → `archDir`) e
   all'avvio si verifica il permesso (`queryPermission`); se serve, pulsante **Riconnetti cartella** (`requestPermission`).
   Consigliato metterla dentro Google Drive per desktop → backup automatico.
@@ -233,11 +232,10 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 ```
 Derivate e salite **non** si salvano: si ricalcolano all'apertura, così i miglioramenti agli algoritmi valgono anche per i voli vecchi.
 
-**Google Drive (bottone «Drive» in alto, dalla v1.45)**
-- Apre la cartella **«RZ Dati / voli»** del Google Drive dedicato al modellismo (la stessa cartella «RZ Dati» di RZ Ballast Archive): elenco dei log (più recenti in alto), **un tocco apre il log** (stessi formati di «Carica»; se c'è già un volo del tipo complementare propone l'unione Jeti + GPS).
-- **⤴ Salva sul Drive**: carica nella cartella i file appena aperti con «Carica» (byte per byte, stesso nome; se esiste già lo sostituisce). Così un log aperto dal PC si ritrova sul telefono e viceversa.
-- Accesso OAuth 2.0 «implicit» **senza librerie** (la CSP non ammette script esterni): redirect a Google, il token torna in `#access_token`, dura circa un'ora, salvato in `localStorage` `fd_drive`. Progetto Google Cloud «RZ Dati» (modalità Test: possono collegarsi solo gli **utenti di test**); origine autorizzata `https://rzannori.github.io`, redirect `https://rzannori.github.io/rz-flight-dashboard/`. La CSP ammette solo `https://www.googleapis.com` in `connect-src`. Da `localhost` il collegamento vero non funziona (redirect non autorizzato): i test usano un Drive finto.
-- Funzioni: `gdConnect`, `gdList`, `gdUpload`, `drvOpen`, `drvRefresh`.
+**Google Drive (dalla v1.45; dalla v1.46 dentro «Apri» e nell'Archivio)**
+- **Apri → Da Google Drive**: elenco dei log della cartella **«RZ Dati / voli»** (più recenti in alto, esclusi i voli archiviati `.rzf.json`), un clic apre il log (se c'è già un volo del tipo complementare propone l'unione Jeti + GPS). **⤴ Salva sul Drive il log aperto** carica nella cartella i file appena aperti dal computer (byte per byte, stesso nome; se esiste lo sostituisce).
+- **Archivio**: i voli si salvano **sul PC** (cartella, solo Chrome/Edge su computer), **sul Drive** (`RZ Dati/voli/*.rzf.json`) o in tutti e due (caselle «Dove», ricordate in `localStorage` `fd_artgt`). L'elenco mostra i voli dei due posti con 💻 / ☁; «Elimina» sul Drive sposta il file nel cestino. Strutture: `ARCH_PC`, `ARCH_DRV`, `ARCH` (unione), chiave `where:file`; funzioni `archReloadDrive`, `archSave`, `archDelete`, `gdPutFile`.
+- Accesso OAuth 2.0 «implicit» **senza librerie** (la CSP non ammette script esterni): redirect a Google, il token torna in `#access_token`, dura circa un'ora, salvato in `localStorage` `fd_drive`. Progetto Google Cloud «RZ Dati» (modalità Test: possono collegarsi solo gli **utenti di test**); origine autorizzata `https://rzannori.github.io`, redirect `https://rzannori.github.io/rz-flight-dashboard/`. La CSP ammette solo `https://www.googleapis.com` in `connect-src`. Da `localhost` il collegamento vero non funziona: i test usano un Drive finto.
 
 **Set up (`re`)**
 - **Costruttore report**: X (Tempo o variabile), Y (una o più), tipo (linea/area/dispersione), **colore per curva**, nome. Salvati in `localStorage`. La lista parte vuota.

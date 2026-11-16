@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vRRY3BrtuIpSoXNh41qZm6g0wN+c0XGjx++ypqVBgZE='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Q4TdCXO7MfJMjJM8oPNAn8BwjcNil5zZZuv+/frPLC0='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -419,6 +419,10 @@
   /* archivio voli + confronto */
   .arfolder{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:.88rem}
   .arfolder .hint{margin:0;flex-basis:100%}
+  .arfolder .arrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;flex-basis:100%}
+  .artgt{display:flex;gap:14px;align-items:center;min-height:38px;font-size:.88rem}
+  .artgt label{display:inline-flex;gap:6px;align-items:center;cursor:pointer;text-transform:none;letter-spacing:0;font-size:.88rem;color:var(--fg)}
+  td.where{font-size:1rem;text-align:center}
   .btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
   #arList td,#arList th{padding:5px 7px}
   #arList td.note{max-width:150px;overflow:hidden;text-overflow:ellipsis;color:var(--muted);text-align:left}
@@ -523,7 +527,7 @@
     <div class="wl-last" id="wlLast" hidden></div>
     <div class="wl-cards">
       <div class="wl-card c1" id="wlC1" role="button" tabindex="0"><div class="wl-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></div><div class="wl-tx"><h2 data-i18n="wl_read_h">Leggi dati</h2><p data-i18n="wl_read_p">Carica un log Jeti, un file NMEA o un CSV del GPS.</p></div>
-        <div class="wl-sec"><button class="wl-b g" id="wlChoose" data-i18n="wl_choose">Scegli file…</button><button class="wl-b" id="wlDemo" data-i18n="wl_demo">Prova con la demo</button></div></div>
+        <div class="wl-sec"><button class="wl-b g" id="wlChoose" data-i18n="wl_choose">Dal computer</button><button class="wl-b g" id="wlDrive" data-i18n="wl_drive">Da Google Drive</button><button class="wl-b" id="wlDemo" data-i18n="wl_demo">Prova la demo</button></div></div>
       <div class="wl-card c2" id="wlC2" role="button" tabindex="0"><div class="wl-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="translate(12 12) rotate(28)"><ellipse rx=".9" ry="8"/><path d="M-.5,-2 L-10,-1 L-10,0 L-.5,1 L.5,1 L10,0 L10,-1 L.5,-2Z"/><path d="M-.4,5.5 L-3.6,6.4 L-3.6,7.2 L3.6,7.2 L3.6,6.4 L.4,5.5Z"/></g></svg></div><div class="wl-tx"><h2 data-i18n="wl_models_h">Modelli salvati</h2><p id="wlModelsP"></p></div>
         <div class="wl-sec"><div class="wl-chips" id="wlChips"></div><button class="wl-b" id="wlModels" data-i18n="wl_models_open">Apri i modelli</button></div></div>
       <div class="wl-card c3" id="wlC3" role="button" tabindex="0"><div class="wl-ic"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18v3H3zM5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9M10 14h4"/></svg></div><div class="wl-tx"><h2 data-i18n="wl_arch_h">Voli salvati</h2><p id="wlArchP"></p></div>
@@ -539,7 +543,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">Flight Dashboard <span class="ver">v1.45</span></div>
+      <div class="apptitle">Flight Dashboard <span class="ver">v1.46</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -556,9 +560,16 @@
         <button class="helpbtn" id="helpBtn" data-i18n-title="help" title="Guida">?</button>
       </div>
       <div class="actions">
-        <label class="filebtn" id="loadBtn" tabindex="0" data-i18n-title="load_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span data-i18n="load_btn">Carica</span><input type="file" id="file" multiple></label>
-      <button class="filebtn drvbtn" id="drvBtn" type="button" data-i18n-title="drv_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 8.5a4 4 0 0 1-.5 9.5H7z"/></svg><span>Drive</span></button>
-      <button class="filebtn demobtn" id="demoBtn" type="button" data-i18n-title="demo_title"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg><span data-i18n="demo">Demo</span></button>
+        <div class="loadmenu" id="loadMenu">
+          <button class="filebtn" id="loadBtn" type="button" aria-haspopup="true" aria-expanded="false" data-i18n-title="load_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span data-i18n="load_btn">Apri</span><svg class="caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="menu" role="menu">
+            <label class="mi" role="menuitem" id="miLocal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><span class="mt"><b data-i18n="mi_local">Dal computer / telefono</b><small data-i18n="mi_local_s">log Jeti, file NMEA o CSV del GPS</small></span><input type="file" id="file" multiple hidden></label>
+            <button class="mi" role="menuitem" id="miDrive" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 8.5a4 4 0 0 1-.5 9.5H7z"/></svg><span class="mt"><b data-i18n="mi_drive">Da Google Drive</b><small data-i18n="mi_drive_s">cartella RZ Dati / voli</small></span></button>
+            <div class="sep"></div>
+            <button class="mi" role="menuitem" id="miDemo" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg><span class="mt"><b>Demo</b><small data-i18n="mi_demo">dati di esempio</small></span></button>
+          </div>
+        </div>
+      <button class="filebtn demobtn" id="demoBtn" type="button" hidden data-i18n-title="demo_title"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg><span data-i18n="demo">Demo</span></button>
       <button class="setupbtn" id="setupBtn" title="Set up">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.6H3a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 4.7 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 3V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></svg>
         <span data-i18n="setup">Set up</span>
@@ -782,7 +793,7 @@
   <!-- PAGE: ARCHIVIO (cartella sul PC, File System Access API) -->
   <section data-page="ar" hidden>
     <div class="card">
-      <h2><span data-i18n="ar_h2">Archivio voli</span> <span class="tag">FOLDER</span></h2>
+      <h2><span data-i18n="ar_h2">Archivio voli</span></h2>
       <div class="arfolder" id="arFolder"></div>
     </div>
     <div class="card" id="arSaveCard">
@@ -791,6 +802,7 @@
       <div class="row">
         <div class="fieldl"><label for="arModel" data-i18n="ar_model">Modello</label><input type="text" id="arModel" list="arModels" autocomplete="off"></div>
         <div class="fieldl" style="flex:1;min-width:200px"><label for="arNote" data-i18n="ar_note">Note</label><input type="text" id="arNote" autocomplete="off"></div>
+        <div class="fieldl"><label data-i18n="ar_where">Dove</label><span class="artgt"><label><input type="checkbox" id="arToPc"> 💻 PC</label><label><input type="checkbox" id="arToDrv"> ☁ Drive</label></span></div>
         <div class="fieldl"><label>&nbsp;</label><button class="btn" id="arSave">Salva</button></div>
       </div>
       <datalist id="arModels"></datalist>
@@ -923,7 +935,7 @@ const T = {
     sub_demo:"dati di esempio", sub_loaded:"log caricato", tagline:"analisi log di volo",
     tab_ov:"Panoramica", tab_ju:"Analisi volo", tab_gr:"Grafico", tab_tb:"Tabella",
     setup:"Set up", soon:"presto", logo_title:"Clicca per cambiare il logo",
-    load_title:"Carica un log Jeti grezzo (.log) o CSV esportato",
+    load_title:"Apri un volo: dal computer o telefono, da Google Drive oppure la demo",
     sm_title:"Carica un file NMEA SM Modellbau (GPS)", rz_title:"Caricamento RZ GPS — in arrivo",
     ov_h2:"Quota & salite a motore", leg_alt:"Quota relativa", leg_motor:"Salita a motore (corrente assorbita)",
     ju_h2:"Analisi", gr_h2:"Grafico selezionabile",
@@ -944,20 +956,20 @@ const T = {
     empty_view:"Nessun report ancora. Vai nella pagina <b>Set up</b> e creane uno con le variabili che ti interessano.",
     rows:"righe", vars:"variabili", step:"passo", remove:"rimuovi", time_word:"Tempo",
     alert_y:"Seleziona almeno una variabile Y.",
-    file_err:"Non riesco a leggere questo file come log Jeti. Controlla che sia il .log grezzo o il CSV esportato.",
+    file_err:"Non riesco a leggere questo file: deve essere un log Jeti (.log grezzo o CSV esportato), un file NMEA dell'SM GPS o un CSV del GPS RZ.",
     soon_msg:"caricamento in arrivo", axis_l:"asse sx", axis_r:"asse dx",
     derived:"variabile derivata", derived_note:"ƒ = variabile derivata (calcolata dai dati reali)",
-    demo:"Demo", demo_title:"Carica dati dimostrativi",
+    demo:"Demo", demo_title:"Apri i dati di esempio",
     focus:"Focus", back:"Indietro", drill_isolate:"Isola questa variabile nel grafico",
     drill_hint:"Trascina sul grafico per analizzare un tratto; clic su una salita per il riepilogo; clic su una KPI per aprirla nel grafico.",
     help:"Guida",
-    help_html:`<h3>Come usare Flight Dashboard</h3><ul><li><b>Scheda Set up</b>: consente di creare i tuoi report (le variabili con <span class="fx">ƒ</span> sono derivate, calcolate dai dati reali) e di personalizzare i colori della dashboard.</li><li><b>In alto</b>: bandierine per la lingua, logo cliccabile a sinistra.</li><li><b>Scheda Panoramica</b>: dati chiave, grafico quota con le salite a motore evidenziate; passa il cursore sul grafico per leggere i valori. <b>Drill-through</b>: trascina sul grafico per focalizzare un intervallo (KPI e tabella si ricalcolano, ✕ per azzerare), clic su una salita per il riepilogo, clic su una KPI per aprirla nel Grafico.</li><li><b>Scheda Analisi volo</b>: riepilogo del volo, fasi (motore, termica, planata), termiche rilevate, distribuzioni di velocità e vario, dati di batteria/GPS e commento automatico.</li><li><b>Scheda Grafico</b>: scegli un report dal menu a tendina. Il pulsante <b>Dettaglio</b> alza o abbassa la risoluzione; i quadratini colorati accanto alle variabili cambiano il colore; ogni variabile ha la sua scala laterale. <b>Zoom</b> con la rotella del mouse e scorrimento con la barra sotto il grafico (⟲ per azzerare); clic su una curva per isolarla (← Indietro per tornare alla vista precedente).</li><li><b>Scheda Tabella</b>: include tutti i dati, risoluzione regolabile e <b>Copia CSV</b>.</li><li><b>Scheda Traiettoria</b> (log GPS): traiettoria 3D del volo colorata dal vario (verde salita, rosso discesa); trascina per ruotare, rotella per zoomare, cursore e ▶ per seguire il volo.</li><li><b>Scheda Polare</b> (log GPS): grafico velocità/sink della planata a motore spento, con curva polare, sink minimo e finesse massima.</li><li><b>Scheda Archivio</b> (Chrome/Edge su PC): scegli una cartella, salva i voli con modello, pacco e note; spunta 2–4 voli per confrontare curve sovrapposte, salite e planate; in fondo il riepilogo per pacco.</li></ul>`
+    help_html:`<h3>Come usare Flight Dashboard</h3><ul><li><b>Scheda Set up</b>: consente di creare i tuoi report (le variabili con <span class="fx">ƒ</span> sono derivate, calcolate dai dati reali) e di personalizzare i colori della dashboard.</li><li><b>In alto</b>: bandierine per la lingua, logo cliccabile a sinistra.</li><li><b>Scheda Panoramica</b>: dati chiave, grafico quota con le salite a motore evidenziate; passa il cursore sul grafico per leggere i valori. <b>Drill-through</b>: trascina sul grafico per focalizzare un intervallo (KPI e tabella si ricalcolano, ✕ per azzerare), clic su una salita per il riepilogo, clic su una KPI per aprirla nel Grafico.</li><li><b>Scheda Analisi volo</b>: riepilogo del volo, fasi (motore, termica, planata), termiche rilevate, distribuzioni di velocità e vario, dati di batteria/GPS e commento automatico.</li><li><b>Scheda Grafico</b>: scegli un report dal menu a tendina. Il pulsante <b>Dettaglio</b> alza o abbassa la risoluzione; i quadratini colorati accanto alle variabili cambiano il colore; ogni variabile ha la sua scala laterale. <b>Zoom</b> con la rotella del mouse e scorrimento con la barra sotto il grafico (⟲ per azzerare); clic su una curva per isolarla (← Indietro per tornare alla vista precedente).</li><li><b>Scheda Tabella</b>: include tutti i dati, risoluzione regolabile e <b>Copia CSV</b>.</li><li><b>Scheda Traiettoria</b> (log GPS): traiettoria 3D del volo colorata dal vario (verde salita, rosso discesa); trascina per ruotare, rotella per zoomare, cursore e ▶ per seguire il volo.</li><li><b>Scheda Polare</b> (log GPS): grafico velocità/sink della planata a motore spento, con curva polare, sink minimo e efficienza massima.</li><li><b>In alto, «Apri»</b>: un volo dal computer o dal telefono, da Google Drive (cartella «RZ Dati / voli») oppure la demo.</li><li><b>Scheda Archivio</b>: salva i voli con modello e note sul PC (cartella, solo Chrome/Edge su computer), su Google Drive o in tutti e due; spunta 2–4 voli per confrontare curve sovrapposte, salite e planate; in fondo il riepilogo per pacco.</li></ul>`
   },
   en:{
     sub_demo:"sample data", sub_loaded:"log loaded", tagline:"flight log analysis",
     tab_ov:"Overview", tab_ju:"Flight analysis", tab_gr:"Chart", tab_tb:"Table",
     setup:"Set up", soon:"soon", logo_title:"Click to change the logo",
-    load_title:"Load a raw Jeti log (.log) or exported CSV",
+    load_title:"Open a flight: from the computer or phone, from Google Drive or the demo",
     sm_title:"Load an SM Modellbau NMEA file (GPS)", rz_title:"RZ GPS loading — coming soon",
     ov_h2:"Altitude & motor climbs", leg_alt:"Relative altitude", leg_motor:"Motor climb (current draw)",
     ju_h2:"Analysis", gr_h2:"Selectable chart",
@@ -991,7 +1003,7 @@ const T = {
     sub_demo:"données d'exemple", sub_loaded:"log chargé", tagline:"analyse de logs de vol",
     tab_ov:"Aperçu", tab_ju:"Analyse du vol", tab_gr:"Graphique", tab_tb:"Tableau",
     setup:"Set up", soon:"bientôt", logo_title:"Cliquer pour changer le logo",
-    load_title:"Charger un log Jeti brut (.log) ou CSV exporté",
+    load_title:"Ouvrir un vol : depuis l'ordinateur ou le téléphone, depuis Google Drive ou la démo",
     sm_title:"Charger un fichier NMEA SM Modellbau (GPS)", rz_title:"Chargement RZ GPS — bientôt",
     ov_h2:"Altitude & montées moteur", leg_alt:"Altitude relative", leg_motor:"Montée moteur (courant absorbé)",
     ju_h2:"Analyse", gr_h2:"Graphique sélectionnable",
@@ -1030,8 +1042,8 @@ const T_AR={
   ar_pick:["Scegli cartella","Choose folder","Choisir le dossier"],
   ar_change:["Cambia cartella","Change folder","Changer de dossier"],
   ar_reconnect:["Riconnetti cartella","Reconnect folder","Reconnecter le dossier"],
-  ar_nofolder:["Nessuna cartella scelta. Scegli (o crea) una cartella sul PC dove salvare i voli: se è dentro Google Drive per desktop hai anche il backup automatico.","No folder chosen yet. Choose (or create) a folder on your computer to store flights: if it's inside Google Drive for desktop you also get automatic backup.","Aucun dossier choisi. Choisissez (ou créez) un dossier sur l'ordinateur pour enregistrer les vols : s'il est dans Google Drive pour ordinateur, la sauvegarde est automatique."],
-  ar_unsupported:["L'archivio su cartella funziona con Chrome o Edge su PC.","The folder archive works with Chrome or Edge on a computer.","L'archive dans un dossier fonctionne avec Chrome ou Edge sur ordinateur."],
+  ar_nofolder:["Nessuna cartella sul PC: sceglila (o creala) per salvare i voli su questo computer.","No folder on the PC: choose (or create) one to save flights on this computer.","Aucun dossier sur le PC : choisissez-en (ou créez-en) un pour enregistrer les vols sur cet ordinateur."],
+  ar_unsupported:["La cartella sul PC funziona solo con Chrome o Edge su computer.","The folder archive works with Chrome or Edge on a computer.","L'archive dans un dossier fonctionne avec Chrome ou Edge sur ordinateur."],
   ar_perm:["Il browser chiede di confermare l'accesso alla cartella (scegli \"Consenti a ogni visita\" per non doverlo rifare).","The browser asks you to confirm access to the folder (pick \"Allow on every visit\" to avoid repeating it).","Le navigateur demande de confirmer l'accès au dossier (choisissez « Autoriser à chaque visite » pour ne plus le refaire)."],
   ar_loading:["Lettura archivio…","Reading archive…","Lecture des archives…"],
   ar_save_h:["Salva il volo corrente","Save current flight","Enregistrer le vol actuel"],
@@ -1039,16 +1051,16 @@ const T_AR={
   ar_save:["Salva nell'archivio","Save to archive","Enregistrer"],
   ar_update:["Aggiorna in archivio","Update in archive","Mettre à jour"],
   ar_in_arch:["In archivio come","Archived as","Archivé sous"],
-  ar_demo:["I dati Demo non si archiviano: carica un log vero.","Demo data can't be archived: load a real log.","Les données de démo ne s'archivent pas : chargez un vrai log."],
-  ar_needfolder:["Scegli prima la cartella dell'archivio (in alto).","Choose the archive folder first (above).","Choisissez d'abord le dossier d'archive (en haut)."],
+  ar_demo:["I dati della demo non si salvano: apri un volo vero.","Demo data can't be archived: load a real log.","Les données de démo ne s'archivent pas : chargez un vrai log."],
+  ar_needfolder:["Per salvare sul PC scegli prima la cartella (in alto).","To save on the PC, choose the folder first (above).","Pour enregistrer sur le PC, choisissez d'abord le dossier (en haut)."],
   ar_saved:["Volo salvato","Flight saved","Vol enregistré"], ar_updated:["Volo aggiornato","Flight updated","Vol mis à jour"],
   ar_err:["Errore","Error","Erreur"],
   ar_list_h:["Voli in archivio","Archived flights","Vols archivés"],
   ar_all:["Tutti","All","Tous"],
-  ar_empty:["Nessun volo in archivio. Carica un log e salvalo qui sopra.","No flights archived yet. Load a log and save it above.","Aucun vol archivé. Chargez un log et enregistrez-le ci-dessus."],
+  ar_empty:["Nessun volo in archivio: aprine uno e salvalo qui sopra.","No flights archived yet. Load a log and save it above.","Aucun vol archivé. Chargez un log et enregistrez-le ci-dessus."],
   ar_open:["Apri","Open","Ouvrir"], ar_del:["Elimina","Delete","Supprimer"],
-  ar_del_q:["Eliminare definitivamente questo volo dalla cartella?","Permanently delete this flight from the folder?","Supprimer définitivement ce vol du dossier ?"],
-  ar_sel_hint:["Spunta da 2 a 4 voli per confrontarli; \"Apri\" carica un volo nelle altre schede.","Tick 2 to 4 flights to compare them; \"Open\" loads a flight into the other tabs.","Cochez 2 à 4 vols pour les comparer ; « Ouvrir » charge un vol dans les autres onglets."],
+  ar_del_q:["Eliminare definitivamente questo volo dalla cartella del PC?","Permanently delete this flight from the folder?","Supprimer définitivement ce vol du dossier ?"],
+  ar_sel_hint:["Spunta da 2 a 4 voli per confrontarli; «Apri» carica il volo nelle altre schede.","Tick 2 to 4 flights to compare them; \"Open\" loads a flight into the other tabs.","Cochez 2 à 4 vols pour les comparer ; « Ouvrir » charge un vol dans les autres onglets."],
   ar_max4:["Puoi confrontare al massimo 4 voli.","You can compare at most 4 flights.","Vous pouvez comparer au maximum 4 vols."],
   cmp_h2:["Confronto voli","Flight comparison","Comparaison de vols"],
   cmp_var:["Variabile","Variable","Variable"], cmp_align:["Allinea a","Align to","Aligner sur"],
@@ -1073,11 +1085,11 @@ const T_PO={
   po_bin:["Fascia","Band","Tranche"], po_pts:["Punti","Points","Points"],
   po_nospeed:["La polare richiede la velocità: carica un file GPS (SM Modellbau).","The polar needs speed: load a GPS file (SM Modellbau).","La polaire nécessite la vitesse : chargez un fichier GPS (SM Modellbau)."],
   po_nodata:["Dati di planata insufficienti per costruire la polare (servono tratti a motore spento a velocità diverse).","Not enough glide data to build the polar (motor-off segments at different speeds are needed).","Pas assez de données de plané pour construire la polaire (il faut des phases moteur coupé à différentes vitesses)."],
-  po_sinkmin:["Sink minimo","Min sink","Chute min."], po_glidemax:["Finesse max","Max glide ratio","Finesse max"],
+  po_sinkmin:["Sink minimo","Min sink","Chute min."], po_glidemax:["Efficienza max","Max glide ratio","Finesse max"],
   po_edge:["al limite dei dati","at data limit","en limite des données"],
   po_used:["punti","points","points"], po_bands:["fasce","bands","tranches"],
   po_l_pts:["Punti di planata","Glide samples","Échantillons de plané"], po_l_bins:["Mediana per fascia","Band median","Médiane par tranche"],
-  po_l_fit:["Curva polare","Polar curve","Courbe polaire"], po_l_tan:["Tangente dall'origine (finesse max)","Tangent from origin (max glide)","Tangente depuis l'origine (finesse max)"],
+  po_l_fit:["Curva polare","Polar curve","Courbe polaire"], po_l_tan:["Tangente dall'origine (efficienza max)","Tangent from origin (max glide)","Tangente depuis l'origine (finesse max)"],
   po_axes:["X: velocità [km/h] · Y: vario TE [m/s] (negativo = discesa)","X: speed [km/h] · Y: TE vario [m/s] (negative = sinking)","X : vitesse [km/h] · Y : vario TE [m/s] (négatif = descente)"],
   po_hint:["Solo planata a motore spento (esclusi i 3 s dopo lo spegnimento), con vario compensato in energia totale; scartati i punti in salita e le manovre brusche. La velocità GPS è al suolo: con vento forte i punti si disperdono, in aria calma la polare è più fedele. Rispetta il Focus della Panoramica.","Motor-off glide only (first 3 s after cut excluded), with total-energy-compensated vario; climbing points and abrupt manoeuvres are discarded. GPS speed is ground speed: strong wind scatters the points, in calm air the polar is more faithful. Follows the Overview focus.","Plané moteur coupé uniquement (3 s après la coupure exclues), avec vario compensé en énergie totale ; points en montée et manœuvres brusques écartés. La vitesse GPS est sol : avec un vent fort les points se dispersent, en air calme la polaire est plus fidèle. Suit le Focus de l'Aperçu."]
 };
@@ -1093,19 +1105,27 @@ const T_TR={
   tr_hint:["Trascina col tasto sinistro per ruotare, col destro premuto per spostare la vista (pan), rotella o pulsanti −/+ (fino a ×40) per zoomare verso il cursore, su touch un dito ruota e due dita zoomano, doppio clic per ripristinare la vista. \"Quota ×\" esagera la scala verticale. Il cursore in basso sposta (o riproduce a 10×) un aliante sulla traiettoria, orientato come in volo; \"Segui\" tiene la vista centrata su di lui (utile con lo zoom). Rispetta il Focus della Panoramica.","Drag with the left button to rotate, hold the right button to pan, wheel or −/+ buttons (up to ×40) to zoom towards the cursor, on touch one finger rotates and two fingers zoom, double-click to reset the view. \"Altitude ×\" exaggerates the vertical scale. The slider moves (or plays at 10×) a glider along the trajectory, oriented as in flight; \"Follow\" keeps the view centred on it (handy when zoomed). Follows the Overview focus.","Faites glisser avec le bouton gauche pour tourner, bouton droit enfoncé pour déplacer la vue (pan), molette ou boutons −/+ (jusqu'à ×40) pour zoomer vers le curseur, sur tactile un doigt tourne et deux doigts zooment, double-clic pour réinitialiser la vue. « Altitude × » exagère l'échelle verticale. Le curseur déplace (ou lit à 10×) un planeur sur la trajectoire, orienté comme en vol ; « Suivre » garde la vue centrée sur lui (utile avec le zoom). Suit le Focus de l'Aperçu."]
 };
 const T_UI={
-  load_btn:["Carica","Load","Charger"],
+  load_btn:["Apri","Open","Ouvrir"],
+  mi_local:["Dal computer / telefono","From computer / phone","Depuis l'ordinateur / le téléphone"],
+  mi_local_s:["log Jeti, file NMEA o CSV del GPS","Jeti log, NMEA file or GPS CSV","log Jeti, fichier NMEA ou CSV du GPS"],
+  mi_drive:["Da Google Drive","From Google Drive","Depuis Google Drive"], mi_drive_s:["cartella RZ Dati / voli","RZ Dati / voli folder","dossier RZ Dati / voli"],
+  ar_where:["Dove","Where","Où"],
+  ar_choose:["Scegli dove salvare: PC, Drive o entrambi.","Choose where to save: PC, Drive or both.","Choisissez où enregistrer : PC, Drive ou les deux."],
+  ar_needdrive:["Per salvare sul Drive collega prima Google Drive (in alto).","To save to the Drive, connect Google Drive first (above).","Pour enregistrer sur le Drive, connectez d'abord Google Drive (en haut)."],
+  ar_drv_not:["Google Drive non collegato: collegalo per salvare i voli e ritrovarli anche sul telefono.","Google Drive not connected: connect it to save flights and find them on the phone too.","Google Drive non connecté : connectez-le pour enregistrer les vols et les retrouver aussi sur le téléphone."],
+  ar_del_qd:["Spostare questo volo nel cestino di Google Drive?","Move this flight to the Google Drive bin?","Mettre ce vol dans la corbeille de Google Drive ?"],
   mi_jeti:["log .log o CSV","raw .log or CSV","log .log ou CSV"], mi_sm:["GPS · .nmea","GPS · .nmea","GPS · .nmea"],
   mi_demo:["dati di esempio","sample data","données d'exemple"],
-  drv_title:["Apri o salva i log nella cartella «RZ Dati / voli» di Google Drive","Open or save logs in the «RZ Dati / voli» folder of Google Drive","Ouvrir ou enregistrer les logs dans le dossier « RZ Dati / voli » de Google Drive"],
+  drv_title:["Apri i log dalla cartella «RZ Dati / voli» di Google Drive, o salvali lì","Open or save logs in the «RZ Dati / voli» folder of Google Drive","Ouvrir ou enregistrer les logs dans le dossier « RZ Dati / voli » de Google Drive"],
   drv_connect:["Collega Google Drive","Connect Google Drive","Connecter Google Drive"],
   drv_refresh:["Aggiorna","Refresh","Actualiser"], drv_off:["Scollega","Disconnect","Déconnecter"],
-  drv_not:["Non collegato. Tocca «Collega Google Drive» e scegli l'account del modellismo (la prima volta: Avanzate → Vai a RZ Apps → Consenti).","Not connected. Tap «Connect Google Drive» and choose the RC account (the first time: Advanced → Go to RZ Apps → Allow).","Non connecté. Touchez « Connecter Google Drive » et choisissez le compte du modélisme (la première fois : Paramètres avancés → Accéder à RZ Apps → Autoriser)."],
-  drv_exp:["Il collegamento è scaduto (dura circa un'ora): tocca «Collega Google Drive».","The connection has expired (it lasts about one hour): tap «Connect Google Drive».","La connexion a expiré (environ une heure) : touchez « Connecter Google Drive »."],
+  drv_not:["Non collegato. Premi «Collega Google Drive» e scegli l'account del modellismo (la prima volta Google mostra un avviso: Avanzate → Vai a RZ Apps → Consenti).","Not connected. Tap «Connect Google Drive» and choose the RC account (the first time: Advanced → Go to RZ Apps → Allow).","Non connecté. Touchez « Connecter Google Drive » et choisissez le compte du modélisme (la première fois : Paramètres avancés → Accéder à RZ Apps → Autoriser)."],
+  drv_exp:["Collegamento scaduto (dura circa un'ora): premi «Collega Google Drive».","The connection has expired (it lasts about one hour): tap «Connect Google Drive».","La connexion a expiré (environ une heure) : touchez « Connecter Google Drive »."],
   drv_loading:["Lettura del Drive…","Reading the Drive…","Lecture du Drive…"],
-  drv_empty:["La cartella «RZ Dati / voli» è vuota: salva qui un log con il bottone qui sopra, oppure trascinalo nella cartella da drive.google.com.","The «RZ Dati / voli» folder is empty: save a log here with the button above, or drag it into the folder from drive.google.com.","Le dossier « RZ Dati / voli » est vide : enregistrez un log avec le bouton ci-dessus ou glissez-le dans le dossier depuis drive.google.com."],
-  drv_count:["log nella cartella: tocca un nome per aprirlo.","logs in the folder: tap a name to open it.","logs dans le dossier : touchez un nom pour l'ouvrir."],
+  drv_empty:["Nella cartella «RZ Dati / voli» non ci sono log: aprine uno dal computer o dal telefono e salvalo qui con il bottone qui sopra.","The «RZ Dati / voli» folder is empty: save a log here with the button above, or drag it into the folder from drive.google.com.","Le dossier « RZ Dati / voli » est vide : enregistrez un log avec le bouton ci-dessus ou glissez-le dans le dossier depuis drive.google.com."],
+  drv_count:["log nella cartella: scegli quello da aprire.","logs in the folder: tap a name to open it.","logs dans le dossier : touchez un nom pour l'ouvrir."],
   drv_open:["Apertura di","Opening","Ouverture de"],
-  drv_up:["⤴ Salva sul Drive:","⤴ Save to Drive:","⤴ Enregistrer sur le Drive :"],
+  drv_up:["⤴ Salva sul Drive il log aperto:","⤴ Save to Drive:","⤴ Enregistrer sur le Drive :"],
   drv_saved:["Salvato sul Drive:","Saved to Drive:","Enregistré sur le Drive :"],
   drv_err:["Errore con Google Drive:","Google Drive error:","Erreur Google Drive :"],
   drv_noauth:["Accesso a Google non riuscito.","Google sign-in failed.","Échec de la connexion à Google."]
@@ -1118,17 +1138,17 @@ const T_GR={
 };
 const T_AN={
   wl_eyebrow:["Benvenuto","Welcome","Bienvenue"], wl_title:["Analizza<br>i tuoi voli","Analyse<br>your flights","Analysez<br>vos vols"],
-  wl_sub:["Log Jeti, GPS e archivio in un solo posto. Funziona offline, i dati restano sul tuo PC.","Jeti logs, GPS and archive in one place. Works offline, your data stays on your PC.","Logs Jeti, GPS et archive au même endroit. Fonctionne hors ligne, vos données restent sur votre PC."],
-  wl_read_h:["Leggi dati","Read data","Lire des données"], wl_read_p:["Carica un log Jeti, un file NMEA dell'SM GPS o un CSV del GPS RZ: il formato viene riconosciuto da solo.","Load a Jeti log, an SM GPS NMEA file or an RZ GPS CSV: the format is recognised automatically.","Chargez un log Jeti, un fichier NMEA du SM GPS ou un CSV du GPS RZ : le format est reconnu automatiquement."],
-  wl_choose:["Scegli file…","Choose file…","Choisir un fichier…"], wl_demo:["Prova con la demo","Try the demo","Essayer la démo"],
+  wl_sub:["Log Jeti, GPS e archivio in un solo posto. Funziona anche senza internet; i voli li salvi dove vuoi: sul PC o su Google Drive.","Jeti logs, GPS and archive in one place. Works offline too; save your flights where you like: on the PC or on Google Drive.","Logs Jeti, GPS et archive au même endroit. Fonctionne aussi hors ligne ; enregistrez vos vols où vous voulez : sur le PC ou sur Google Drive."],
+  wl_read_h:["Apri un volo","Open a flight","Ouvrir un vol"], wl_read_p:["Log Jeti, file NMEA dell'SM GPS o CSV del GPS RZ: il formato viene riconosciuto in automatico.","Load a Jeti log, an SM GPS NMEA file or an RZ GPS CSV: the format is recognised automatically.","Chargez un log Jeti, un fichier NMEA du SM GPS ou un CSV du GPS RZ : le format est reconnu automatiquement."],
+  wl_choose:["Dal computer","From computer","Depuis l'ordinateur"], wl_drive:["Da Google Drive","From Google Drive","Depuis Google Drive"], wl_demo:["Prova la demo","Try the demo","Essayer la démo"],
   wl_models_h:["Modelli salvati","Saved models","Modèles enregistrés"], wl_models_p:["I tuoi alianti, con voli e miglior indice. Salva un volo in archivio per vederli qui.","Your gliders, with flights and best index. Save a flight to the archive to see them here.","Vos planeurs, avec vols et meilleur indice. Enregistrez un vol dans l'archive pour les voir ici."],
   wl_models_n:["{n} modelli in archivio","{n} models in the archive","{n} modèles dans l'archive"], wl_models_none:["Nessun modello indicato nei voli salvati.","No model named in the saved flights.","Aucun modèle indiqué dans les vols enregistrés."],
   wl_models_open:["Apri i modelli","Open models","Ouvrir les modèles"],
-  wl_arch_h:["Voli salvati","Saved flights","Vols enregistrés"], wl_arch_p:["Archivio su cartella: confronta i voli e guarda l'andamento nel tempo.","Folder archive: compare flights and see the trend over time.","Archive sur dossier : comparez les vols et suivez l'évolution."],
-  wl_arch_nofolder:["Collega la cartella dell'archivio (Chrome o Edge su PC) per vedere i tuoi voli.","Connect the archive folder (Chrome or Edge on PC) to see your flights.","Connectez le dossier d'archive (Chrome ou Edge sur PC) pour voir vos vols."], wl_arch_empty:["Nessun volo salvato ancora: caricane uno e salvalo in archivio.","No flight saved yet: load one and save it to the archive.","Aucun vol enregistré : chargez-en un et enregistrez-le dans l'archive."],
+  wl_arch_h:["Voli salvati","Saved flights","Vols enregistrés"], wl_arch_p:["Confronta i voli salvati e guarda come cambiano nel tempo.","Compare saved flights and see how they change over time.","Comparez les vols enregistrés et suivez leur évolution."],
+  wl_arch_nofolder:["Scegli una cartella sul PC o collega Google Drive per ritrovare qui i tuoi voli.","Choose a folder on the PC or connect Google Drive to find your flights here.","Choisissez un dossier sur le PC ou connectez Google Drive pour retrouver ici vos vols."], wl_arch_empty:["Nessun volo salvato: aprine uno e salvalo nell'archivio.","No flight saved yet: load one and save it to the archive.","Aucun vol enregistré : chargez-en un et enregistrez-le dans l'archive."],
   wl_arch_open:["Apri l'archivio","Open the archive","Ouvrir l'archive"], wl_flights:["voli","flights","vols"], wl_best:["miglior indice","best index","meilleur indice"],
   wl_resume:["Riprendi","Resume","Reprendre"], wl_skip:["Vai all'app","Go to app","Aller à l'app"], wl_home:["Pagina di benvenuto","Welcome page","Page d'accueil"],
-  wl_foot:["I tuoi dati non lasciano questo computer · Nessun account","Your data never leaves this computer · No account","Vos données ne quittent pas cet ordinateur · Aucun compte"],
+  wl_foot:["Nessun account necessario · I voli restano sul tuo PC o sul tuo Google Drive","No account needed · Your flights stay on your PC or your Google Drive","Aucun compte nécessaire · Vos vols restent sur votre PC ou votre Google Drive"],
   wl_show:["Mostra la pagina di benvenuto all'avvio","Show the welcome page at start-up","Afficher la page d'accueil au démarrage"],
   bk_h2:["Copia di sicurezza delle impostazioni","Settings backup","Sauvegarde des réglages"],
   bk_hint:["Le impostazioni (lingua, aspetto, report, interruttori delle fasi, logo) stanno nella memoria di questo browser. Esportale in un file per non perderle (cambio browser o telefono, reinstallazione dell'app) e importale quando servono. I voli non ne fanno parte: restano nei file dell'archivio.","Settings (language, appearance, reports, phase switches, logo) live in this browser's memory. Export them to a file so you do not lose them (new browser or phone, app reinstall) and import them when needed. Flights are not included: they stay in the archive files.","Les réglages (langue, apparence, rapports, interrupteurs de phases, logo) sont dans la mémoire de ce navigateur. Exportez-les dans un fichier pour ne pas les perdre (nouveau navigateur ou téléphone, réinstallation) et importez-les au besoin. Les vols n'en font pas partie : ils restent dans les fichiers d'archive."],
@@ -1148,7 +1168,7 @@ const T_AN={
   rd_qmin:["Q minima","Min Q","Q min."], rd_q90:["sotto 90 % per","below 90 % for","sous 90 % pendant"], rd_amin:["Antenne min.","Min antenna","Antenne min."], rd_rxmin:["Tensione Rx min.","Min Rx voltage","Tension Rx min."], rd_med:["tipica","typical","typique"], rd_bec:["BEC min.","Min BEC","BEC min."],
   rd_event:["Evento","Event","Événement"], rd_val:["Valore","Value","Valeur"], rd_none:["Nessun calo di collegamento o di tensione rilevato.","No link or voltage dropout detected.","Aucune perte de liaison ou de tension détectée."],
   rd_e_q:["Calo qualità collegamento","Link quality drop","Baisse de qualité de liaison"], rd_e_ant:["Antenna debole","Weak antenna","Antenne faible"], rd_e_rx:["Calo tensione ricevitore","Receiver voltage dip","Chute de tension du récepteur"], rd_e_bec:["Calo tensione BEC","BEC voltage dip","Chute de tension du BEC"],
-  mg_ask:["Il file è del tipo complementare al volo aperto (Jeti + GPS). Unirli in un unico volo?","This file is the complementary type of the open flight (Jeti + GPS). Merge them into one flight?","Ce fichier est du type complémentaire du vol ouvert (Jeti + GPS). Les fusionner en un seul vol ?"],
+  mg_ask:["Questo file completa il volo aperto (Jeti + GPS). Vuoi unirli in un unico volo?","This file is the complementary type of the open flight (Jeti + GPS). Merge them into one flight?","Ce fichier est du type complémentaire du vol ouvert (Jeti + GPS). Les fusionner en un seul vol ?"],
   mg_fail:["Non riesco ad allineare i due file: le quote non coincidono abbastanza. Sono dello stesso volo?","Cannot align the two files: the altitudes do not match well enough. Are they from the same flight?","Impossible d'aligner les deux fichiers : les altitudes ne coïncident pas assez. Sont-ils du même vol ?"],
   mg_ok:["uniti","merged","fusionnés"],
   pc_h2:["Interruttori delle fasi di volo","Flight-phase switches","Interrupteurs des phases de vol"],
@@ -2539,7 +2559,7 @@ function renderWelcome(){
   if(!$("#welcome")) return;
   const ver=$(".ver").textContent; $("#wlVer").textContent=ver; $("#wlVer2").textContent="Flight Dashboard · "+ver;
   $("#wlIt").classList.toggle("active",lang==="it"); $("#wlEn").classList.toggle("active",lang==="en"); $("#wlFr").classList.toggle("active",lang==="fr");
-  const L=(typeof ARCH!=="undefined")?ARCH:[], connected=ARCH_OK&&archDir&&archPerm==="granted";
+  const L=(typeof ARCH!=="undefined")?ARCH:[], connected=(ARCH_OK&&archDir&&archPerm==="granted")||gdOk();
   // modelli
   const by={}; for(const e of L){ const m=e.model||""; if(m) by[m]=(by[m]||0)+1; }
   const ms=Object.keys(by).sort((a,b)=>by[b]-by[a]).slice(0,5);
@@ -2556,19 +2576,19 @@ function renderWelcome(){
   } else { $("#wlArchP").textContent=connected?t("wl_arch_empty"):t("wl_arch_nofolder"); $("#wlStat").innerHTML=""; }
   // riprendi
   const last=L.slice().sort((a,b)=>(b.ts||0)-(a.ts||0))[0], lw=$("#wlLast");
-  lw.hidden=!last; if(last){ lw.dataset.file=last.file; lw.innerHTML=`<span>↻</span><span>${t("wl_resume")}: <b>${escapeHtml(last.model||last.file)}</b> · ${escapeHtml(archDate(last))}</span>${num(last.sum&&last.sum.score)?`<span class="sc">${Math.round(last.sum.score)}</span>`:""}`; }
+  lw.hidden=!last; if(last){ lw.dataset.key=last.key; lw.innerHTML=`<span>↻</span><span>${t("wl_resume")}: <b>${escapeHtml(last.model||last.file)}</b> · ${escapeHtml(archDate(last))}</span>${num(last.sum&&last.sum.score)?`<span class="sc">${Math.round(last.sum.score)}</span>`:""}`; }
 }
 function initWelcome(){
   const w=$("#welcome"); if(!w) return;
   const act=(id,fn)=>{ const el=$(id); el.addEventListener("click",e=>{ e.stopPropagation(); fn(e); }); };
   act("#wlSkip",hideWelcome); act("#wlSetup",()=>{ hideWelcome(); $("#setupBtn").click(); });
-  act("#wlChoose",()=>{ $("#file").click(); }); act("#wlDemo",()=>{ hideWelcome(); $("#demoBtn").click(); });
+  act("#wlChoose",()=>{ $("#file").click(); }); act("#wlDrive",()=>{ hideWelcome(); drvOpen(); }); act("#wlDemo",()=>{ hideWelcome(); $("#demoBtn").click(); });
   act("#wlModels",()=>goArchive("")); act("#wlArch",()=>goArchive(""));
   $("#wlC1").addEventListener("click",()=>$("#file").click());
   $("#wlC2").addEventListener("click",()=>goArchive("")); $("#wlC3").addEventListener("click",()=>goArchive(""));
   for(const id of ["#wlC1","#wlC2","#wlC3"]) $(id).addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); e.currentTarget.click(); } });
   $("#wlChips").addEventListener("click",e=>{ const b=e.target.closest("[data-model]"); if(!b) return; e.stopPropagation(); goArchive(b.dataset.model); });
-  $("#wlLast").addEventListener("click",()=>{ const f=$("#wlLast").dataset.file; if(f){ hideWelcome(); archOpen(f); } });
+  $("#wlLast").addEventListener("click",()=>{ const f=$("#wlLast").dataset.key; if(f){ hideWelcome(); archOpen(f); } });
   $("#wlIt").addEventListener("click",()=>setLang("it")); $("#wlEn").addEventListener("click",()=>setLang("en")); $("#wlFr").addEventListener("click",()=>setLang("fr"));
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!w.hidden) hideWelcome(); });
   const t0=document.querySelector(".apptitle"); if(t0){ t0.title=t("wl_home"); t0.setAttribute("role","button"); t0.tabIndex=0; t0.addEventListener("click",showWelcome); t0.addEventListener("keydown",e=>{ if(e.key==="Enter") showWelcome(); }); }
@@ -2701,13 +2721,15 @@ function makeDemo(){
   computeDerived(f); detectClimbs(f); return f;
 }
 
-/* ---------- archivio voli (cartella sul PC) + confronto ----------
-   Ogni volo è un file "<gg-mm-aaaa_hh-mm>_<modello>.rzf.json" nella cartella scelta.
+/* ---------- archivio voli (cartella sul PC e/o Google Drive «RZ Dati / voli») + confronto ----------
+   Ogni volo è un file "<gg-mm-aaaa_hh-mm>_<modello>.rzf.json" nella cartella sul PC e/o sul Drive.
+   ARCH = voli del PC (ARCH_PC) + voli del Drive (ARCH_DRV); ogni voce ha where ("pc" | "drv") e key = where:file.
    Si salvano solo i canali registrati: derivate e salite si ricalcolano all'apertura. */
 const ARCH_EXT=".rzf.json";
 const ARCH_OK=("showDirectoryPicker" in window);
 let archDir=null, archPerm="none", archBusy=false;
-let ARCH=[];                       // [{file,model,pack,note,source,f,sum,ts}]
+let ARCH=[];                       // [{file,model,pack,note,source,f,sum,ts,where,id,key}]
+let ARCH_PC=[], ARCH_DRV=[], archDrvBusy=false;
 const archSel=new Set();           // file selezionati per il confronto (max 4)
 let archSortScore=false;
 const archF={model:"",pack:""};    // filtri elenco
@@ -2823,17 +2845,20 @@ async function archFreeName(base){
   for(let i=1;i<100;i++){ const n=base+(i>1?"-"+i:"")+ARCH_EXT; try{ await archDir.getFileHandle(n); }catch(e){ return n; } }
   return base+"-"+Date.now()+ARCH_EXT;
 }
-function archEntry(file,o,f){ const d=f.meta&&f.meta.dateObj; return {file,model:o.model||"",pack:o.pack||"",note:o.note||"",source:o.source||"",f,sum:flightSummary(f),ts:d?d.getTime():0}; }
-function archFindDup(f){ return f._src ? ARCH.find(e=>e.source===f._src && Math.abs(e.f.dur-f.dur)<0.5) : null; }
+function archEntry(file,o,f,where,id){ const d=f.meta&&f.meta.dateObj; where=where||"pc";
+  return {file,model:o.model||"",pack:o.pack||"",note:o.note||"",source:o.source||"",f,sum:flightSummary(f),ts:d?d.getTime():0,where,id:id||null,key:where+":"+file}; }
+function archFindDup(f,where){ return f._src ? ARCH.find(e=>(!where||e.where===where)&&e.source===f._src && Math.abs(e.f.dur-f.dur)<0.5) : null; }
+const archUpsert=(L,e)=>{ const i=L.findIndex(x=>x.file===e.file); if(i>=0) L[i]=e; else L.push(e); };
+function archMerge(){ ARCH=ARCH_PC.concat(ARCH_DRV); archSort(); for(const k of [...archSel]) if(!ARCH.some(e=>e.key===k)) archSel.delete(k); renderArchive(); }
 function archSort(){ ARCH.sort((a,b)=>b.ts-a.ts||(a.file<b.file?1:-1)); }
 
 /* cartella: scelta, permesso, lettura */
 async function archInit(){
-  if(!ARCH_OK) return renderArchive();
-  const h=await kvGet("archDir"); if(!h) return renderArchive();
-  archDir=h;
-  try{ archPerm=await h.queryPermission({mode:"readwrite"}); }catch(e){ archPerm="prompt"; }
-  if(archPerm==="granted") await archReload(); else renderArchive();
+  if(ARCH_OK){ const h=await kvGet("archDir");
+    if(h){ archDir=h; try{ archPerm=await h.queryPermission({mode:"readwrite"}); }catch(e){ archPerm="prompt"; }
+      if(archPerm==="granted") await archReload(); } }
+  renderArchive();
+  if(gdOk()) archReloadDrive();
 }
 async function archPick(){
   try{ archDir=await window.showDirectoryPicker({id:"rz-voli",mode:"readwrite"}); }catch(e){ return; }   // annullato
@@ -2844,6 +2869,7 @@ async function archReconnect(){
   if(archPerm==="granted") await archReload(); else renderArchive();
 }
 async function archReload(){
+  if(!archDir) return;
   archBusy=true; renderArchFolder();
   const out=[];
   try{
@@ -2852,43 +2878,67 @@ async function archReload(){
       try{ const o=JSON.parse(await (await h.getFile()).text()); if(o.format!=="rz-flight") continue; out.push(archEntry(name,o,frameFromJson(o))); }catch(e){}
     }
   }catch(e){ archMsg=t("ar_err")+": "+e.message; }
-  ARCH=out; archSort(); archBusy=false;
-  for(const k of [...archSel]) if(!ARCH.some(e=>e.file===k)) archSel.delete(k);
-  renderArchive();
+  ARCH_PC=out; archBusy=false; archMerge();
+}
+/* voli archiviati sul Google Drive (cartella «RZ Dati / voli», file .rzf.json) */
+async function archReloadDrive(){
+  if(!gdOk()){ ARCH_DRV=[]; return archMerge(); }
+  archDrvBusy=true; renderArchFolder();
+  const out=[];
+  try{
+    const dir=await gdVoli(), q="'"+dir+"' in parents and trashed=false and name contains '"+ARCH_EXT+"'";
+    const fl=((await (await gdF("/drive/v3/files?q="+encodeURIComponent(q)+"&fields=files(id,name)&pageSize=500&spaces=drive")).json()).files||[]).filter(f=>f.name.endsWith(ARCH_EXT));
+    for(let i=0;i<fl.length;i+=4){
+      await Promise.all(fl.slice(i,i+4).map(async f=>{ try{ const o=await (await gdF("/drive/v3/files/"+encodeURIComponent(f.id)+"?alt=media")).json();
+        if(o.format==="rz-flight") out.push(archEntry(f.name,o,frameFromJson(o),"drv",f.id)); }catch(e){ if(e.message==="auth") throw e; } }));
+    }
+    ARCH_DRV=out;
+  }catch(e){ archMsg=t("ar_err")+" (Drive): "+(e.message==="auth"?t("drv_exp"):e.message); }
+  archDrvBusy=false; archMerge();
 }
 async function archWrite(name,o){ const h=await archDir.getFileHandle(name,{create:true}); const w=await h.createWritable(); await w.write(JSON.stringify(o)); await w.close(); }
 
+function archTargets(){ let o={pc:true,drv:true}; try{ o=Object.assign(o,JSON.parse(localStorage.getItem("fd_artgt")||"{}")); }catch(e){} return o; }
 async function archSave(){
   if(!DATA||isDemo) return;
-  if(!archDir){ archMsg=t("ar_needfolder"); return renderArchSave(); }
-  if(archPerm!=="granted"){ await archReconnect(); if(archPerm!=="granted") return; }
+  const toPc=ARCH_OK&&$("#arToPc").checked, toDrv=$("#arToDrv").checked;
+  try{ localStorage.setItem("fd_artgt",JSON.stringify({pc:$("#arToPc").checked,drv:toDrv})); }catch(e){}
+  if(!toPc&&!toDrv){ archMsg=t("ar_choose"); return renderArchSave(); }
+  if(toPc&&!archDir){ archMsg=t("ar_needfolder"); return renderArchSave(); }
+  if(toPc&&archPerm!=="granted"){ await archReconnect(); if(archPerm!=="granted") return; }
+  if(toDrv&&!gdOk()){ archMsg=t("ar_needdrive"); return renderArchSave(); }
   const model=$("#arModel").value.trim(), pack="", note=$("#arNote").value.trim();
+  if(model) DATA.model=model;
+  const cur=DATA._arch&&ARCH.find(x=>x.key===DATA._arch);
+  const dupOf=w=>(cur&&cur.where===w)?cur:archFindDup(DATA,w);
+  const o=frameToJson(DATA,{model,pack,note,source:DATA._src||(cur&&cur.source)||""});
+  const base=archBaseName(DATA,model,pack), done=[];
   try{
-    let file=DATA._arch;
-    if(!file){ const dup=archFindDup(DATA); if(dup) file=dup.file; }
-    const upd=!!file;
-    if(!file) file=await archFreeName(archBaseName(DATA,model,pack));
-    if(model) DATA.model=model;
-    const o=frameToJson(DATA,{model,pack,note,source:DATA._src||""});
-    await archWrite(file,o);
-    DATA._arch=file;
-    const e=archEntry(file,o,DATA), i=ARCH.findIndex(x=>x.file===file);
-    if(i>=0) ARCH[i]=e; else ARCH.push(e); archSort();
-    archMsg=(upd?t("ar_updated"):t("ar_saved"))+": "+file;
-    renderFlightHead(DATA); renderArchive();
-  }catch(err){ archMsg=t("ar_err")+": "+err.message; renderArchSave(); }
+    if(toPc){ const dup=dupOf("pc"), file=dup?dup.file:await archFreeName(base);
+      await archWrite(file,o); const e=archEntry(file,o,DATA,"pc"); archUpsert(ARCH_PC,e); DATA._arch=e.key; done.push((dup?t("ar_updated"):t("ar_saved"))+" 💻 "+file); }
+    if(toDrv){ const dup=dupOf("drv"), dir=await gdVoli(); let file=dup?dup.file:base+ARCH_EXT;
+      if(!dup) for(let k=2; await gdFind(file,dir) && k<100; k++) file=base+"-"+k+ARCH_EXT;
+      const id=await gdPutFile(dup&&dup.id,file,dir,new Blob([JSON.stringify(o)],{type:"application/json"}));
+      const e=archEntry(file,o,DATA,"drv",id); archUpsert(ARCH_DRV,e); if(!toPc) DATA._arch=e.key; done.push((dup?t("ar_updated"):t("ar_saved"))+" ☁ "+file); }
+    archMsg=done.join(" · ");
+  }catch(err){ archMsg=(done.length?done.join(" · ")+" · ":"")+t("ar_err")+": "+(err.message==="auth"?t("drv_exp"):err.message); }
+  renderFlightHead(DATA); archMerge();
 }
-async function archDelete(file){
-  if(!confirm(t("ar_del_q")+"\n\n"+file)) return;
-  try{ await archDir.removeEntry(file); }catch(err){ archMsg=t("ar_err")+": "+err.message; return renderArchive(); }
-  ARCH=ARCH.filter(e=>e.file!==file); archSel.delete(file);
-  if(DATA&&DATA._arch===file){ delete DATA._arch; archFormFor=null; }
-  renderArchive();
+async function archDelete(key){
+  const e=ARCH.find(x=>x.key===key); if(!e) return;
+  if(!confirm((e.where==="drv"?t("ar_del_qd"):t("ar_del_q"))+"\n\n"+e.file)) return;
+  try{
+    if(e.where==="drv"){ await gdF("/drive/v3/files/"+encodeURIComponent(e.id),{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({trashed:true})}); ARCH_DRV=ARCH_DRV.filter(x=>x.key!==key); }
+    else { await archDir.removeEntry(e.file); ARCH_PC=ARCH_PC.filter(x=>x.key!==key); }
+  }catch(err){ archMsg=t("ar_err")+": "+(err.message==="auth"?t("drv_exp"):err.message); return renderArchive(); }
+  archSel.delete(key);
+  if(DATA&&DATA._arch===key){ delete DATA._arch; archFormFor=null; }
+  archMerge();
 }
-function archOpen(file){
-  const e=ARCH.find(x=>x.file===file); if(!e) return; hideWelcome();
+function archOpen(key){
+  const e=ARCH.find(x=>x.key===key); if(!e) return; hideWelcome();
   focusRange=null; gZoom=null; reports=reports.filter(r=>!r.tmp);
-  DATA=e.f; DATA._arch=e.file; isDemo=false; $("#fname").textContent=e.file; renderAll();
+  DATA=e.f; DATA._arch=e.key; if(e.source) DATA._src=e.source; isDemo=false; $("#fname").textContent=(e.where==="drv"?"☁ ":"💻 ")+e.file; renderAll();
   const tab=document.querySelector('.tab[data-p="ov"]'); if(tab) tab.click();
 }
 
@@ -2906,14 +2956,23 @@ function cmpColor(i){ return DEFCOLORS[i%DEFCOLORS.length]; }
 
 function renderArchFolder(){
   const el=$("#arFolder"); if(!el) return;
-  if(!ARCH_OK){ el.innerHTML=`<p class="hint">${t("ar_unsupported")}</p>`; return; }
-  if(!archDir){ el.innerHTML=`<p class="hint">${t("ar_nofolder")}</p><button class="btn" data-ar="pick">${t("ar_pick")}</button>`; return; }
-  const name=`${t("ar_folder")}: <b>${escapeHtml(archDir.name)}</b>`;
-  if(archPerm!=="granted"){ el.innerHTML=`<span>${name}</span><button class="btn" data-ar="reconnect">${t("ar_reconnect")}</button><p class="hint">${t("ar_perm")}</p>`; return; }
-  el.innerHTML=`<span>${name} · ${archBusy?t("ar_loading"):ARCH.length+" "+t("pk_n").toLowerCase()}</span><button class="btn ghost" data-ar="pick">${t("ar_change")}</button>`;
+  let pc;
+  if(!ARCH_OK) pc=`<span>💻 ${t("ar_unsupported")}</span>`;
+  else if(!archDir) pc=`<span>💻 ${t("ar_nofolder")}</span><button class="btn" data-ar="pick">${t("ar_pick")}</button>`;
+  else { const name=`💻 ${t("ar_folder")}: <b>${escapeHtml(archDir.name)}</b>`;
+    pc=archPerm!=="granted"?`<span>${name}</span><button class="btn" data-ar="reconnect">${t("ar_reconnect")}</button><p class="hint">${t("ar_perm")}</p>`
+      :`<span>${name} · ${archBusy?t("ar_loading"):ARCH_PC.length+" "+t("wl_flights")}</span><button class="btn ghost" data-ar="pick">${t("ar_change")}</button>`; }
+  const dr=gdOk()?`<span>☁ Google Drive: <b>RZ Dati / voli</b> · ${archDrvBusy?t("ar_loading"):ARCH_DRV.length+" "+t("wl_flights")}</span><button class="btn ghost" data-ar="dreload">${t("drv_refresh")}</button>`
+    :`<span>☁ ${gd.dir?t("drv_exp"):t("ar_drv_not")}</span><button class="btn" data-ar="dconnect">${t("drv_connect")}</button>`;
+  el.innerHTML=`<div class="arrow">${pc}</div><div class="arrow">${dr}</div>`;
 }
 function renderArchSave(){
-  const ready=ARCH_OK&&archDir&&archPerm==="granted";
+  const tp=$("#arToPc"), td=$("#arToDrv");
+  if(!tp.dataset.init){ const g=archTargets(); tp.checked=ARCH_OK&&g.pc; td.checked=g.drv; tp.dataset.init="1"; }
+  tp.disabled=!ARCH_OK; if(!ARCH_OK) tp.checked=false;
+  const pcReady=ARCH_OK&&archDir&&archPerm==="granted";
+  const ready=(tp.checked&&pcReady)||(td.checked&&gdOk());
+  const why=!tp.checked&&!td.checked?t("ar_choose"):(tp.checked&&!pcReady?t("ar_needfolder"):(td.checked&&!gdOk()?t("ar_needdrive"):""));
   const ins=["#arModel","#arNote"].map(s=>$(s)), btn=$("#arSave"), msg=$("#arMsg");
   const uniq=k=>[...new Set(ARCH.map(e=>e[k]).filter(Boolean))].sort();
   { const sb=$("#arScore"); let q=null; if(DATA&&!isDemo){ if(DATA._scoreQ===undefined){ try{ DATA._scoreQ=flightScore(DATA); }catch(e){ DATA._scoreQ=null; } } q=DATA._scoreQ; }
@@ -2922,14 +2981,15 @@ function renderArchSave(){
   if(!DATA||isDemo){ ins.forEach(i=>{i.disabled=true;i.value="";}); btn.disabled=true; btn.textContent=t("ar_save"); msg.textContent=t("ar_demo"); archFormFor=null; return; }
   if(archFormFor!==DATA){   // nuovo volo caricato: precompila i campi
     archFormFor=DATA; archMsg="";
-    if(!DATA._arch){ const d=archFindDup(DATA); if(d) DATA._arch=d.file; }   // log già archiviato: riprende i suoi dati
-    const e=DATA._arch&&ARCH.find(x=>x.file===DATA._arch);
+    if(!DATA._arch){ const d=archFindDup(DATA); if(d) DATA._arch=d.key; }   // log già archiviato: riprende i suoi dati
+    const e=DATA._arch&&ARCH.find(x=>x.key===DATA._arch);
     ins[0].value=e?e.model:(DATA.model&&!/^(SM|RZ) GPS$/.test(DATA.model)?DATA.model:"");
     ins[1].value=e?e.note:"";
   }
   ins.forEach(i=>i.disabled=false);
   btn.disabled=!ready; btn.textContent=DATA._arch?t("ar_update"):t("ar_save");
-  msg.textContent=archMsg||(DATA._arch?`${t("ar_in_arch")} ${DATA._arch}`:(ready?"":t("ar_needfolder")));
+  const inA=DATA._arch&&ARCH.find(x=>x.key===DATA._arch);
+  msg.textContent=archMsg||why||(inA?`${t("ar_in_arch")} ${inA.where==="drv"?"☁":"💻"} ${inA.file}`:"");
 }
 function renderArchFilters(){
   const fill=(sel,key)=>{ const vals=[...new Set(ARCH.map(e=>e[key]).filter(Boolean))].sort();
@@ -2943,19 +3003,19 @@ function renderArchList(){
   { const b=bestFlight(), bb=$("#arBest"); bb.hidden=!b; if(b) bb.innerHTML=`${t("ar_bestbanner")}: <b>${Math.round(b.sum.score)}</b> /100 · ${escapeHtml(archLabel(b))}`; }
   if(archSortScore) L=L.slice().sort((a,b)=>(num(b.sum.score)?b.sum.score:-1)-(num(a.sum.score)?a.sum.score:-1));
   if(!L.length){ el.innerHTML=`<p class="empty">${ARCH.length?"—":t("ar_empty")}</p>`; return; }
-  const rows=L.map(e=>{ const s=e.sum, f=escapeHtml(e.file), sel=archSel.has(e.file);
-    return `<tr class="${sel?"sel":""}${DATA&&DATA._arch===e.file?" cur":""}">
-      <td><input type="checkbox" data-sel="${f}"${sel?" checked":""} aria-label="${escapeHtml(archLabel(e))}"></td>
+  const rows=L.map(e=>{ const s=e.sum, f=escapeHtml(e.key), sel=archSel.has(e.key);
+    return `<tr class="${sel?"sel":""}${DATA&&DATA._arch===e.key?" cur":""}">
+      <td><input type="checkbox" data-sel="${f}"${sel?" checked":""} aria-label="${escapeHtml(archLabel(e))}"></td><td class="where" title="${e.where==="drv"?"Google Drive":"PC"}">${e.where==="drv"?"☁":"💻"}</td>
       <td class="mono txt">${archDate(e)}</td><td class="txt">${escapeHtml(e.model||"—")}</td>
       <td class="mono"><b>${num(s.score)?Math.round(s.score):"—"}</b></td><td class="mono">${hhmmss(s.dur)}</td><td class="mono">${fmt(s.altMax,0)}</td><td class="mono">${s.nClimbs}</td>
       <td class="mono">${fmt(s.rate,1)}</td><td class="mono">${fmt(s.spec,0)}</td><td class="mono">${fmt(s.sink,2)}</td>
       <td class="note" title="${escapeHtml(e.note)}">${escapeHtml(e.note)}</td>
       <td class="act"><button data-open="${f}">${t("ar_open")}</button><button class="del" data-del="${f}" title="${t("ar_del")}" aria-label="${t("ar_del")}">✕</button></td></tr>`; }).join("");
-  el.innerHTML=`<table><thead><tr><th></th><th>${t("m_date")}</th><th>${t("ar_model")}</th><th class="sortidx" data-sortidx style="cursor:pointer" title="↓">${t("ar_index")}${archSortScore?" ▼":""}</th><th>${t("m_dur")}</th>
+  el.innerHTML=`<table><thead><tr><th></th><th title="${t("ar_where")}"></th><th>${t("m_date")}</th><th>${t("ar_model")}</th><th class="sortidx" data-sortidx style="cursor:pointer" title="↓">${t("ar_index")}${archSortScore?" ▼":""}</th><th>${t("m_dur")}</th>
     <th>${t("m_altmax")} m</th><th>${t("m_nclimb")}</th><th>${t("m_rate")} m/s</th><th>mAh/100m</th><th>${t("m_sink")} m/s</th><th>${t("ar_note")}</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 function renderCompare(){
-  const card=$("#cmpCard"), sel=ARCH.filter(e=>archSel.has(e.file));
+  const card=$("#cmpCard"), sel=ARCH.filter(e=>archSel.has(e.key));
   card.hidden=sel.length<2; if(sel.length<2||!archVisible()) return;
   // variabili presenti in tutti i voli selezionati
   const keys=Object.keys(sel[0].f.series).filter(k=>sel.every(e=>e.f.series[k]));
@@ -3045,7 +3105,9 @@ function renderTrend(){
 }
 function renderArchive(){ renderArchFolder(); renderArchSave(); renderArchFilters(); renderArchList(); renderCompare(); renderTrend(); try{ renderWelcome(); }catch(e){} }
 
-$("#arFolder").addEventListener("click",e=>{ const b=e.target.closest("button[data-ar]"); if(!b) return; if(b.dataset.ar==="pick") archPick(); else archReconnect(); });
+$("#arFolder").addEventListener("click",e=>{ const b=e.target.closest("button[data-ar]"); if(!b) return; const a=b.dataset.ar;
+  if(a==="pick") archPick(); else if(a==="reconnect") archReconnect(); else if(a==="dreload"){ archMsg=""; archReloadDrive(); } else if(a==="dconnect"){ gd.after="ar"; gdSave(); gdConnect(); } });
+$("#arToPc").addEventListener("change",()=>{ archMsg=""; renderArchSave(); }); $("#arToDrv").addEventListener("change",()=>{ archMsg=""; renderArchSave(); });
 $("#arSave").addEventListener("click",archSave);
 $("#arList").addEventListener("change",e=>{
   const c=e.target.closest("input[data-sel]"); if(!c) return; const k=c.dataset.sel;
@@ -3508,11 +3570,14 @@ async function gdList(){ const dir=await gdVoli();
   const q="'"+dir+"' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'";
   const r=await gdF("/drive/v3/files?q="+encodeURIComponent(q)+"&fields=files(id,name,size,modifiedTime)&orderBy=modifiedTime%20desc&pageSize=300&spaces=drive");
   return (await r.json()).files||[]; }
-async function gdUpload(file){ const dir=await gdVoli(), old=await gdFind(file.name,dir), type=file.type||"application/octet-stream";
-  if(old){ await gdF("/upload/drive/v3/files/"+old.id+"?uploadType=media",{method:"PATCH",headers:{"Content-Type":type},body:file}); return; }
+/* crea il file nella cartella, oppure (id dato) ne sostituisce il contenuto; ritorna l'id */
+async function gdPutFile(id,name,parent,blob){ const type=blob.type||"application/octet-stream";
+  if(id){ await gdF("/upload/drive/v3/files/"+encodeURIComponent(id)+"?uploadType=media",{method:"PATCH",headers:{"Content-Type":type},body:blob}); return id; }
   const b="rzfd"+Date.now().toString(36);
-  const body=new Blob(["--"+b+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:file.name,parents:[dir]})+"\r\n--"+b+"\r\nContent-Type: "+type+"\r\n\r\n",file,"\r\n--"+b+"--"]);
-  await gdF("/upload/drive/v3/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+b},body}); }
+  const body=new Blob(["--"+b+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name,parents:[parent]})+"\r\n--"+b+"\r\nContent-Type: "+type+"\r\n\r\n",blob,"\r\n--"+b+"--"]);
+  const r=await gdF("/upload/drive/v3/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+b},body});
+  return (await r.json()).id; }
+async function gdUpload(file){ const dir=await gdVoli(), old=await gdFind(file.name,dir); return gdPutFile(old&&old.id,file.name,dir,file); }
 function drvMsg(txt,err){ const e=$("#drvSt"); e.textContent=txt; e.classList.toggle("err",!!err); }
 function drvButtons(){ const on=gdOk();
   $("#drvConnect").hidden=on; $("#drvRefresh").hidden=!on; $("#drvOff").hidden=!(on||gd.dir);
@@ -3520,7 +3585,7 @@ function drvButtons(){ const on=gdOk();
 async function drvRefresh(){ drvButtons(); const L=$("#drvList"); L.innerHTML="";
   if(!gdOk()){ drvMsg(gd.err==="auth"?t("drv_noauth"):gd.dir?t("drv_exp"):t("drv_not"),gd.err==="auth"); return; }
   drvMsg(t("drv_loading"));
-  try{ const fl=await gdList();
+  try{ const fl=(await gdList()).filter(f=>!/\.rzf\.json$/i.test(f.name));
     if(!fl.length){ drvMsg(t("drv_empty")); return; }
     drvMsg(fl.length+" "+t("drv_count"));
     L.innerHTML=fl.map(f=>{ const d=f.modifiedTime?new Date(f.modifiedTime):null, kb=f.size?Math.max(1,Math.round(f.size/1024))+" kB":"";
@@ -3528,10 +3593,17 @@ async function drvRefresh(){ drvButtons(); const L=$("#drvList"); L.innerHTML=""
   }catch(e){ drvFail(e); } }
 function drvFail(e){ if(e.message==="auth"){ drvButtons(); drvMsg(t("drv_exp"),true); } else drvMsg(t("drv_err")+" "+e.message,true); }
 function drvOpen(){ $("#drvOverlay").classList.add("open"); drvRefresh(); }
-$("#drvBtn").addEventListener("click",drvOpen);
+const lm=$("#loadMenu");
+const lmClose=()=>{ lm.classList.remove("open"); $("#loadBtn").setAttribute("aria-expanded","false"); };
+$("#loadBtn").addEventListener("click",e=>{ e.stopPropagation(); const o=lm.classList.toggle("open"); $("#loadBtn").setAttribute("aria-expanded",String(o)); });
+document.addEventListener("click",e=>{ if(!lm.contains(e.target)) lmClose(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") lmClose(); });
+$("#miLocal").addEventListener("click",()=>setTimeout(lmClose,0));
+$("#miDrive").addEventListener("click",()=>{ lmClose(); drvOpen(); });
+$("#miDemo").addEventListener("click",()=>{ lmClose(); hideWelcome(); $("#demoBtn").click(); });
 $("#drvClose").addEventListener("click",()=>$("#drvOverlay").classList.remove("open"));
 $("#drvOverlay").addEventListener("click",e=>{ if(e.target.id==="drvOverlay") e.target.classList.remove("open"); });
-$("#drvConnect").addEventListener("click",gdConnect);
+$("#drvConnect").addEventListener("click",()=>{ delete gd.after; gdConnect(); });
 $("#drvRefresh").addEventListener("click",drvRefresh);
 $("#drvOff").addEventListener("click",()=>{ gd={}; gdSave(); drvRefresh(); });
 $("#drvUp").addEventListener("click",async()=>{ if(!lastFiles.length) return;
@@ -3546,7 +3618,8 @@ $("#drvList").addEventListener("click",async e=>{ const b=e.target.closest(".drv
     if(cur && cur._kind!==f._kind && confirm(t("mg_ask"))){ if(tryMerge(cur,f,cur._src+" + "+f._src)) return; }
     showFrame(f,f._src);
   }catch(err){ drvFail(err); } });
-if(gdBack) setTimeout(drvOpen,300);                     // di ritorno da Google: riapre la finestra con l'elenco
+if(gdBack){ const a=gd.after; delete gd.after; gdSave();   // di ritorno da Google: riapre la finestra da cui si era partiti
+  setTimeout(()=>{ if(a==="ar") goArchive(); else drvOpen(); },300); }
 
 $("#addBtn").addEventListener("click",()=>{
   const x=$("#xSel").value;
@@ -3639,7 +3712,7 @@ $("#logo").addEventListener("click",()=>$("#logoFile").click());
 $("#logoFile").addEventListener("change",e=>{ const f=e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{ logoData=String(rd.result); try{localStorage.setItem("fd_logo",logoData);}catch(err){} renderLogo(); }; rd.readAsDataURL(f); });
 
 /* gancio per i test automatici (non usato dall'app): aggiunge un volo all'elenco dell'archivio senza cartella */
-window.__rz={ addFlight(text,name,model){ const f=parseAnyText(text,name); if(!f) return false; ARCH.push(archEntry(name+".rzf.json",{model},f)); renderArchive(); return true; } };
+window.__rz={ addFlight(text,name,model){ const f=parseAnyText(text,name); if(!f) return false; ARCH_PC.push(archEntry(name+".rzf.json",{model},f)); archMerge(); return true; } };
 
 /* boot */
 (function(){ const nj=document.getElementById("nojs"); if(nj) nj.remove(); })();   // JS is running → hide the fallback notice

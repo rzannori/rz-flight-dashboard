@@ -144,6 +144,8 @@ console.log("Google Drive (Drive finto)");
     if (m === "GET" && r) { const f = files[r[1]]; return ful({ status: 200, contentType: "application/octet-stream", body: f.data }); }
     r = /^\/upload\/drive\/v3\/files\/([^/]+)$/.exec(u.pathname);
     if (m === "PATCH" && r) { files[r[1]].data = req.postDataBuffer(); return json({ id: r[1] }); }
+    r = /^\/drive\/v3\/files\/([^/]+)$/.exec(u.pathname);
+    if (m === "PATCH" && r) { const bd = JSON.parse(req.postData() || "{}"); if (bd.trashed) files[r[1]].parents = []; return json({ id: r[1] }); }
     if (m === "POST" && u.pathname === "/upload/drive/v3/files") {
       const buf = req.postDataBuffer(), bd = /boundary=(\S+)/.exec(req.headers()["content-type"])[1], st = buf.toString("latin1");
       const p1 = st.indexOf("\r\n\r\n") + 4, e1 = st.indexOf("\r\n--" + bd, p1), meta = JSON.parse(st.slice(p1, e1));
@@ -157,7 +159,7 @@ console.log("Google Drive (Drive finto)");
   await p3.route("https://www.googleapis.com/**", handler);
   await p3.route("https://accounts.google.com/**", r => r.fulfill({ status: 200, contentType: "text/html", body: "google" }));
   await p3.goto(url); await p3.waitForTimeout(400);
-  await p3.click("#drvBtn"); await p3.waitForTimeout(200);
+  await p3.click("#loadBtn"); await p3.click("#miDrive"); await p3.waitForTimeout(200);
   ok(!(await p3.locator("#drvConnect").isHidden()) && /Non collegato/.test(await p3.textContent("#drvSt")), "Drive: non collegato, bottone Collega visibile");
   const [rq] = await Promise.all([p3.waitForRequest(/accounts\.google\.com/), p3.click("#drvConnect")]);
   const au = new URL(rq.url());
@@ -168,12 +170,24 @@ console.log("Google Drive (Drive finto)");
   await p3.click(".drvrow"); await p3.waitForTimeout(1500);
   ok(/volo-nmea\.nmea/.test(await p3.textContent("#fname")) && (await p3.locator("#drvOverlay.open").count()) === 0, "Drive: un tocco apre il log");
   await p3.setInputFiles("#file", E("volo-completo-test.log")); await p3.waitForTimeout(1500);
-  await p3.click("#drvBtn"); await p3.waitForTimeout(600);
+  await p3.click("#loadBtn"); await p3.click("#miDrive"); await p3.waitForTimeout(600);
   ok(/volo-completo-test\.log/.test(await p3.textContent("#drvUp")), "Drive: proposto il salvataggio del file aperto");
   await p3.click("#drvUp"); await p3.waitForTimeout(1500);
   const up = Object.values(files).find(f => f.name === "volo-completo-test.log");
   ok(!!up && up.data.equals(fs.readFileSync(E("volo-completo-test.log"))), "Drive: log caricato identico all'originale");
   ok((await p3.locator(".drvrow").count()) === 2, "Drive: elenco aggiornato dopo il salvataggio");
+  // archivio sul Drive: salva (solo Drive), ricarica, elimina
+  await p3.click("#drvClose"); await p3.click('.tab[data-p="ar"]'); await p3.waitForTimeout(500);
+  if (await p3.isChecked("#arToPc")) await p3.uncheck("#arToPc");
+  await p3.check("#arToDrv"); await p3.fill("#arModel", "Prova Drive"); await p3.click("#arSave"); await p3.waitForTimeout(1500);
+  const rzf = Object.values(files).filter(f => f.name.endsWith(".rzf.json") && f.parents.length);
+  ok(rzf.length === 1 && JSON.parse(rzf[0].data.toString("utf8")).model === "Prova Drive", "Archivio: volo salvato sul Drive (.rzf.json con il modello)");
+  ok((await p3.locator("#arList td.where").count()) === 1 && /☁/.test(await p3.textContent("#arList")), "Archivio: il volo compare con il segno ☁");
+  await p3.reload(); await p3.waitForTimeout(800); await p3.click('.tab[data-p="ar"]'); await p3.waitForTimeout(1500);
+  ok(/Prova Drive/.test(await p3.textContent("#arList")) && /RZ Dati \/ voli · 1/.test(await p3.textContent("#arFolder")), "Archivio: dopo il riavvio i voli del Drive si rileggono da soli");
+  p3.removeAllListeners("dialog"); p3.on("dialog", d => d.accept());
+  await p3.click("#arList button[data-del]"); await p3.waitForTimeout(1000);
+  ok(rzf[0].parents.length === 0 && (await p3.locator("#arList td.where").count()) === 0, "Archivio: Elimina sposta il volo nel cestino del Drive");
   ok(((await p3.evaluate(() => window.__v || [])).length === 0) && e3.length === 0, "Drive: nessun errore né violazione CSP" + (e3.length ? ": " + e3.join("|") : ""));
   await c3.close(); }
 
