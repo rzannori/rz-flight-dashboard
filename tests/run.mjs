@@ -24,9 +24,11 @@ const errs = []; p.on("pageerror", e => errs.push(e.message)); p.on("dialog", d 
 const fresh = async () => { await p.goto(url); await p.waitForTimeout(400); };
 const load = async files => { await p.setInputFiles("#file", files); await p.waitForTimeout(1500); };
 const text = async sel => (await p.textContent(sel)).replace(/\s+/g, " ");
+await p.addInitScript(() => localStorage.setItem("fd_welcome", "0"));
 await p.addInitScript(() => document.addEventListener("securitypolicyviolation", e => (window.__v = window.__v || []).push(e.violatedDirective + " | " + e.blockedURI)));
 await p.goto(url); await p.waitForTimeout(400);
 
+const jeti = fs.readFileSync(E("volo-completo-test.log"), "latin1");
 console.log("NMEA (SM GPS)");
 await load(E("volo-completo-test.nmea"));
 await p.click("text=Polare"); await p.waitForTimeout(500);
@@ -94,11 +96,33 @@ ok((await p.evaluate(() => window.__pwn || 0)) === 0, "importazione: nome di rep
 fs.unlinkSync(tmp);
 
 console.log("Archivio (senza cartella)");
-const jeti = fs.readFileSync(E("volo-completo-test.log"), "latin1");
+
 await p.evaluate(t => { window.__rz.addFlight(t, "2026-10-01_a.log", "Prova"); window.__rz.addFlight(t, "2026-10-02_b.log", "Prova"); }, jeti);
 await p.click('.tab[data-p="ar"]'); await p.waitForTimeout(500);
 ok(/(Miglior volo registrato|Best recorded flight): \d+/.test(await text("#arBest")), "miglior volo registrato mostrato");
 ok(!(await p.locator("#tdCard").isHidden()), "grafico andamento visibile con 2 voli");
+
+console.log("Welcome page");
+{ const p2 = await b.newPage({ viewport: { width: 1400, height: 900 } }); const e2 = [];
+  p2.on("pageerror", e => e2.push(e.message)); p2.on("dialog", d => d.accept());
+  await p2.addInitScript(() => document.addEventListener("securitypolicyviolation", e => (window.__v = window.__v || []).push(e.violatedDirective + " | " + e.blockedURI)));
+  await p2.goto(url); await p2.waitForTimeout(500);
+  ok(!(await p2.locator("#welcome").isHidden()) && (await p2.locator(".wl-card").count()) === 3, "all'avvio compare la welcome page con 3 schede");
+  ok(/v\d+\.\d+/.test(await p2.textContent("#wlVer")), "versione mostrata nella welcome");
+  await p2.evaluate(t => { window.__rz.addFlight(t, "2026-10-01_a.log", "ARCUS"); window.__rz.addFlight(t, "2026-10-02_b.log", "ARCUS"); window.__rz.addFlight(t, "2026-10-03_c.log", "PRECISION 2"); }, jeti);
+  await p2.waitForTimeout(300);
+  ok((await p2.locator("#wlChips .wl-chip").count()) === 2 && !(await p2.locator("#wlLast").isHidden()), "modelli e \"Riprendi\" dall'archivio");
+  await p2.click("#wlChips .wl-chip"); await p2.waitForTimeout(400);
+  ok((await p2.locator("#welcome").isHidden()) && (await p2.inputValue("#arFModel")) === "ARCUS", "chip del modello: apre l'archivio filtrato");
+  await p2.evaluate(() => document.querySelector(".apptitle").click()); await p2.waitForTimeout(200);
+  ok(!(await p2.locator("#welcome").isHidden()), "il titolo riporta alla welcome");
+  await p2.click("#wlDemo"); await p2.waitForTimeout(300);
+  ok(await p2.locator("#welcome").isHidden(), "\"Prova con la demo\" entra nell'app");
+  await p2.evaluate(() => document.querySelector(".apptitle").click()); await p2.click("#wlSetup"); await p2.waitForTimeout(300);
+  await p2.uncheck("#wlShow"); await p2.reload(); await p2.waitForTimeout(500);
+  ok(await p2.locator("#welcome").isHidden(), "impostazione: welcome disattivabile all'avvio");
+  ok(((await p2.evaluate(() => window.__v || [])).length === 0) && e2.length === 0, "welcome: nessun errore né violazione CSP" + (e2.length ? ": " + e2.join("|") : ""));
+  await p2.close(); }
 
 const viol = await p.evaluate(() => window.__v || []);
 ok(viol.length === 0, "nessuna violazione della CSP nell'uso normale" + (viol.length ? ": " + viol.join(" | ") : ""));
