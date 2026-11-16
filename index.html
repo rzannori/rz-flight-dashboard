@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-k0gQLgyVYWH6Aoh2d8dKpuWArTa4xQF12QUdj3JA7fo='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vRRY3BrtuIpSoXNh41qZm6g0wN+c0XGjx++ypqVBgZE='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -104,6 +104,16 @@
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;
     padding:max(16px,env(safe-area-inset-left,0px));z-index:50}
   .overlay.open{display:flex}
+  .drvcard{max-width:640px}
+  .drvbtns{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+  .drvbtns button[hidden]{display:none}
+  .drvst{color:var(--muted)}
+  .drvst.err{color:#ef4444}
+  .drvlist{display:flex;flex-direction:column;gap:4px}
+  .drvrow{display:flex;justify-content:space-between;gap:10px;align-items:center;text-align:left;width:100%;padding:9px 10px;border:1px solid var(--line);
+    border-radius:8px;background:var(--surface);color:var(--fg);cursor:pointer;font:inherit}
+  .drvrow:hover{border-color:var(--accent)}
+  .drvrow small{color:var(--muted);white-space:nowrap}
   .helpcard{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;max-width:560px;width:100%;
     max-height:82vh;overflow:auto;padding:22px 22px 20px}
   .helpclose{position:absolute;top:10px;right:12px;border:none;background:none;color:var(--muted);font-size:1.5rem;line-height:1;cursor:pointer}
@@ -529,7 +539,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle">Flight Dashboard <span class="ver">v1.44</span></div>
+      <div class="apptitle">Flight Dashboard <span class="ver">v1.45</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -547,6 +557,7 @@
       </div>
       <div class="actions">
         <label class="filebtn" id="loadBtn" tabindex="0" data-i18n-title="load_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 15V3m0 0L8 7m4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span data-i18n="load_btn">Carica</span><input type="file" id="file" multiple></label>
+      <button class="filebtn drvbtn" id="drvBtn" type="button" data-i18n-title="drv_title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 8.5a4 4 0 0 1-.5 9.5H7z"/></svg><span>Drive</span></button>
       <button class="filebtn demobtn" id="demoBtn" type="button" data-i18n-title="demo_title"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg><span data-i18n="demo">Demo</span></button>
       <button class="setupbtn" id="setupBtn" title="Set up">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.2A1.6 1.6 0 0 0 6.6 19.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 13.6H3a2 2 0 1 1 0-4h.2A1.6 1.6 0 0 0 4.7 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 3V3a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1z"/></svg>
@@ -878,6 +889,20 @@
   </section>
 
   <!-- HELP overlay -->
+  <div class="overlay" id="drvOverlay">
+    <div class="helpcard drvcard">
+      <button class="helpclose" id="drvClose" aria-label="×">×</button>
+      <h3>Google Drive · RZ Dati / voli</h3>
+      <p class="drvst" id="drvSt"></p>
+      <div class="drvbtns">
+        <button class="filebtn" id="drvConnect" type="button" data-i18n="drv_connect">Collega Google Drive</button>
+        <button class="filebtn" id="drvUp" type="button"></button>
+        <button class="setupbtn" id="drvRefresh" type="button" data-i18n="drv_refresh">Aggiorna</button>
+        <button class="setupbtn" id="drvOff" type="button" data-i18n="drv_off">Scollega</button>
+      </div>
+      <div id="drvList" class="drvlist"></div>
+    </div>
+  </div>
   <div class="overlay" id="helpOverlay">
     <div class="helpcard">
       <button class="helpclose" id="helpClose" aria-label="×">×</button>
@@ -1070,7 +1095,20 @@ const T_TR={
 const T_UI={
   load_btn:["Carica","Load","Charger"],
   mi_jeti:["log .log o CSV","raw .log or CSV","log .log ou CSV"], mi_sm:["GPS · .nmea","GPS · .nmea","GPS · .nmea"],
-  mi_demo:["dati di esempio","sample data","données d'exemple"]
+  mi_demo:["dati di esempio","sample data","données d'exemple"],
+  drv_title:["Apri o salva i log nella cartella «RZ Dati / voli» di Google Drive","Open or save logs in the «RZ Dati / voli» folder of Google Drive","Ouvrir ou enregistrer les logs dans le dossier « RZ Dati / voli » de Google Drive"],
+  drv_connect:["Collega Google Drive","Connect Google Drive","Connecter Google Drive"],
+  drv_refresh:["Aggiorna","Refresh","Actualiser"], drv_off:["Scollega","Disconnect","Déconnecter"],
+  drv_not:["Non collegato. Tocca «Collega Google Drive» e scegli l'account del modellismo (la prima volta: Avanzate → Vai a RZ Apps → Consenti).","Not connected. Tap «Connect Google Drive» and choose the RC account (the first time: Advanced → Go to RZ Apps → Allow).","Non connecté. Touchez « Connecter Google Drive » et choisissez le compte du modélisme (la première fois : Paramètres avancés → Accéder à RZ Apps → Autoriser)."],
+  drv_exp:["Il collegamento è scaduto (dura circa un'ora): tocca «Collega Google Drive».","The connection has expired (it lasts about one hour): tap «Connect Google Drive».","La connexion a expiré (environ une heure) : touchez « Connecter Google Drive »."],
+  drv_loading:["Lettura del Drive…","Reading the Drive…","Lecture du Drive…"],
+  drv_empty:["La cartella «RZ Dati / voli» è vuota: salva qui un log con il bottone qui sopra, oppure trascinalo nella cartella da drive.google.com.","The «RZ Dati / voli» folder is empty: save a log here with the button above, or drag it into the folder from drive.google.com.","Le dossier « RZ Dati / voli » est vide : enregistrez un log avec le bouton ci-dessus ou glissez-le dans le dossier depuis drive.google.com."],
+  drv_count:["log nella cartella: tocca un nome per aprirlo.","logs in the folder: tap a name to open it.","logs dans le dossier : touchez un nom pour l'ouvrir."],
+  drv_open:["Apertura di","Opening","Ouverture de"],
+  drv_up:["⤴ Salva sul Drive:","⤴ Save to Drive:","⤴ Enregistrer sur le Drive :"],
+  drv_saved:["Salvato sul Drive:","Saved to Drive:","Enregistré sur le Drive :"],
+  drv_err:["Errore con Google Drive:","Google Drive error:","Erreur Google Drive :"],
+  drv_noauth:["Accesso a Google non riuscito.","Google sign-in failed.","Échec de la connexion à Google."]
 };
 const T_GR={
   gr_vars:["Variabili","Variables","Variables"], gr_search:["Cerca variabile…","Search variable…","Rechercher une variable…"],
@@ -3432,6 +3470,83 @@ $("#file").addEventListener("change",e=>{
     showFrame(f,f._src);
   });
 });
+
+/* ---------- Google Drive: log nella cartella «RZ Dati / voli» (stesso progetto Google «RZ Dati» di RZ Ballast Archive) ----------
+   OAuth senza librerie (la CSP non le ammette): redirect a Google, il token torna in #access_token e dura circa un'ora.
+   Origine autorizzata https://rzannori.github.io; redirect https://rzannori.github.io/rz-flight-dashboard/ */
+const GD={cid:"903204161294-4qaf9ckt8vn7c2prp5a25idkfl02ut9c.apps.googleusercontent.com",scope:"https://www.googleapis.com/auth/drive",
+  api:"https://www.googleapis.com",dir:"RZ Dati",sub:"voli"};
+let gd={}; try{ gd=JSON.parse(localStorage.getItem("fd_drive")||"{}")||{}; }catch(e){ gd={}; }
+const gdSave=()=>{ try{ localStorage.setItem("fd_drive",JSON.stringify(gd)); }catch(e){} };
+const gdOk=()=>!!gd.tok&&gd.exp>Date.now()+60000;
+let lastFiles=[];                                       // file aperti dal computer / telefono (per «Salva sul Drive»)
+$("#file").addEventListener("change",e=>{ const fs=[...e.target.files].slice(0,2); if(fs.length) lastFiles=fs; },true);
+function gdConnect(){ gd.state=Math.random().toString(36).slice(2)+Date.now().toString(36); gdSave();
+  location.href="https://accounts.google.com/o/oauth2/v2/auth?"+new URLSearchParams({client_id:GD.cid,redirect_uri:location.origin+location.pathname.replace(/index\.html$/,""),
+    response_type:"token",scope:GD.scope,include_granted_scopes:"true",state:gd.state}).toString(); }
+let gdBack=false;
+(()=>{ const h=location.hash; if(!/(^|[#&])(access_token|error)=/.test(h)) return;
+  const q=new URLSearchParams(h.slice(1)); history.replaceState(null,"",location.pathname+location.search);
+  const ok=gd.state&&q.get("state")===gd.state; delete gd.state;
+  if(ok&&q.get("access_token")){ gd.tok=q.get("access_token"); gd.exp=Date.now()+(+q.get("expires_in")||3600)*1000; gd.err=null; gdBack=true; }
+  else gd.err="auth";
+  gdSave(); })();
+async function gdF(u,opt){ opt=opt||{};
+  const r=await fetch(GD.api+u,Object.assign({},opt,{headers:Object.assign({Authorization:"Bearer "+gd.tok},opt.headers||{})}));
+  if(r.status===401){ gd.tok=null; gdSave(); throw new Error("auth"); }
+  if(!r.ok) throw new Error("HTTP "+r.status); return r; }
+const gdQ=x=>x.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+async function gdFind(name,parent,folder){
+  const q="name='"+gdQ(name)+"' and '"+parent+"' in parents and trashed=false"+(folder?" and mimeType='application/vnd.google-apps.folder'":"");
+  const r=await gdF("/drive/v3/files?q="+encodeURIComponent(q)+"&fields=files(id,name)&spaces=drive&pageSize=10&orderBy=createdTime");
+  return ((await r.json()).files||[])[0]||null; }
+async function gdFolder(name,parent){ const f=await gdFind(name,parent,true); if(f) return f.id;
+  const r=await gdF("/drive/v3/files?fields=id",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,mimeType:"application/vnd.google-apps.folder",parents:[parent]})});
+  return (await r.json()).id; }
+async function gdVoli(){ if(!gd.dir) gd.dir=await gdFolder(GD.dir,"root"); if(!gd.voli) gd.voli=await gdFolder(GD.sub,gd.dir); gdSave(); return gd.voli; }
+async function gdList(){ const dir=await gdVoli();
+  const q="'"+dir+"' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'";
+  const r=await gdF("/drive/v3/files?q="+encodeURIComponent(q)+"&fields=files(id,name,size,modifiedTime)&orderBy=modifiedTime%20desc&pageSize=300&spaces=drive");
+  return (await r.json()).files||[]; }
+async function gdUpload(file){ const dir=await gdVoli(), old=await gdFind(file.name,dir), type=file.type||"application/octet-stream";
+  if(old){ await gdF("/upload/drive/v3/files/"+old.id+"?uploadType=media",{method:"PATCH",headers:{"Content-Type":type},body:file}); return; }
+  const b="rzfd"+Date.now().toString(36);
+  const body=new Blob(["--"+b+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify({name:file.name,parents:[dir]})+"\r\n--"+b+"\r\nContent-Type: "+type+"\r\n\r\n",file,"\r\n--"+b+"--"]);
+  await gdF("/upload/drive/v3/files?uploadType=multipart&fields=id",{method:"POST",headers:{"Content-Type":"multipart/related; boundary="+b},body}); }
+function drvMsg(txt,err){ const e=$("#drvSt"); e.textContent=txt; e.classList.toggle("err",!!err); }
+function drvButtons(){ const on=gdOk();
+  $("#drvConnect").hidden=on; $("#drvRefresh").hidden=!on; $("#drvOff").hidden=!(on||gd.dir);
+  const up=$("#drvUp"); up.hidden=!(on&&lastFiles.length); if(lastFiles.length) up.textContent=t("drv_up")+" "+lastFiles.map(f=>f.name).join(", "); }
+async function drvRefresh(){ drvButtons(); const L=$("#drvList"); L.innerHTML="";
+  if(!gdOk()){ drvMsg(gd.err==="auth"?t("drv_noauth"):gd.dir?t("drv_exp"):t("drv_not"),gd.err==="auth"); return; }
+  drvMsg(t("drv_loading"));
+  try{ const fl=await gdList();
+    if(!fl.length){ drvMsg(t("drv_empty")); return; }
+    drvMsg(fl.length+" "+t("drv_count"));
+    L.innerHTML=fl.map(f=>{ const d=f.modifiedTime?new Date(f.modifiedTime):null, kb=f.size?Math.max(1,Math.round(f.size/1024))+" kB":"";
+      return '<button type="button" class="drvrow" data-id="'+escapeHtml(f.id)+'" data-name="'+escapeHtml(f.name)+'"><span>'+escapeHtml(f.name)+'</span><small>'+(d?d.toLocaleDateString(lang)+" "+d.toLocaleTimeString(lang,{hour:"2-digit",minute:"2-digit"}):"")+" · "+kb+'</small></button>'; }).join("");
+  }catch(e){ drvFail(e); } }
+function drvFail(e){ if(e.message==="auth"){ drvButtons(); drvMsg(t("drv_exp"),true); } else drvMsg(t("drv_err")+" "+e.message,true); }
+function drvOpen(){ $("#drvOverlay").classList.add("open"); drvRefresh(); }
+$("#drvBtn").addEventListener("click",drvOpen);
+$("#drvClose").addEventListener("click",()=>$("#drvOverlay").classList.remove("open"));
+$("#drvOverlay").addEventListener("click",e=>{ if(e.target.id==="drvOverlay") e.target.classList.remove("open"); });
+$("#drvConnect").addEventListener("click",gdConnect);
+$("#drvRefresh").addEventListener("click",drvRefresh);
+$("#drvOff").addEventListener("click",()=>{ gd={}; gdSave(); drvRefresh(); });
+$("#drvUp").addEventListener("click",async()=>{ if(!lastFiles.length) return;
+  try{ for(const f of lastFiles) await gdUpload(f); drvMsg(t("drv_saved")+" "+lastFiles.map(f=>f.name).join(", ")); setTimeout(drvRefresh,800); }catch(e){ drvFail(e); } });
+$("#drvList").addEventListener("click",async e=>{ const b=e.target.closest(".drvrow"); if(!b) return;
+  drvMsg(t("drv_open")+" "+b.dataset.name+"…");
+  try{ const buf=await (await gdF("/drive/v3/files/"+encodeURIComponent(b.dataset.id)+"?alt=media")).arrayBuffer();
+    const f=parseAnyText(new TextDecoder("iso-8859-1").decode(buf),b.dataset.name);
+    if(!f){ drvMsg(t("file_err"),true); return; }
+    lastFiles=[]; $("#drvOverlay").classList.remove("open");
+    const cur=DATA&&!isDemo&&DATA._kind&&DATA._kind!=="merged"?DATA:null;
+    if(cur && cur._kind!==f._kind && confirm(t("mg_ask"))){ if(tryMerge(cur,f,cur._src+" + "+f._src)) return; }
+    showFrame(f,f._src);
+  }catch(err){ drvFail(err); } });
+if(gdBack) setTimeout(drvOpen,300);                     // di ritorno da Google: riapre la finestra con l'elenco
 
 $("#addBtn").addEventListener("click",()=>{
   const x=$("#xSel").value;

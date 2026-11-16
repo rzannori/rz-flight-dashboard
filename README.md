@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build per usarla: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.44**
+- Versione corrente: **v1.45**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -232,6 +232,12 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
   series:{ "<canale>":{ unit, vals:[...] } } }                                       // solo canali registrati, null = nessun dato
 ```
 Derivate e salite **non** si salvano: si ricalcolano all'apertura, così i miglioramenti agli algoritmi valgono anche per i voli vecchi.
+
+**Google Drive (bottone «Drive» in alto, dalla v1.45)**
+- Apre la cartella **«RZ Dati / voli»** del Google Drive dedicato al modellismo (la stessa cartella «RZ Dati» di RZ Ballast Archive): elenco dei log (più recenti in alto), **un tocco apre il log** (stessi formati di «Carica»; se c'è già un volo del tipo complementare propone l'unione Jeti + GPS).
+- **⤴ Salva sul Drive**: carica nella cartella i file appena aperti con «Carica» (byte per byte, stesso nome; se esiste già lo sostituisce). Così un log aperto dal PC si ritrova sul telefono e viceversa.
+- Accesso OAuth 2.0 «implicit» **senza librerie** (la CSP non ammette script esterni): redirect a Google, il token torna in `#access_token`, dura circa un'ora, salvato in `localStorage` `fd_drive`. Progetto Google Cloud «RZ Dati» (modalità Test: possono collegarsi solo gli **utenti di test**); origine autorizzata `https://rzannori.github.io`, redirect `https://rzannori.github.io/rz-flight-dashboard/`. La CSP ammette solo `https://www.googleapis.com` in `connect-src`. Da `localhost` il collegamento vero non funziona (redirect non autorizzato): i test usano un Drive finto.
+- Funzioni: `gdConnect`, `gdList`, `gdUpload`, `drvOpen`, `drvRefresh`.
 
 **Set up (`re`)**
 - **Costruttore report**: X (Tempo o variabile), Y (una o più), tipo (linea/area/dispersione), **colore per curva**, nome. Salvati in `localStorage`. La lista parte vuota.

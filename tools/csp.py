@@ -15,7 +15,7 @@ csp = ("default-src 'none'; "
        f"script-src '{h}'; "
        "style-src 'unsafe-inline'; "
        "img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; "
-       "connect-src 'self'; manifest-src 'self'; worker-src 'self'; "
+       "connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; "
        "base-uri 'none'; form-action 'none'; object-src 'none'")
 tag = f'<meta http-equiv="Content-Security-Policy" content="{csp}">'
 if re.search(r'<meta http-equiv="Content-Security-Policy"[^>]*>', s):
