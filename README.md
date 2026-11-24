@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build per usarla: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.47**
+- Versione corrente: **v1.48**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -333,6 +333,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.48** — Pagina di benvenuto: tolta la sagoma dell'aliante; al suo posto il grande **quadrante esagonale** (strumento di bordo) sul cielo al tramonto, ridimensionato in base alla finestra (PC, tablet, telefono).
 - **v1.47** — **Grafica «strumento di bordo»**: pulsanti in metallo con spia luminosa (verde sull'azione principale) che si abbassano al clic, schede incassate con scritta verde luminosa per quella attiva, quadrante esagonale con orizzonte artificiale come marchio accanto al titolo e nella welcome. **Logo RZ in 3D** (cromo blu con spessore e ombra, WebP ~22 KB; un logo caricato dall'utente resta com'è). **Nuove icone** dell'app, di iPhone/iPad e favicon con il quadrante. Animazioni disattivate con "riduci movimento".
 - **v1.46** — un solo bottone **Apri** (computer / Google Drive / demo), archivio su PC e/o Drive, testi italiani rivisti.
 - **v1.45** — bottone **Google Drive**: log nella cartella `RZ Dati/voli` di Drive (apri e salva).
