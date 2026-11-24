@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build per usarla: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.45**
+- Versione corrente: **v1.47**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -29,13 +29,12 @@ Interfaccia **trilingue IT / EN / FR**, tema scuro antracite con colori personal
 ## 2. Come si usa (utente finale)
 
 1. Salva il file `.html` e aprilo con doppio clic (funziona offline).
-2. In alto a destra il pulsante **Carica ▾** apre un menu con:
-   - **Jeti Log** → log Jeti grezzo `.log` o CSV esportato;
-   - **SM Modellbau** → file GPS `.nmea`;
-   - **RZ GPS** → *placeholder, non ancora implementato*;
-   - **Demo** → carica dati fittizi + 2 grafici d'esempio.
+2. In alto a destra il pulsante **Apri ▾** (dalla v1.46) apre un menu con:
+   - **Dal computer / telefono** → log Jeti (`.log` grezzo o CSV esportato), file NMEA dell'SM GPS, CSV del GPS RZ (il formato si riconosce da solo);
+   - **Da Google Drive** → elenco dei log nella cartella «RZ Dati / voli» del Drive dedicato;
+   - **Demo** → dati fittizi + 2 grafici d'esempio.
 
-   Il menu si chiude con Esc, con un clic fuori o dopo la scelta; è navigabile da tastiera (↓ ↑ Invio). Accanto c'è **Set up** (ingranaggio).
+   Il menu si chiude con Esc, con un clic fuori o dopo la scelta. Accanto c'è **Set up** (ingranaggio). La pagina di benvenuto ha le stesse tre scelte nella scheda «Apri un volo».
 3. Schede: **Panoramica · Analisi volo · Grafico · Tabella · Polare · Traiettoria · Archivio**, più **Set up** (ingranaggio) e guida **?**.
 4. Lingua con le bandierine 🇮🇹 🇬🇧 🇫🇷; logo cliccabile in alto a sinistra.
 
@@ -209,7 +208,7 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 - Limiti: la velocità GPS è **al suolo** (con vento forte i punti si disperdono); la polare è più fedele con planate a velocità
   costante e diverse tra loro, in aria calma. Punti anomali oltre `1,5×` il sink massimo delle fasce non vengono disegnati.
 
-**Archivio (`ar`)** — solo Chrome/Edge su PC (File System Access API)
+**Archivio (`ar`)** — cartella sul PC (solo Chrome/Edge, File System Access API) e/o Google Drive (vedi sopra)
 - **Cartella**: scelta con `showDirectoryPicker`; l'handle è salvato in IndexedDB (`rzfd` → `kv` → `archDir`) e
   all'avvio si verifica il permesso (`queryPermission`); se serve, pulsante **Riconnetti cartella** (`requestPermission`).
   Consigliato metterla dentro Google Drive per desktop → backup automatico.
@@ -232,6 +231,11 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
   series:{ "<canale>":{ unit, vals:[...] } } }                                       // solo canali registrati, null = nessun dato
 ```
 Derivate e salite **non** si salvano: si ricalcolano all'apertura, così i miglioramenti agli algoritmi valgono anche per i voli vecchi.
+
+**Google Drive (dalla v1.45; dalla v1.46 dentro «Apri» e nell'Archivio)**
+- **Apri → Da Google Drive**: elenco dei log della cartella **«RZ Dati / voli»** (più recenti in alto, esclusi i voli archiviati `.rzf.json`), un clic apre il log (se c'è già un volo del tipo complementare propone l'unione Jeti + GPS). **⤴ Salva sul Drive il log aperto** carica nella cartella i file appena aperti dal computer (byte per byte, stesso nome; se esiste lo sostituisce).
+- **Archivio**: i voli si salvano **sul PC** (cartella, solo Chrome/Edge su computer), **sul Drive** (`RZ Dati/voli/*.rzf.json`) o in tutti e due (caselle «Dove», ricordate in `localStorage` `fd_artgt`). L'elenco mostra i voli dei due posti con 💻 / ☁; «Elimina» sul Drive sposta il file nel cestino. Strutture: `ARCH_PC`, `ARCH_DRV`, `ARCH` (unione), chiave `where:file`; funzioni `archReloadDrive`, `archSave`, `archDelete`, `gdPutFile`.
+- Accesso OAuth 2.0 «implicit» **senza librerie** (la CSP non ammette script esterni): redirect a Google, il token torna in `#access_token`, dura circa un'ora, salvato in `localStorage` `fd_drive`. Progetto Google Cloud «RZ Dati» (modalità Test: possono collegarsi solo gli **utenti di test**); origine autorizzata `https://rzannori.github.io`, redirect `https://rzannori.github.io/rz-flight-dashboard/`. La CSP ammette solo `https://www.googleapis.com` in `connect-src`. Da `localhost` il collegamento vero non funziona: i test usano un Drive finto.
 
 **Set up (`re`)**
 - **Costruttore report**: X (Tempo o variabile), Y (una o più), tipo (linea/area/dispersione), **colore per curva**, nome. Salvati in `localStorage`. La lista parte vuota.
@@ -329,6 +333,29 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 - **v1.2** — drill sulle curve; zoom rotella + barra scorrimento nel Grafico; clipping.
 - **v1.3** — fix chiusura barra Focus (via classe, non `hidden`); pulsante **← Indietro** dopo il drill.
 - **v1.4** — avviso `#nojs` per chi apre il file in un'anteprima senza JavaScript.
+- **v1.47** — **Grafica «strumento di bordo»**: pulsanti in metallo con spia luminosa (verde sull'azione principale) che si abbassano al clic, schede incassate con scritta verde luminosa per quella attiva, quadrante esagonale con orizzonte artificiale come marchio accanto al titolo e nella welcome. **Logo RZ in 3D** (cromo blu con spessore e ombra, WebP ~22 KB; un logo caricato dall'utente resta com'è). **Nuove icone** dell'app, di iPhone/iPad e favicon con il quadrante. Animazioni disattivate con "riduci movimento".
+- **v1.46** — un solo bottone **Apri** (computer / Google Drive / demo), archivio su PC e/o Drive, testi italiani rivisti.
+- **v1.45** — bottone **Google Drive**: log nella cartella `RZ Dati/voli` di Drive (apri e salva).
+- **v1.44** — **Pagina di benvenuto** all'avvio con sfondo disegnato (tramonto, crinali, aliante in silhouette) e tre schede: Leggi dati, Modelli salvati, Voli salvati; striscia "Riprendi"; disattivabile in Set up.
+- **v1.43** — **Esporta / importa impostazioni** (file `.json`, importazione con validazione di ogni campo) e test.
+- **v1.42** — nuove icone nello stile di RZ Ballast Archive (poi sostituite nella v1.47).
+- **v1.41** — titolo dell'intestazione senza "RZ" (le iniziali sono nel logo).
+- **v1.40** — tema **Blu** predefinito (sfondi blu, scritte azzurro-bluette); selezione Blu / Chiaro / Scuro in Set up.
+- **v1.39** — aspetto dello stile RZ Ballast Archive (tema chiaro, intestazione blu, accento verde); niente più Google Fonts.
+- **v1.38** — **Content-Security-Policy** (script solo con hash, nessun host esterno tranne i tile delle mappe), `tools/csp.py`, controlli nei test.
+- **v1.37** — lettura del **CSV del GPS RZ** (~1 Hz) con gestione di data/ora false e coordinate vuote prima del fix.
+- **v1.36** — Archivio: grafico **Andamento nel tempo** per modello; **test automatici** (`tests/run.mjs`) e log Jeti sintetico di esempio.
+- **v1.35** — Analisi volo: scheda **Radio e alimentazione** (Q, antenne, tensione Rx e BEC) con eventi.
+- **v1.34** — **Unione log Jeti + NMEA** dello stesso volo con allineamento automatico delle quote.
+- **v1.33** — **Picchiate** riconosciute e tolte dal sink di planata; **interruttori delle fasi impostabili** in Set up.
+- **v1.32** — Archivio: l'indice di volo compare nel riquadro di salvataggio e viene registrato con il volo.
+- **v1.31** — Indice di volo: più peso a termica e planata, meno alla durata; nuova voce **distanza percorsa** (GPS).
+- **v1.30** — Indice di volo: durata valutata su voli tipici di 15–60 minuti.
+- **v1.29** — **Indice di volo (0–100)** in Analisi volo con nota esplicativa; colonna "Indice" ordinabile e riquadro "Miglior volo registrato" in Archivio.
+- **v1.28** — Archivio: tolto ovunque il campo "Pacco".
+- **v1.27** — Archivio: tolto il filtro "Pacco"; nome predefinito del volo `gg-mm-aaaa_hh-mm_modello`.
+- **v1.26** — Assetto in intestazione con il ruolo di ogni dispositivo (Regolatore, Vario, GPS, Ricevente, Batteria).
+- **v1.25** — fasi di volo come barra orizzontale alla base dei grafici.
 - **v1.24** — **Fasi di volo dagli interruttori** (log Jeti con canali `Comando Sa/Sb`): barra colorata alla base dei grafici (Normale, Termica, Velocità, Atterraggio), canale derivato "Fase volo" e riquadro "Modalità di volo" in Analisi volo con i tempi per fase. Assegnazione: Sa a 3 posizioni (0 = termica, 50 = normale, 100 = velocità), Sb ≥ 50 = atterraggio; modificabile in `PHASE_SA`/`PHASE_SB`. Corretta la lettura delle righe che terminano con `;`; i canali identici duplicati si fondono.
 - **v1.23** — **Un solo pulsante "Carica"** (più "Demo"): il tipo di file (log Jeti raw, CSV, NMEA dello SM GPS) è riconosciuto dal contenuto. Sotto il nome del modello compare la **frase dell'assetto** (es. "Jeti Mezon 120 · MiVario · 6S": regolatore e sensori dai nomi nel log, numero di celle dalla tensione, GPS se presente). I nomi leggibili si aggiungono nella tabella `DEVICE_NAMES` in `index.html`. Corretta la lettura dell'ora dal nome file quando è preceduto da altre cifre.
 - **v1.22** — Supporto ai log Jeti con regolatore **MEZON** e sensore **MiVario** (es. ARCUS): i nomi dei canali in italiano (Altitudine, U/I Batteria, Capacita, Giri, Acc_X…) sono mappati sui nomi standard; i canali con lo stesso nome su dispositivi diversi ricevono il suffisso del dispositivo; "Temp." del regolatore diventa TempESC; l'intestazione mostra i dispositivi rilevati. Nota: se il canale `Velocita` non è una velocità reale, Polare e Traiettoria non sono disponibili.

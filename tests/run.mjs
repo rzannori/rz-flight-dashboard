@@ -124,6 +124,73 @@ console.log("Welcome page");
   ok(((await p2.evaluate(() => window.__v || [])).length === 0) && e2.length === 0, "welcome: nessun errore né violazione CSP" + (e2.length ? ": " + e2.join("|") : ""));
   await p2.close(); }
 
+console.log("Google Drive (Drive finto)");
+{ const files = { root: { id: "root", name: "root", folder: true, parents: [] } }; let n = 0;
+  const add = (name, parent, folder, data, type) => { const id = "f" + (++n); files[id] = { id, name, parents: [parent], folder: !!folder, data: data || Buffer.alloc(0), type, mt: new Date(Date.now() - n * 60000).toISOString() }; return id; };
+  const dir = add("RZ Dati", "root", true), voli = add("voli", dir, true);
+  add("volo-nmea.nmea", voli, false, fs.readFileSync(E("volo-completo-test.nmea")), "text/plain");
+  const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,content-type", "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS" };
+  const handler = async route => {
+    const req = route.request(), u = new URL(req.url()), m = req.method();
+    const ful = o => route.fulfill({ ...o, headers: { ...CORS, ...(o.headers || {}) } }), json = o => ful({ status: 200, contentType: "application/json", body: JSON.stringify(o) });
+    if (m === "OPTIONS") return ful({ status: 204, body: "" });
+    if (req.headers()["authorization"] !== "Bearer TOK") return ful({ status: 401, body: "{}" });
+    if (m === "GET" && u.pathname === "/drive/v3/files") {
+      const q = u.searchParams.get("q"), par = /'([^']+)' in parents/.exec(q)[1], nm = /name='((?:[^'\\]|\\.)*)'/.exec(q);
+      const L = Object.values(files).filter(f => f.parents.includes(par) && (!nm || f.name === nm[1].replace(/\\(.)/g, "$1")) && (/mimeType!=/.test(q) ? !f.folder : (/vnd\.google-apps\.folder/.test(q) ? f.folder : true)));
+      return json({ files: L.map(f => ({ id: f.id, name: f.name, size: String(f.data.length), modifiedTime: f.mt })) }); }
+    if (m === "POST" && u.pathname === "/drive/v3/files") { const bd = JSON.parse(req.postData()); return json({ id: add(bd.name, bd.parents[0], true) }); }
+    let r = /^\/drive\/v3\/files\/([^/]+)$/.exec(u.pathname);
+    if (m === "GET" && r) { const f = files[r[1]]; return ful({ status: 200, contentType: "application/octet-stream", body: f.data }); }
+    r = /^\/upload\/drive\/v3\/files\/([^/]+)$/.exec(u.pathname);
+    if (m === "PATCH" && r) { files[r[1]].data = req.postDataBuffer(); return json({ id: r[1] }); }
+    r = /^\/drive\/v3\/files\/([^/]+)$/.exec(u.pathname);
+    if (m === "PATCH" && r) { const bd = JSON.parse(req.postData() || "{}"); if (bd.trashed) files[r[1]].parents = []; return json({ id: r[1] }); }
+    if (m === "POST" && u.pathname === "/upload/drive/v3/files") {
+      const buf = req.postDataBuffer(), bd = /boundary=(\S+)/.exec(req.headers()["content-type"])[1], st = buf.toString("latin1");
+      const p1 = st.indexOf("\r\n\r\n") + 4, e1 = st.indexOf("\r\n--" + bd, p1), meta = JSON.parse(st.slice(p1, e1));
+      const h2 = st.indexOf("\r\n\r\n", e1) + 4, e2 = st.lastIndexOf("\r\n--" + bd + "--");
+      return json({ id: add(meta.name, meta.parents[0], false, Buffer.from(st.slice(h2, e2), "latin1"), "text/plain") }); }
+    return ful({ status: 400, body: "?" }); };
+  const c3 = await b.newContext({ viewport: { width: 1400, height: 1000 }, serviceWorkers: "block" }); const p3 = await c3.newPage(); const e3 = [];
+  p3.on("pageerror", e => e3.push(e.message)); p3.on("dialog", d => d.dismiss());
+  await p3.addInitScript(() => localStorage.setItem("fd_welcome", "0"));
+  await p3.addInitScript(() => document.addEventListener("securitypolicyviolation", e => (window.__v = window.__v || []).push(e.violatedDirective + " | " + e.blockedURI)));
+  await p3.route("https://www.googleapis.com/**", handler);
+  await p3.route("https://accounts.google.com/**", r => r.fulfill({ status: 200, contentType: "text/html", body: "google" }));
+  await p3.goto(url); await p3.waitForTimeout(400);
+  await p3.click("#loadBtn"); await p3.click("#miDrive"); await p3.waitForTimeout(200);
+  ok(!(await p3.locator("#drvConnect").isHidden()) && /Non collegato/.test(await p3.textContent("#drvSt")), "Drive: non collegato, bottone Collega visibile");
+  const [rq] = await Promise.all([p3.waitForRequest(/accounts\.google\.com/), p3.click("#drvConnect")]);
+  const au = new URL(rq.url());
+  ok(au.searchParams.get("redirect_uri") === url && au.searchParams.get("response_type") === "token" && /googleusercontent\.com$/.test(au.searchParams.get("client_id")), "Drive: richiesta a Google con redirect e client giusti");
+  await p3.goto(url + "#access_token=TOK&expires_in=3599&token_type=Bearer&state=" + au.searchParams.get("state")); await p3.waitForTimeout(1200);
+  ok(!(await p3.evaluate(() => location.hash)) && (await p3.locator("#drvOverlay.open").count()) === 1, "Drive: ritorno da Google, token tolto dall'indirizzo e finestra riaperta");
+  ok((await p3.locator(".drvrow").count()) === 1 && /1 log/.test(await p3.textContent("#drvSt")), "Drive: elenco dei log della cartella RZ Dati/voli");
+  await p3.click(".drvrow"); await p3.waitForTimeout(1500);
+  ok(/volo-nmea\.nmea/.test(await p3.textContent("#fname")) && (await p3.locator("#drvOverlay.open").count()) === 0, "Drive: un tocco apre il log");
+  await p3.setInputFiles("#file", E("volo-completo-test.log")); await p3.waitForTimeout(1500);
+  await p3.click("#loadBtn"); await p3.click("#miDrive"); await p3.waitForTimeout(600);
+  ok(/volo-completo-test\.log/.test(await p3.textContent("#drvUp")), "Drive: proposto il salvataggio del file aperto");
+  await p3.click("#drvUp"); await p3.waitForTimeout(1500);
+  const up = Object.values(files).find(f => f.name === "volo-completo-test.log");
+  ok(!!up && up.data.equals(fs.readFileSync(E("volo-completo-test.log"))), "Drive: log caricato identico all'originale");
+  ok((await p3.locator(".drvrow").count()) === 2, "Drive: elenco aggiornato dopo il salvataggio");
+  // archivio sul Drive: salva (solo Drive), ricarica, elimina
+  await p3.click("#drvClose"); await p3.click('.tab[data-p="ar"]'); await p3.waitForTimeout(500);
+  if (await p3.isChecked("#arToPc")) await p3.uncheck("#arToPc");
+  await p3.check("#arToDrv"); await p3.fill("#arModel", "Prova Drive"); await p3.click("#arSave"); await p3.waitForTimeout(1500);
+  const rzf = Object.values(files).filter(f => f.name.endsWith(".rzf.json") && f.parents.length);
+  ok(rzf.length === 1 && JSON.parse(rzf[0].data.toString("utf8")).model === "Prova Drive", "Archivio: volo salvato sul Drive (.rzf.json con il modello)");
+  ok((await p3.locator("#arList td.where").count()) === 1 && /☁/.test(await p3.textContent("#arList")), "Archivio: il volo compare con il segno ☁");
+  await p3.reload(); await p3.waitForTimeout(800); await p3.click('.tab[data-p="ar"]'); await p3.waitForTimeout(1500);
+  ok(/Prova Drive/.test(await p3.textContent("#arList")) && /RZ Dati \/ voli · 1/.test(await p3.textContent("#arFolder")), "Archivio: dopo il riavvio i voli del Drive si rileggono da soli");
+  p3.removeAllListeners("dialog"); p3.on("dialog", d => d.accept());
+  await p3.click("#arList button[data-del]"); await p3.waitForTimeout(1000);
+  ok(rzf[0].parents.length === 0 && (await p3.locator("#arList td.where").count()) === 0, "Archivio: Elimina sposta il volo nel cestino del Drive");
+  ok(((await p3.evaluate(() => window.__v || [])).length === 0) && e3.length === 0, "Drive: nessun errore né violazione CSP" + (e3.length ? ": " + e3.join("|") : ""));
+  await c3.close(); }
+
 const viol = await p.evaluate(() => window.__v || []);
 ok(viol.length === 0, "nessuna violazione della CSP nell'uso normale" + (viol.length ? ": " + viol.join(" | ") : ""));
 await p.evaluate(() => { window.__v = []; window.__pwn = 0;
