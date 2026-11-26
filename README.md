@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build per usarla: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.50**
+- Versione corrente: **v1.51**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -336,6 +336,7 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 
 ## 15. Changelog
 
+- **v1.51** — Scheda Grafico: in alto la scelta del report salvato, poi il **grafico a tutta larghezza** e **sotto** il pannello delle variabili (su più colonne, con ricerca, X, tipo, nome e salvataggio in una riga).
 - **v1.50** — **Dashboard animata**: i numeri dei riquadri (KPI) e l'indice di volo salgono da zero fino al valore esatto, miniature e grafico della quota si disegnano da sinistra a destra, riquadri e schede entrano a cascata, le barre dell'indice si riempiono, i riquadri cliccabili si sollevano al passaggio del mouse. L'animazione parte al caricamento di un volo e all'ingresso in una scheda (non al ridimensionamento o al cambio tema). Si disattiva in *Set up → Aspetto dashboard → Animazioni* (salvato anche nell'esportazione delle impostazioni) e si spegne da sola con "riduci movimento" del sistema. Test: i valori finali sono esatti, nei test generali le animazioni sono spente.
 - **v1.49** — vento in quota dalla deriva delle termiche (anche in Traiettoria 3D con le termiche segnate), analisi dell'atterraggio, consumo giudicato sul modello (voli dello stesso modello o rendimento col peso di RZ Dati) e posizione dell'indice tra i voli del modello, Archivio → Modelli e Migliori 10 voli, Stampa / PDF dell'Analisi, data stimata dal file per i log Jeti senza data. Nuovo esempio `volo-vento-test.nmea` (`genera-volo-vento.py`). Test: 57 controlli.
 

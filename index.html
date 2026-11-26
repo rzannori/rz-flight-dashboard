@@ -563,6 +563,14 @@
   section.enter>.card,section.enter>.anarow>.card,section.enter>.kpis{animation:rise .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*90ms)}
   .kpi{transition:transform .18s,box-shadow .18s}.kpi.clickable:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(0,0,0,.35)}
   @media(prefers-reduced-motion:reduce){.kpi.rise,section.enter>.card,section.enter>.anarow>.card,section.enter>.kpis{animation:none}}
+
+  /* grafico in alto, selezione delle variabili sotto */
+  .grlayout{grid-template-columns:minmax(0,1fr);gap:14px}
+  .varpanel{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 14px}
+  .varpanel .vphead{flex:0 0 auto;gap:10px}.varpanel #varSearch{flex:1 1 220px;width:auto}
+  .varpanel .varlist{flex:1 1 100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1px 12px;max-height:260px}
+  .varpanel .vpopts{flex:0 1 260px}.varpanel #liveName{flex:1 1 200px;width:auto}.varpanel .vpbtns{flex:0 1 auto;flex-wrap:nowrap}.varpanel>.hint{flex:1 1 100%}
+  @media(max-width:900px){ .varpanel .varlist{max-height:220px} }
 </style>
 
 <div id="nojs" style="margin:16px;padding:14px 16px;font:14px system-ui,-apple-system,sans-serif;color:#eef3f9;background:#242931;border:1px solid #3a434f;border-radius:10px;line-height:1.5">
@@ -597,7 +605,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v1.50</span></div>
+      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v1.51</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -729,6 +737,13 @@
         </div>
       </div>
       <div class="grlayout">
+        <div class="grmain">
+          <p class="empty" id="viewPick" data-i18n="gr_pick" hidden></p>
+      <p class="empty" id="viewEmpty" data-i18n-html="empty_view" hidden>Nessun report ancora. Vai nella pagina <b>Set up</b> e creane uno con le variabili che ti interessano.</p>
+      <div class="chart-wrap"><canvas id="viewChart"></canvas><div class="tip" id="tipView"></div></div>
+      <div class="hscroll-row" id="viewScrollRow"><div class="hscroll" id="viewScroll"><div class="hthumb" id="viewThumb"></div></div><button id="viewZoomReset" title="reset zoom">⟲</button></div>
+      <div class="legend" id="viewLegend"></div>
+        </div>
         <aside class="varpanel" id="varPanel">
           <div class="vphead"><b data-i18n="gr_vars">Variabili</b><span class="mono" id="varCount"></span></div>
           <input type="text" id="varSearch" data-i18n-ph="gr_search" placeholder="Cerca variabile…" autocomplete="off">
@@ -741,13 +756,6 @@
           <div class="vpbtns"><button class="btn" id="liveSave" data-i18n="gr_save">Salva come report</button><button class="btn ghost" id="liveClear" data-i18n="gr_clear">Azzera</button></div>
           <p class="hint" style="margin:0" data-i18n="gr_live_hint"></p>
         </aside>
-        <div class="grmain">
-          <p class="empty" id="viewPick" data-i18n="gr_pick" hidden></p>
-      <p class="empty" id="viewEmpty" data-i18n-html="empty_view" hidden>Nessun report ancora. Vai nella pagina <b>Set up</b> e creane uno con le variabili che ti interessano.</p>
-      <div class="chart-wrap"><canvas id="viewChart"></canvas><div class="tip" id="tipView"></div></div>
-      <div class="hscroll-row" id="viewScrollRow"><div class="hscroll" id="viewScroll"><div class="hthumb" id="viewThumb"></div></div><button id="viewZoomReset" title="reset zoom">⟲</button></div>
-      <div class="legend" id="viewLegend"></div>
-        </div>
       </div>
     </div>
   </section>
