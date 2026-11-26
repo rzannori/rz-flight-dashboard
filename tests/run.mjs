@@ -24,7 +24,7 @@ const errs = []; p.on("pageerror", e => errs.push(e.message)); p.on("dialog", d 
 const fresh = async () => { await p.goto(url); await p.waitForTimeout(400); };
 const load = async files => { await p.setInputFiles("#file", files); await p.waitForTimeout(1500); };
 const text = async sel => (await p.textContent(sel)).replace(/\s+/g, " ");
-await p.addInitScript(() => localStorage.setItem("fd_welcome", "0"));
+await p.addInitScript(() => { localStorage.setItem("fd_welcome", "0"); localStorage.setItem("fd_anim", "0"); });
 await p.addInitScript(() => document.addEventListener("securitypolicyviolation", e => (window.__v = window.__v || []).push(e.violatedDirective + " | " + e.blockedURI)));
 await p.goto(url); await p.waitForTimeout(400);
 
@@ -132,6 +132,25 @@ ok(await p.isVisible("#prBtn"), "bottone Stampa / PDF");
 await fresh();
 await load(E("volo-completo-test.log"));
 ok(/data stimata dal file/.test(await text("#flightHead")), "log Jeti senza data: data stimata dal file");
+
+console.log("Animazioni");
+{ const p3 = await b.newPage({ viewport: { width: 1400, height: 900 } }); const e3 = [];
+  p3.on("pageerror", e => e3.push(e.message)); p3.on("dialog", d => d.accept());
+  await p3.addInitScript(() => localStorage.setItem("fd_welcome", "0"));
+  await p3.goto(url); await p3.waitForTimeout(400);
+  await p3.setInputFiles("#file", [E("volo-completo-test.log"), E("volo-completo-test.nmea")]);
+  await p3.waitForTimeout(350);
+  const mid = await p3.evaluate(() => [...document.querySelectorAll("#kpis .val")].map(e => e.firstChild.nodeValue).join("|"));
+  await p3.waitForTimeout(2600);
+  const fin = await p3.evaluate(() => [...document.querySelectorAll("#kpis .val")].map(e => e.firstChild.nodeValue).join("|"));
+  ok(mid !== fin, "KPI: i numeri si animano (a metà ≠ finale)");
+  ok(/407/.test(fin) && /15:16/.test(fin), "KPI: i valori finali sono esatti (" + fin + ")");
+  await p3.click('.tab[data-p="ju"]'); await p3.waitForTimeout(2600);
+  ok(/^7\d$/.test(await p3.evaluate(() => document.querySelector(".scorebig").firstChild.nodeValue.trim())), "indice di volo: valore finale esatto dopo l'animazione");
+  await p3.click("#setupBtn"); await p3.uncheck("#animOn"); await p3.click('.tab[data-p="ov"]'); await p3.waitForTimeout(150);
+  ok(!/^0/.test(await p3.evaluate(() => document.querySelector("#kpis .val").firstChild.nodeValue)), "animazioni disattivate: valori subito finali");
+  ok(e3.length === 0, "animazioni: nessun errore" + (e3.length ? ": " + e3.join("|") : ""));
+  await p3.close(); }
 
 console.log("Welcome page");
 { const p2 = await b.newPage({ viewport: { width: 1400, height: 900 } }); const e2 = [];

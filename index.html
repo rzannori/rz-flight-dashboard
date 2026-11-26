@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-djgMSV6Hel1fyx40sTWMx8fLKhkAOoDuzZZydipxPZM='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-jgKWdMs8xmYJi8c6qNBeq3OVa9tNydbezCerx0WuyFM='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -556,6 +556,13 @@
 
   .wl-dial{position:fixed;right:clamp(24px,9vw,170px);top:clamp(90px,12vh,170px);width:clamp(210px,min(29vw,33vh),430px);height:auto;aspect-ratio:1;z-index:2;pointer-events:none;filter:drop-shadow(0 22px 32px rgba(0,0,0,.55))}
   @media(max-width:860px){.wl-dial{width:128px;right:18px;top:96px}}
+
+  /* ---- animazioni ---- */
+  @keyframes rise{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+  .kpi.rise{animation:rise .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*110ms)}
+  section.enter>.card,section.enter>.anarow>.card,section.enter>.kpis{animation:rise .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*90ms)}
+  .kpi{transition:transform .18s,box-shadow .18s}.kpi.clickable:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(0,0,0,.35)}
+  @media(prefers-reduced-motion:reduce){.kpi.rise,section.enter>.card,section.enter>.anarow>.card,section.enter>.kpis{animation:none}}
 </style>
 
 <div id="nojs" style="margin:16px;padding:14px 16px;font:14px system-ui,-apple-system,sans-serif;color:#eef3f9;background:#242931;border:1px solid #3a434f;border-radius:10px;line-height:1.5">
@@ -590,7 +597,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v1.49</span></div>
+      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v1.50</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -932,6 +939,7 @@
       <h2><span data-i18n="col_h2">Aspetto dashboard</span> <span class="tag">COLORS</span></h2>
       <p class="hint" style="margin-top:0" data-i18n="col_hint">Personalizza i colori principali: le modifiche si applicano subito e restano salvate su questo browser.</p>
       <div class="row" style="margin-bottom:10px"><div class="fieldl"><label for="modeSel" data-i18n="md_label">Aspetto</label><select id="modeSel" class="resSel"><option value="blue" data-i18n="md_blue">Blu (predefinito)</option><option value="light" data-i18n="md_light">Chiaro (stile RZ)</option><option value="dark" data-i18n="md_dark">Scuro</option></select></div></div>
+      <label class="chk" style="margin:0 0 6px"><input type="checkbox" id="animOn"> <span data-i18n="an_on">Animazioni (grafici e numeri)</span></label>
       <label class="chk" style="margin:0 0 10px"><input type="checkbox" id="wlShow"> <span data-i18n="wl_show">Mostra la pagina di benvenuto all'avvio</span></label>
       <div class="ck" id="themeCtl"></div>
       <div class="row" style="margin-top:12px">
@@ -1191,6 +1199,7 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  an_on:["Animazioni (grafici e numeri)","Animations (charts and numbers)","Animations (graphiques et chiffres)"],
   wl_eyebrow:["Benvenuto","Welcome","Bienvenue"], wl_title:["Analizza<br>i tuoi voli","Analyse<br>your flights","Analysez<br>vos vols"],
   wl_sub:["Log Jeti, GPS e archivio in un solo posto. Funziona anche senza internet; i voli li salvi dove vuoi: sul PC o su Google Drive.","Jeti logs, GPS and archive in one place. Works offline too; save your flights where you like: on the PC or on Google Drive.","Logs Jeti, GPS et archive au même endroit. Fonctionne aussi hors ligne ; enregistrez vos vols où vous voulez : sur le PC ou sur Google Drive."],
   wl_read_h:["Apri un volo","Open a flight","Ouvrir un vol"], wl_read_p:["Log Jeti, file NMEA dell'SM GPS o CSV del GPS RZ: il formato viene riconosciuto in automatico.","Load a Jeti log, an SM GPS NMEA file or an RZ GPS CSV: the format is recognised automatically.","Chargez un log Jeti, un fichier NMEA du SM GPS ou un CSV du GPS RZ : le format est reconnu automatiquement."],
@@ -1765,7 +1774,7 @@ const ICON={
   speed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14a2 2 0 1 0 0-4m0 0 4-3M4 18a9 9 0 1 1 16 0"/></svg>',
   time:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
 };
-function renderKpis(f){
+function renderKpis(f,anim){
   const altKey=["Rel. altit","Rel.altit","Rel. altitude","Altitude","Abs. altit"].find(k=>f.series[k]);
   const spKey=["Speed","Velocità","GPS Speed","SpdGPS","Vel."].find(k=>f.series[k]);
   const alt=altSeries(f), vario=pick(f,["Vario"]), ibat=pick(f,["IBat"]), speed=spKey?f.series[spKey]:null;
@@ -1784,7 +1793,9 @@ function renderKpis(f){
        <div class="val">${tile.val}${tile.u?`<span class="u">${tile.u}</span>`:""}</div>
        ${tile.spark?`<div class="spark"><canvas id="spark${i}"></canvas></div>`:""}
      </div>`).join("");
-  tiles.forEach((t,i)=>{ if(t.spark){ const c=$("#spark"+i); if(c) drawSpark(c,decim(f.t,t.spark,160).ys,t.sc,{area:t.area}); }});
+  const go=anim&&animOn();
+  tiles.forEach((t,i)=>{ if(t.spark){ const c=$("#spark"+i); if(c){ const ys=decim(f.t,t.spark,160).ys; drawSpark(c,ys,t.sc,{area:t.area,reveal:go?0:1}); if(go) tween(1000,u=>drawSpark(c,ys,t.sc,{area:t.area,reveal:u}),150+i*130); } } });
+  if(go){ document.querySelectorAll("#kpis .kpi").forEach((k,i)=>{ k.style.setProperty("--i",i); k.classList.remove("rise"); void k.offsetWidth; k.classList.add("rise"); countUp(k.querySelector(".val"),1100,100+i*130); }); }
 }
 
 /* ---------- verdict ---------- */
@@ -1909,7 +1920,7 @@ function renderScore(f){
   const body=$("#scoreBody"); if(!body) return;
   let q=null; try{ q=flightScore(f); }catch(e){}
   if(!q){ body.innerHTML=`<p class="empty">${t("an_noair")}</p>`; return; }
-  const rows=q.comps.map(c=>`<div class="sbrow"><span>${t("sc_"+c.id)}</span><div class="sbtrack"><div class="sbfill" style="width:${c.v.toFixed(0)}%"></div></div><span class="mono">${fmt(c.v,0)} · ${fmt(c.w*100,0)} %</span></div>`).join("");
+  const rows=q.comps.map(c=>`<div class="sbrow"><span>${t("sc_"+c.id)}</span><div class="sbtrack"><div class="sbfill" data-w="${c.v.toFixed(0)}%" style="width:${c.v.toFixed(0)}%"></div></div><span class="mono">${fmt(c.v,0)} · ${fmt(c.w*100,0)} %</span></div>`).join("");
   const b=bestFlight(), cur=Math.round(q.score);
   let best="";
   if(b){ const bs=Math.round(b.sum.score); best=`<div class="scorebest">${t("sc_best")}: <b>${bs}</b> · ${escapeHtml(archLabel(b))}${cur>=bs?" — "+t("sc_isbest"):" ("+t("sc_cur")+" "+cur+")"}</div>`; }
@@ -2217,12 +2228,35 @@ function toRgb(c){ c=(c||"").trim(); if(c[0]==="#"){ let h=c.slice(1); if(h.leng
 function rgba(c,a){ const r=toRgb(c); return `rgba(${r[0]},${r[1]},${r[2]},${a})`; }
 
 /* tiny sparkline for KPI tiles */
+/* ---------- animazioni (disattivabili in Set up o con "riduci movimento" del sistema) ---------- */
+function animOn(){ try{ if(localStorage.getItem("fd_anim")==="0") return false; }catch(e){} return !(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches); }
+const easeOut=u=>1-Math.pow(1-u,3);
+function tween(ms,fn,delay){ return new Promise(res=>{ setTimeout(()=>{ const t0=performance.now(); const step=now=>{ const u=Math.min(1,(now-t0)/ms); fn(easeOut(u)); if(u<1) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); },delay||0); }); }
+/* il numero (o la durata m:ss) nel primo nodo di testo dell'elemento "sale" da zero al suo valore */
+function countUp(el,ms,delay){
+  const n=el&&el.firstChild; if(!n||n.nodeType!==3) return; const txt=n.nodeValue.trim(); let to,f;
+  const mt=txt.match(/^(\d+):(\d{2})$/), mn=txt.match(/^([−-]?)(\d+)(?:[.,](\d+))?$/);
+  if(mt){ to=+mt[1]*60+ +mt[2]; f=v=>hhmmss(Math.round(v)); }
+  else if(mn){ const dec=mn[3]?mn[3].length:0, sg=mn[1]?-1:1; to=sg*parseFloat(mn[2]+(mn[3]?"."+mn[3]:"")); f=v=>fmt(v,dec); }
+  else return;
+  n.nodeValue=f(0); return tween(ms,u=>{ n.nodeValue=f(to*u); },delay).then(()=>{ n.nodeValue=txt; });
+}
+function playEnter(sec){
+  if(!animOn()||!sec) return; const cards=[...sec.querySelectorAll(":scope > .card, :scope > .anarow > .card, :scope > .kpis")];
+  cards.forEach((c,i)=>c.style.setProperty("--i",i)); sec.classList.remove("enter"); void sec.offsetWidth; sec.classList.add("enter"); setTimeout(()=>sec.classList.remove("enter"),1400);
+}
+function playScore(){
+  if(!animOn()) return; const sb=$("#scoreBody"); if(!sb) return;
+  sb.querySelectorAll(".sbfill").forEach((b,i)=>{ const w=b.dataset.w||b.style.width; b.dataset.w=w; b.style.transition="none"; b.style.width="0%"; void b.offsetWidth; b.style.transition="width 1s cubic-bezier(.2,.8,.2,1) "+(0.25+i*0.12)+"s"; b.style.width=w; });
+  countUp(sb.querySelector(".scorebig"),1100,150);
+}
 function drawSpark(canvas, ys, color, opts){
   opts=opts||{};
   const dpr=Math.min(2,window.devicePixelRatio||1);
   const w=canvas.clientWidth||120, h=30;
   canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
   const g=canvas.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  if(opts.reveal!=null&&opts.reveal<1){ g.beginPath(); g.rect(0,0,w*opts.reveal,h); g.clip(); }
   const col=cssv(color)||color;
   const vals=ys.filter(v=>isFinite(v)); if(vals.length<2){ return; }
   let mn=Math.min(...ys.filter(isFinite)), mx=Math.max(...ys.filter(isFinite)); if(mn===mx){mx+=1;mn-=1;}
@@ -2278,6 +2312,8 @@ function drawChart(canvas, cfg){
   const X=v=>padL+(v-xmin)/(xmax-xmin)*W;
   const Yof=(s,v)=>padT+H-(v-s._min)/(s._max-s._min)*H;
 
+  const rv=(cfg.reveal!=null&&cfg.reveal<1);
+  if(rv){ g.save(); g.beginPath(); g.rect(padL,padT,W*cfg.reveal,H); g.clip(); }
   // fasi di volo: barra orizzontale alla base del grafico
   if(cfg.phases) for(const b of cfg.phases){
     const x0=Math.max(padL,X(b.x0)),x1=Math.min(padL+W,X(b.x1)); if(x1<=x0) continue;
@@ -2292,6 +2328,7 @@ function drawChart(canvas, cfg){
     if(b.label){ g.fillStyle=motor; g.font='600 10px ui-monospace,"SF Mono",Consolas,monospace'; g.textAlign="center"; g.fillText(b.label,(x0+x1)/2,padT+11); }
   }
 
+  if(rv) g.restore();
   // horizontal gridlines (5 divisions); every series gets its own axis (left = S[0], right = S[1..])
   const ticks=5;
   g.font='10px ui-monospace,"SF Mono",Consolas,monospace'; g.textBaseline="middle";
@@ -2311,7 +2348,7 @@ function drawChart(canvas, cfg){
   for(let i=0;i<=5;i++){ const v=xmin+(xmax-xmin)*i/5, x=X(v); g.fillText(xt?hhmmss(v):fmtTick(v), x, padT+H+7); }
 
   // series (each on its own x/scale, min/max-decimated so peaks survive)
-  g.save(); g.beginPath(); g.rect(padL,padT,W,H); g.clip();
+  g.save(); g.beginPath(); g.rect(padL,padT,W*(rv?cfg.reveal:1),H); g.clip();
   for(let si=0; si<S.length; si++){
     const s=S[si], sx=s.xs||xs, col=s._col, Y=v=>Yof(s,v);
     if(s.type==="scatter"){
@@ -2538,15 +2575,18 @@ function phaseLegend(f){
   const used=new Set(f.phases.map(p=>p.k));
   return PHASES.filter(p=>used.has(p.k)).map(p=>`<span><span class="swatch" style="background:${p.col};opacity:.55"></span>${t(p.id)}</span>`).join("");
 }
-function renderMain(){
+let mainTok=0;
+function renderMain(anim){
   const f=DATA; if(!f) return;
   const alt=altSeries(f); if(!alt){ return; }
   const d=decim(f.t,alt.vals,chartPts);
   const bands=f.climbs.map((c,i)=>({x0:c.t0,x1:c.t1,label:c.dalt!=null?("+"+Math.round(c.dalt)):""}));
-  drawChart($("#mainChart"),{
+  const cfg={
     series:[{xs:d.xs,ys:d.ys,color:"--accent",type:"area",name:"Quota",unit:"m"}],
     bands, phases:phaseBands(f), height:chartH(340,610), xTimeAxis:true
-  });
+  }, cv=$("#mainChart"), tok=++mainTok;
+  if(anim&&animOn()){ drawChart(cv,Object.assign({},cfg,{reveal:0})); tween(1700,u=>{ if(tok===mainTok) drawChart(cv,Object.assign({},cfg,{reveal:u})); },250).then(()=>{ if(tok===mainTok){ drawChart(cv,cfg); paintFocus(); } }); }
+  else drawChart(cv,cfg);
   const r=rangeOf(alt.vals);
   $("#mainRange").textContent = `${Math.round(r.dmin)}…${Math.round(r.dmax)} m`;
   $("#phaseLeg").innerHTML=phaseLegend(f);
@@ -2647,7 +2687,7 @@ function renderView(){
 const BK_FORMAT="rz-flight-settings";
 function bkExport(){
   const data={}, J=k=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }, G=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
-  if(G("fd_welcome")) data.welcome=G("fd_welcome"); if(G("fd_lang")) data.lang=G("fd_lang"); if(G("fd_mode")) data.mode=G("fd_mode"); if(G("fd_map")) data.map=G("fd_map"); if(G("fd_logo")) data.logo=G("fd_logo");
+  if(G("fd_welcome")) data.welcome=G("fd_welcome"); if(G("fd_anim")) data.anim=G("fd_anim"); if(G("fd_lang")) data.lang=G("fd_lang"); if(G("fd_mode")) data.mode=G("fd_mode"); if(G("fd_map")) data.map=G("fd_map"); if(G("fd_logo")) data.logo=G("fd_logo");
   const th=J("fd_theme"); if(th&&Object.keys(th).length) data.theme=th;
   const rp=J("jeti_reports"); if(Array.isArray(rp)&&rp.length) data.reports=rp;
   const lv=J("fd_live"); if(lv) data.live=lv;
@@ -2664,6 +2704,7 @@ function bkClean(o){
   const types=["line","area","scatter"], d=o&&typeof o==="object"?o.data:null; if(!d||typeof d!=="object") return null;
   if(["it","en","fr"].includes(d.lang)) out.fd_lang=d.lang;
   if(d.welcome==="0"||d.welcome==="1") out.fd_welcome=d.welcome;
+  if(d.anim==="0"||d.anim==="1") out.fd_anim=d.anim;
   if(["blue","light","dark"].includes(d.mode)) out.fd_mode=d.mode;
   if(["none","osm","esri"].includes(d.map)) out.fd_map=d.map;
   if(typeof d.logo==="string"&&d.logo.length<=2000000&&/^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(d.logo)) out.fd_logo=d.logo;
@@ -2731,6 +2772,7 @@ function initWelcome(){
   $("#wlIt").addEventListener("click",()=>setLang("it")); $("#wlEn").addEventListener("click",()=>setLang("en")); $("#wlFr").addEventListener("click",()=>setLang("fr"));
   document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!w.hidden) hideWelcome(); });
   const t0=document.querySelector(".apptitle"); if(t0){ t0.title=t("wl_home"); t0.setAttribute("role","button"); t0.tabIndex=0; t0.addEventListener("click",showWelcome); t0.addEventListener("keydown",e=>{ if(e.key==="Enter") showWelcome(); }); }
+  const ca=$("#animOn"); ca.checked=animOn(); ca.addEventListener("change",()=>{ try{ localStorage.setItem("fd_anim",ca.checked?"1":"0"); }catch(e){} });
   const cb=$("#wlShow"); cb.checked=welcomeOn(); cb.addEventListener("change",()=>{ try{ localStorage.setItem("fd_welcome",cb.checked?"1":"0"); }catch(e){} });
   if(welcomeOn()){ renderWelcome(); document.body.style.overflow="hidden"; } else { w.hidden=true; }
 }
@@ -2822,7 +2864,7 @@ function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":
 
 function renderAll(){
   if(!DATA) return;
-  renderFlightHead(DATA); renderKpis(VF()); renderMain(); renderVerdict(DATA);
+  renderFlightHead(DATA); renderKpis(VF(),true); renderMain(true); renderVerdict(DATA);
   refreshReportSel(); refreshBuilder(); updateFocusBar();
   setupMainInteractions(); attachHover("viewChart","tipView"); setupViewInteractions();
   renderArchive(); renderPolar(); renderTrack();
@@ -3659,7 +3701,7 @@ document.querySelectorAll(".tab").forEach(tb=>tb.addEventListener("click",()=>{
   const p=tb.dataset.p;
   try{ tb.scrollIntoView({inline:"center",block:"nearest",behavior:"smooth"}); }catch(e){}   // la scheda scelta resta visibile nella barra scorrevole
   document.querySelectorAll("section[data-page]").forEach(s=>s.hidden = s.dataset.page!==p);
-  if(p==="ov") renderMain(); if(p==="gr") renderView(); if(p==="tb") renderTable(); if(p==="ar") renderArchive(); if(p==="po") renderPolar(); if(p==="tr") renderTrack();
+  if(p==="ov"){ renderKpis(VF(),true); renderMain(true); } else playEnter(document.querySelector(`section[data-page="${p}"]`)); if(p==="ju") playScore(); if(p==="gr") renderView(); if(p==="tb") renderTable(); if(p==="ar") renderArchive(); if(p==="po") renderPolar(); if(p==="tr") renderTrack();
 }));
 $("#setupBtn").addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected","false"));
