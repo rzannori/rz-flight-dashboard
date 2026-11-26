@@ -102,6 +102,37 @@ await p.click('.tab[data-p="ar"]'); await p.waitForTimeout(500);
 ok(/(Miglior volo registrato|Best recorded flight): \d+/.test(await text("#arBest")), "miglior volo registrato mostrato");
 ok(!(await p.locator("#tdCard").isHidden()), "grafico andamento visibile con 2 voli");
 
+console.log("v1.49: modelli, migliori 10, consumo sul modello");
+ok(/Prova/.test(await text("#mdBody")) && /2 (voli|flights)/.test(await text("#mdBody")), "pagina Modelli: scheda del modello con 2 voli");
+await p.click("#mdTabT"); await p.waitForTimeout(200);
+ok((await p.locator("#mdBody tbody tr").count()) === 2 && /Prova/.test(await text("#mdBody")), "Migliori 10 voli: tabella con i voli in archivio");
+await p.evaluate(t => { window.__rz.addFlight(t, "2026-10-03_c.log", "Prova"); window.__rz.addFlight(t, "2026-10-04_d.log", "Prova"); }, jeti);
+await p.click("#mdTabM"); await p.waitForTimeout(200);
+await p.click('.tab[data-p="ar"]'); await p.waitForTimeout(300);
+await p.locator("#arList button[data-open]").first().click(); await p.waitForTimeout(800);
+await p.click('.tab[data-p="ju"]'); await p.waitForTimeout(500);
+ok(/voli dello stesso modello|flights with this model|vols de ce modèle/.test(await text("#scoreBody")), "indice: posizione tra i voli dello stesso modello");
+
+console.log("v1.49: vento dalle termiche, atterraggio, data dal file, stampa");
+await p.evaluate(() => localStorage.setItem("fd_lang", "it"));
+await fresh();
+await load(E("volo-vento-test.nmea"));
+await p.click("text=Analisi volo"); await p.waitForTimeout(500);
+{ const tl = await text("#anaTiles"); const w = tl.match(/Vento in quota\s*([\d,]+)\s*m\/s\s*da (\w+)/);
+  ok(!!w && Math.abs(parseFloat(w[1].replace(",", ".")) - 4.0) <= 0.5 && w[2] === "NO", "vento stimato dalle termiche ~4 m/s da NO (" + (w ? w[1] + " " + w[2] : "-") + ")");
+  ok(/Sink finale/.test(tl) && /Direzione di atterraggio/.test(tl), "atterraggio: sink finale e direzione"); }
+ok(/Vento stimato/.test(await text("#verdictText")), "narrativa: paragrafo sul vento");
+ok((await p.locator("#thermWrap th").allTextContents()).includes("Vento"), "tabella termiche con la colonna Vento");
+await p.click("text=Traiettoria"); await p.waitForTimeout(900);
+await p.click("text=Analisi volo"); await p.waitForTimeout(300);
+await p.emulateMedia({ media: "print" });
+ok(await p.evaluate(() => getComputedStyle(document.querySelector(".tabs")).display === "none" && getComputedStyle(document.querySelector('section[data-page="ju"]')).display !== "none"), "stampa: solo l'Analisi volo");
+await p.emulateMedia({ media: "screen" });
+ok(await p.isVisible("#prBtn"), "bottone Stampa / PDF");
+await fresh();
+await load(E("volo-completo-test.log"));
+ok(/data stimata dal file/.test(await text("#flightHead")), "log Jeti senza data: data stimata dal file");
+
 console.log("Welcome page");
 { const p2 = await b.newPage({ viewport: { width: 1400, height: 900 } }); const e2 = [];
   p2.on("pageerror", e => e2.push(e.message)); p2.on("dialog", d => d.accept());

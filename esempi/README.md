@@ -3,6 +3,7 @@
 | File | Per provare | Durata |
 |---|---|---|
 | [`volo-completo-test.nmea`](volo-completo-test.nmea) | **tutte le schede** (consigliato) | ~16 min, 2,2 MB |
+| [`volo-vento-test.nmea`](volo-vento-test.nmea) | vento stimato dalle termiche e atterraggio (v1.49) | ~16 min, 2,2 MB |
 | [`polare-traiettoria-test.nmea`](polare-traiettoria-test.nmea) | solo Polare e Traiettoria | ~12 min, 1,7 MB |
 
 Tutti i log sono **sintetici** (inventati, non sono voli reali) e si caricano da **Carica ▾ → SM Modellbau**.
@@ -58,3 +59,7 @@ Caricando **insieme** `volo-completo-test.log` e `volo-completo-test.nmea` (sele
 |---|---|
 | `volo-completo-rzgps.csv` | lo stesso volo sintetico di `volo-completo-test.nmea` nel formato CSV del GPS RZ, a 1 Hz, con le stranezze dei log reali (data 2080-01-05 e ora falsa all'accensione, coordinate vuote prima del fix, riga duplicata) |
 | `genera-rzgps-test.py` | lo script che lo produce |
+
+## `volo-vento-test.nmea` — vento noto (v1.49)
+Come `volo-completo-test.nmea`, ma con un **vento costante di 4 m/s da nord-ovest (315°)** per tutto il volo (generato da `genera-volo-vento.py`).
+**Atteso in Analisi volo:** «Vento in quota» ≈ **4 m/s da NO** (la dashboard legge 4,1 m/s; le tre termiche 4,2 · 3,8 · 4,3 m/s), paragrafo «Vento stimato», gruppo **Atterraggio** con sink finale e direzione; in **Traiettoria** le termiche T1–T3 segnate e la freccia del vento.

@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-U9TY0b9/8rS0LUit4zUnT8l/gb+L+QvEQHYzJCWAqXc='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-djgMSV6Hel1fyx40sTWMx8fLKhkAOoDuzZZydipxPZM='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -295,6 +295,22 @@
   @media(max-width:640px){ .scoregrid{grid-template-columns:1fr} .sbrow{grid-template-columns:110px minmax(0,1fr) 70px} }
   .agroups{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
   @media(min-width:1100px){ .agroups{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  .mdtabs{display:inline-flex;gap:6px}.mdtabs .btn{padding:5px 12px;font-size:.82rem}.mdtabs .btn.on{background:var(--accent);color:#04120a;border-color:var(--accent)}
+  .mdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+  .mdc{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:5px;background:color-mix(in srgb,var(--surface) 80%,transparent)}
+  .mdc.none{border-left-color:var(--line);opacity:.8}
+  .mdc .mdn{font-weight:800;font-size:1.05rem}.mdc .mds,.mdc .mdset,.mdc .mdd{font-size:.8rem;color:var(--muted)}
+  .mdc .mdk{display:flex;gap:14px;flex-wrap:wrap;font-size:.86rem}.mdc .mdk b{font-size:1.05rem}
+  .mdc button{align-self:flex-start;margin-top:4px}
+  .prbar{display:flex;justify-content:flex-end;margin:-4px 0 10px}
+  @media print{
+    :root{--bg:#fff !important;--surface:#fff !important;--fg:#111 !important;--muted:#555 !important;--line:#c8c8c8 !important}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{background:#fff !important;color:#111 !important}
+    header,.tabs,#welcome,.prbar,.focusbar,.overlay,section[data-page]:not([data-page="ju"]){display:none !important}
+    section[data-page="ju"]{display:block !important}
+    .card{break-inside:avoid;box-shadow:none !important;background:#fff !important;border:1px solid #c8c8c8 !important}
+  }
   .agroup{border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-left:5px solid var(--accent);border-radius:12px;padding:12px 14px 14px;
     background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
   .agroup>.trh{font:700 .95rem -apple-system,system-ui,"Segoe UI",sans-serif;letter-spacing:.9px;color:var(--accent);margin-bottom:2px}
@@ -574,7 +590,7 @@
       <input type="file" id="logoFile" accept="image/*" style="display:none">
     </div>
     <div class="center">
-      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v1.48</span></div>
+      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v1.49</span></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -643,6 +659,7 @@
 
   <!-- PAGE: GIUDIZIO -->
   <section data-page="ju" hidden>
+    <div class="prbar"><button class="btn ghost" id="prBtn" type="button"><span aria-hidden="true">🖨</span> <span data-i18n="pr_btn">Stampa / PDF</span></button></div>
     <div class="card" id="scoreCard">
       <h2><span data-i18n="sc_h2">Indice di volo</span> <span class="tag">RANK</span></h2>
       <div id="scoreBody"></div>
@@ -838,6 +855,12 @@
       </div>
       <datalist id="arModels"></datalist>
       <p class="hint" id="arMsg"></p>
+    </div>
+    <div class="card" id="mdCard">
+      <h2><span data-i18n="md_h2">Modelli</span> <span class="tag">MODELS</span>
+        <span class="resctl mdtabs"><button class="btn ghost on" id="mdTabM" type="button" data-i18n="md_models">Modelli</button><button class="btn ghost" id="mdTabT" type="button" data-i18n="md_top">Migliori 10 voli</button></span>
+      </h2>
+      <div id="mdBody"></div>
     </div>
     <div class="card">
       <h2><span data-i18n="ar_list_h">Voli in archivio</span>
@@ -1234,6 +1257,18 @@ const T_AN={
   an_sink:["Sink medio planata","Avg glide sink","Chute moy. plané"], an_gr:["Efficienza mediana","Median glide ratio","Finesse médiane"], an_lift:["Vario > 0 in planata","Vario > 0 in glide","Vario > 0 en plané"],
   an_vmax:["Velocità max","Max speed","Vitesse max"], an_vavg:["Velocità media","Avg speed","Vitesse moy."], an_vmed:["Velocità mediana planata","Median glide speed","Vitesse méd. plané"],
   an_path:["Percorso","Path length","Parcours"], an_dmax:["Distanza max","Max distance","Distance max"], an_dend:["Atterraggio da partenza","Landing from start","Atterrissage / départ"],
+  date_est:["data stimata dal file","date estimated from the file","date estimée d'après le fichier"],
+  an_wind:["Vento in quota","Wind aloft","Vent en altitude"], from:["da","from","du"], th_col_wind:["Vento","Wind","Vent"],
+  an_g_land:["Atterraggio","Landing","Atterrissage"], an_sinkfin:["Sink finale (5 s)","Final sink (5 s)","Chute finale (5 s)"], an_vfin:["Velocità finale","Final speed","Vitesse finale"],
+  an_ldir:["Direzione di atterraggio","Landing direction","Direction d'atterrissage"], an_tailw:["vento in coda","tailwind","vent arrière"], an_headw:["controvento","headwind","vent de face"], an_crossw:["vento di traverso","crosswind","vent de travers"],
+  nar_wind:["Vento stimato","Estimated wind","Vent estimé"], nar_land:["Atterraggio","Landing","Atterrissage"],
+  an_usual:["di solito","usually","d'habitude"], an_eta:["rendimento","efficiency","rendement"],
+  sc_rank:["Per {m}: {r}° su {n} voli dello stesso modello (media {a})","For {m}: #{r} of {n} flights with this model (average {a})","Pour {m} : {r}e sur {n} vols de ce modèle (moyenne {a})"],
+  md_h2:["Modelli","Models","Modèles"], md_models:["Modelli","Models","Modèles"], md_top:["Migliori 10 voli","Top 10 flights","10 meilleurs vols"],
+  md_none:["Nessun volo con l'indice in archivio.","No flight with an index in the archive.","Aucun vol avec indice dans l'archive."],
+  md_setup:["Assetto","Setup","Équipement"], md_best:["miglior","best","meilleur"], md_avg:["media","average","moyenne"], md_last:["Ultimo volo","Last flight","Dernier vol"],
+  md_bestf:["migliore","best","meilleur"], md_noflights:["Ancora nessun volo in archivio (modello di RZ Dati)","No flights archived yet (RZ Dati model)","Pas encore de vol archivé (modèle RZ Dati)"],
+  md_flights:["Vedi i voli","See flights","Voir les vols"], md_flight1:["volo","flight","vol"], pr_btn:["Stampa / PDF","Print / PDF","Imprimer / PDF"],
   an_mah:["Consumo","Used","Consommé"], an_wh:["Energia","Energy","Énergie"], an_ipk:["Corrente max","Peak current","Courant max"], an_ppk:["Potenza max","Peak power","Puissance max"],
   an_vcell:["V/cella min","Min V/cell","V/cell. min"], an_rint:["Rint mediana","Median Rint","Rint médiane"], an_spec:["mAh/100 m","mAh/100 m","mAh/100 m"], an_tesc:["ESC max","ESC max","ESC max"],
   ph_ground:["A terra","Ground","Au sol"], ph_motor:["Motore","Motor","Moteur"], ph_therm:["Termica","Thermal","Ascendance"], ph_glide:["Planata","Glide","Plané"],
@@ -1696,7 +1731,7 @@ function renderFlightHead(f){
   const model=(f.model||"").replace(/^DEMO\s*[—-]\s*/,"").trim();
   const loc=locale();
   let dline;
-  if(m.dateObj && m.dateKnown){ dline=m.dateObj.toLocaleDateString(loc,{weekday:"long",day:"numeric",month:"long",year:"numeric"}); if(m.time) dline+=" · "+t("hour_at")+m.time; }
+  if(m.dateObj && m.dateKnown){ dline=m.dateObj.toLocaleDateString(loc,{weekday:"long",day:"numeric",month:"long",year:"numeric"}); if(m.time) dline+=" · "+t("hour_at")+m.time; if(m.dateEst) dline+=" ("+t("date_est")+")"; }
   else if(m.time){ dline=t("hour_at")+m.time+t("date_unavail"); }
   else dline=t("dt_unavail");
   $("#flightHead").innerHTML =
@@ -1775,6 +1810,28 @@ function radioStats(f,i0,i1){
   ev.sort((x,y)=>x.t-y.t);
   return (st.qmin==null&&st.amin==null&&st.rxmin==null&&st.becmin==null)?null:{st,ev};
 }
+/* v1.49 · analisi memorizzata per frame (serve alla Traiettoria e ai giudizi) e direzioni della bussola */
+const anaMemo=new WeakMap();
+function anaOf(f){ if(!f) return null; if(!anaMemo.has(f)){ let A=null; try{ A=analyzeFlight(f); }catch(e){} anaMemo.set(f,A); } return anaMemo.get(f); }
+const DIR8={it:["N","NE","E","SE","S","SO","O","NO"],en:["N","NE","E","SE","S","SW","W","NW"],fr:["N","NE","E","SE","S","SO","O","NO"]};
+function dir8(deg){ return (DIR8[lang]||DIR8.it)[Math.round((((deg%360)+360)%360)/45)%8]; }
+/* v1.49 · consumo in salita giudicato sul modello, non con soglie fisse (che penalizzavano i modelli grandi):
+   1) con almeno 3 voli dello stesso modello in archivio → confronto con il solito (mediana);
+   2) altrimenti, se il modello è in RZ Dati con il peso → rendimento della salita = energia di quota / energia della batteria;
+   3) altrimenti nessun giudizio. */
+let RZM=(()=>{ try{ return JSON.parse(localStorage.getItem("fd_rzm")||"[]"); }catch(e){ return []; } })();   // modelli di RZ Dati (Drive)
+const lowName=x=>String(x||"").trim().toLowerCase();
+function modelOf(f){ const e=f&&f._arch&&typeof ARCH!=="undefined"?ARCH.find(x=>x.key===f._arch):null; return ((e&&e.model)||(f&&f.model)||"").replace(/^DEMO\s*[—-]\s*/,"").trim(); }
+function rzModelFor(name){ const n=lowName(name); if(!n) return null; return RZM.find(m=>lowName(m.name)===n||(m.alias||[]).some(a=>lowName(a)===n))||null; }
+function specJudge(f,A){ const E=A&&A.el; if(!E||E.spec==null) return null;
+  const mod=modelOf(f), L=typeof ARCH!=="undefined"?ARCH:[];
+  const hist=L.filter(e=>e.key!==f._arch&&lowName(e.model)===lowName(mod)&&num(e.sum&&e.sum.spec)).map(e=>e.sum.spec);
+  if(hist.length>=3){ const med=median(hist), r=E.spec/med; return {kind:"hist",med,n:hist.length,r,lvl:r<=0.95?"good":r>1.15?"bad":"ok"}; }
+  const rz=rzModelFor(mod), mah=A.C.reduce((p,c)=>p+(num(c.mah)?c.mah:0),0);
+  if(rz&&rz.rtf>0&&f.cells&&mah>0&&A.gainMotor>20){ const wh=mah/1000*f.cells*3.7, eta=(rz.rtf/1000)*9.81*A.gainMotor/(wh*3600);
+    return {kind:"eta",eta,rtf:rz.rtf,lvl:eta>=0.40?"good":eta<0.25?"bad":"ok"}; }
+  return {kind:"none"};
+}
 function analyzeFlight(f){
   const a=altSeries(f), N=f.t.length, DT=f.DT; if(!a||N<10) return null;
   const va=varioOf(f), C=f.climbs||[], sp=f.series["Speed"], la=f.series["Lat"], lo=f.series["Lon"];
@@ -1825,8 +1882,24 @@ function analyzeFlight(f){
   const um=C.filter(c=>c.umin!=null); if(um.length&&cells) el.vcell=Math.min(...um.map(c=>c.umin))/cells;
   const sp100=C.filter(c=>c.mah!=null&&c.dalt>5); if(sp100.length) el.spec=sp100.reduce((p,c)=>p+c.mah,0)/sp100.reduce((p,c)=>p+c.dalt,0)*100;
   const te=pick(f,["TempESC"]); if(te) el.tesc=Math.max(...te.vals.filter(Number.isFinite));
+  // v1.49 · vento in quota dalla deriva delle termiche: il centro dei cerchi si sposta con il vento.
+  // Per ogni termica: posizione media del primo e dell'ultimo terzo (max 30 s, così i cerchi si compensano) → velocità di deriva.
+  let wind=null;
+  if(X){ let sx=0,sy=0,sw=0,nw=0;
+    for(const h of th){ const n=h.i1-h.i0+1, w=Math.min(Math.round(30/DT),Math.floor(n/3)); if(w<Math.round(6/DT)) continue;
+      let ax=0,ay=0,bx=0,by=0; for(let k=0;k<w;k++){ ax+=X[h.i0+k]; ay+=Y[h.i0+k]; bx+=X[h.i1-k]; by+=Y[h.i1-k]; }
+      const dtc=(n-w)*DT; if(!(dtc>0)) continue;
+      const vx=(bx-ax)/w/dtc, vy=(by-ay)/w/dtc;
+      h.wind={ms:Math.hypot(vx,vy),from:(Math.atan2(-vx,-vy)*180/Math.PI+360)%360,vx,vy};
+      sx+=vx*h.dur; sy+=vy*h.dur; sw+=h.dur; nw++; }
+    if(sw>0){ const vx=sx/sw, vy=sy/sw; wind={ms:Math.hypot(vx,vy),from:(Math.atan2(-vx,-vy)*180/Math.PI+360)%360,vx,vy,n:nw}; } }
+  // v1.49 · atterraggio: ultimi 5 s di volo (sink e velocità), direzione e distanza dal punto di lancio
+  const land={sinkFin:null,spd:null,dir:null,dist:dend,tail:null};
+  { const j0=Math.max(i0,i1-Math.round(5/DT)); let sm=0,n=0; for(let i=j0;i<=i1;i++) if(Number.isFinite(va[i])){ sm+=va[i]; n++; } if(n) land.sinkFin=-sm/n;
+    if(sp){ const v=[]; for(let i=j0;i<=i1;i++) if(Number.isFinite(sp.vals[i])) v.push(sp.vals[i]); if(v.length) land.spd=v.reduce((p,q)=>p+q,0)/v.length; }
+    if(X){ const dx=X[i1]-X[j0], dy=Y[i1]-Y[j0], L=Math.hypot(dx,dy); if(L>5){ land.dir=(Math.atan2(dx,dy)*180/Math.PI+360)%360; if(wind) land.tail=(wind.vx*dx+wind.vy*dy)/L; } } }
   const altMax=Math.max(...a.vals.slice(i0,i1+1)), lastClimb=C.length?C[C.length-1]:null;
-  return {N,DT,i0,i1,air,ph,secs,th,C,altMax,launchAlt:lastClimb?a.vals[Math.min(N-1,lastClimb.i1)]:null,
+  return {wind,land,N,DT,i0,i1,air,ph,secs,th,C,altMax,launchAlt:lastClimb?a.vals[Math.min(N-1,lastClimb.i1)]:null,
     gainMotor:C.reduce((p,c)=>p+Math.max(0,c.dalt||0),0),gainTherm:th.reduce((p,x)=>p+x.gain,0),
     sink:ns?ss/ns:null,gr,liftPct:n3?np/n3*100:null,sv,path,dmax,dend,hs,hvar,el,radio:radioStats(f,i0,i1),dives,hasGps:!!X,tOn:f.t[i0],tOff:f.t[i1]};
 }
@@ -1841,6 +1914,9 @@ function renderScore(f){
   let best="";
   if(b){ const bs=Math.round(b.sum.score); best=`<div class="scorebest">${t("sc_best")}: <b>${bs}</b> · ${escapeHtml(archLabel(b))}${cur>=bs?" — "+t("sc_isbest"):" ("+t("sc_cur")+" "+cur+")"}</div>`; }
   else best=`<div class="scorebest">${t("sc_nobest")}</div>`;
+  { const mod=modelOf(f), L=(typeof ARCH!=="undefined"?ARCH:[]).filter(e=>e.key!==f._arch&&mod&&lowName(e.model)===lowName(mod)&&num(e.sum&&e.sum.score)).map(e=>e.sum.score);
+    if(L.length>=2){ const rank=L.filter(v=>v>q.score).length+1, avg=L.reduce((p,v)=>p+v,0)/L.length;
+      best+=`<div class="scorebest">${t("sc_rank").replace("{m}",escapeHtml(mod)).replace("{r}",rank).replace("{n}",L.length+1).replace("{a}",fmt(avg,0))}</div>`; } }
   body.innerHTML=`<div class="scoregrid"><div><div class="scorebig">${cur}<small> /100</small></div><div class="scorelvl">${scoreLevel(q.score)}</div></div>
     <div class="scorebars">${rows}</div>${best}
     ${q.hasTh?"":`<div class="scorenote">⚠ ${t("sc_noth")}</div>`}
@@ -1881,16 +1957,22 @@ function renderAnalysis(f){
   if(A.gr!=null) g2.push(tile(t("an_gr"),fmt(A.gr,1),":1"));
   if(A.liftPct!=null) g2.push(tile(t("an_lift"),fmt(A.liftPct,0),"%"));
   if(A.sv){ g3.push(tile(t("an_vmax"),fmt(A.sv.max,0),"km/h")); if(A.sv.avg!=null) g3.push(tile(t("an_vavg"),fmt(A.sv.avg,0),"km/h")); if(A.sv.med!=null) g3.push(tile(t("an_vmed"),fmt(A.sv.med,0),"km/h")); }
-  if(A.path!=null){ g3.push(tile(t("an_path"),fmt(A.path/1000,2),"km")); g3.push(tile(t("an_dmax"),fmt(A.dmax,0),"m")); g3.push(tile(t("an_dend"),fmt(A.dend,0),"m")); }
+  if(A.path!=null){ g3.push(tile(t("an_path"),fmt(A.path/1000,2),"km")); g3.push(tile(t("an_dmax"),fmt(A.dmax,0),"m")); }
+  if(A.wind) g2.push(tile(t("an_wind"),fmt(A.wind.ms,1),"m/s",`${t("from")} ${dir8(A.wind.from)} · ${fmt(A.wind.ms*3.6,0)} km/h`));
+  const gL=[], LD=A.land||{};
+  if(LD.dist!=null) gL.push(tile(t("an_dend"),fmt(LD.dist,0),"m","",LD.dist<=100?"good":LD.dist>400?"warn":""));
+  if(LD.sinkFin!=null) gL.push(tile(t("an_sinkfin"),fmt(LD.sinkFin,1),"m/s","",LD.sinkFin>3?"warn":""));
+  if(LD.spd!=null) gL.push(tile(t("an_vfin"),fmt(LD.spd,0),"km/h"));
+  if(LD.dir!=null) gL.push(tile(t("an_ldir"),dir8(LD.dir),"",LD.tail!=null?(LD.tail>0.5?t("an_tailw")+" "+fmt(LD.tail,1)+" m/s":LD.tail<-0.5?t("an_headw")+" "+fmt(-LD.tail,1)+" m/s":t("an_crossw")):"",LD.tail!=null&&LD.tail>1.5?"warn":LD.tail!=null&&LD.tail<-0.5?"good":""));
   if(E.mah!=null) g4.push(tile(t("an_mah"),fmt(E.mah,0),"mAh")); if(E.wh!=null) g4.push(tile(t("an_wh"),fmt(E.wh,1),"Wh"));
   if(E.ipk!=null) g4.push(tile(t("an_ipk"),fmt(E.ipk,0),"A")); if(E.ppk!=null) g4.push(tile(t("an_ppk"),fmt(E.ppk,0),"W"));
   if(E.vcell!=null) g4.push(tile(t("an_vcell"),fmt(E.vcell,2),"V",""+"",E.vcell>=3.55?"good":E.vcell>=3.45?"warn":"crit"));
-  if(E.rint!=null) g4.push(tile(t("an_rint"),fmt(E.rint,0),"mΩ")); if(E.spec!=null) g4.push(tile(t("an_spec"),fmt(E.spec,0),"",""));
+  if(E.rint!=null) g4.push(tile(t("an_rint"),fmt(E.rint,0),"mΩ")); if(E.spec!=null){ const J=specJudge(f,A); g4.push(tile(t("an_spec"),fmt(E.spec,0),"",J&&J.kind==="hist"?`${t("an_usual")} ${fmt(J.med,0)}`:J&&J.kind==="eta"?`${t("an_eta")} ${fmt(J.eta*100,0)} %`:"",J&&J.lvl==="good"?"good":J&&J.lvl==="bad"?"warn":"")); }
   if(E.tesc!=null) g4.push(tile(t("an_tesc"),fmt(E.tesc,0),"°C","",E.tesc<60?"good":E.tesc<75?"warn":"crit"));
   const g5=[];
   if(f.phases){ const tot={}; for(const p of f.phases){ if(p.t1<=A.tOn||p.t0>=A.tOff) continue; const a=Math.max(p.t0,A.tOn),b=Math.min(p.t1,A.tOff); tot[p.k]=(tot[p.k]||0)+(b-a); }
     for(const P of PHASES) if(tot[P.k]>0) g5.push(tile(t(P.id),hhmmss(tot[P.k]),"",pct(tot[P.k]))); }
-  tiles.innerHTML=grp("an_g_flight",g1)+grp("an_g_air",g2)+grp("an_g_gps",g3)+grp("an_g_elec",g4)+grp("an_g_phase",g5);
+  tiles.innerHTML=grp("an_g_flight",g1)+grp("an_g_air",g2)+grp("an_g_gps",g3)+grp("an_g_land",gL)+grp("an_g_elec",g4)+grp("an_g_phase",g5);
 
   // barra delle fasi
   const COL=["var(--line)","var(--motor)","var(--good)","var(--accent-2)"], NAME=[t("ph_ground"),t("ph_motor"),t("ph_therm"),t("ph_glide")];
@@ -1904,8 +1986,8 @@ function renderAnalysis(f){
   // termiche
   renderRadio(f,A);
   if(!th.length) $("#thermWrap").innerHTML=`<p class="empty" style="padding:14px">${t("an_nothermals")}</p>`;
-  else $("#thermWrap").innerHTML=`<table><thead><tr><th>${t("th_col_n")}</th><th>${t("th_col_t0")}</th><th>${t("th_col_dur")}</th><th>${t("th_col_gain")}</th><th>${t("th_col_rate")}</th><th>${t("th_col_max")}</th><th>${t("th_col_in")}</th>${A.hasGps?`<th>${t("th_col_drift")}</th>`:""}</tr></thead><tbody>`+
-    th.map((x,k)=>`<tr><td>#${k+1}</td><td class="mono">${hhmmss(x.t0)}</td><td class="mono">${fmt(x.dur,0)}</td><td class="mono">+${fmt(x.gain,0)}</td><td class="mono">+${fmt(x.rate,1)}</td><td class="mono">+${fmt(x.vmax,1)}</td><td class="mono">${fmt(x.alt0,0)}</td>${A.hasGps?`<td class="mono">${x.drift!=null?fmt(x.drift,0):"—"}</td>`:""}</tr>`).join("")+`</tbody></table>`;
+  else $("#thermWrap").innerHTML=`<table><thead><tr><th>${t("th_col_n")}</th><th>${t("th_col_t0")}</th><th>${t("th_col_dur")}</th><th>${t("th_col_gain")}</th><th>${t("th_col_rate")}</th><th>${t("th_col_max")}</th><th>${t("th_col_in")}</th>${A.hasGps?`<th>${t("th_col_drift")}</th><th>${t("th_col_wind")}</th>`:""}</tr></thead><tbody>`+
+    th.map((x,k)=>`<tr><td>#${k+1}</td><td class="mono">${hhmmss(x.t0)}</td><td class="mono">${fmt(x.dur,0)}</td><td class="mono">+${fmt(x.gain,0)}</td><td class="mono">+${fmt(x.rate,1)}</td><td class="mono">+${fmt(x.vmax,1)}</td><td class="mono">${fmt(x.alt0,0)}</td>${A.hasGps?`<td class="mono">${x.drift!=null?fmt(x.drift,0):"—"}</td><td class="mono">${x.wind?fmt(x.wind.ms,1)+" m/s "+t("from")+" "+dir8(x.wind.from):"—"}</td>`:""}</tr>`).join("")+`</tbody></table>`;
 
   // istogrammi
   const histo=(title,bins,colFn,fmtLabel)=>{ if(!bins) return ""; const mx=Math.max(...bins.map(b=>b.s))||1, every=Math.ceil(bins.length/9);
@@ -1993,10 +2075,36 @@ function renderNarrative(f,A,tech,lowPara,minAlt){
     S.push([t("nar_gps"),LG(`${sv?`Velocità massima ${B(n0(sv.max)+" km/h")}${sv.avg!=null?`, media ${B(n0(sv.avg)+" km/h")} a motore spento`:""}.`:""}${land}`,`${sv?`Top speed ${B(n0(sv.max)+" km/h")}${sv.avg!=null?`, ${B(n0(sv.avg)+" km/h")} average with the motor off`:""}.`:""}${land}`,`${sv?`Vitesse maximale ${B(n0(sv.max)+" km/h")}${sv.avg!=null?`, moyenne ${B(n0(sv.avg)+" km/h")} moteur coupé`:""}.`:""}${land}`)]);
   }
 
+  // 5b · vento stimato dalle termiche (v1.49)
+  if(A.wind){ const w=A.wind, d=dir8(w.from);
+    S.push([t("nar_wind"),LG(`Dalla deriva ${w.n>1?`delle ${w.n} termiche`:"della termica"} stimo un vento in quota di ${B(n1(w.ms)+" m/s")} (${n0(w.ms*3.6)} km/h) da ${B(d)}. È il vento all'altezza delle termiche: a terra di solito è più debole.`,
+      `From the drift of ${w.n>1?`the ${w.n} thermals`:"the thermal"} I estimate a wind aloft of ${B(n1(w.ms)+" m/s")} (${n0(w.ms*3.6)} km/h) from ${B(d)}. This is the wind at thermal height: on the ground it is usually weaker.`,
+      `D'après la dérive ${w.n>1?`des ${w.n} ascendances`:"de l'ascendance"}, j'estime un vent en altitude de ${B(n1(w.ms)+" m/s")} (${n0(w.ms*3.6)} km/h) du ${B(d)}. C'est le vent à hauteur des ascendances : au sol il est en général plus faible.`)]); }
+  // 5c · atterraggio (v1.49)
+  { const L=A.land||{}, bits=[], bitsE=[], bitsF=[];
+    if(L.sinkFin!=null){ bits.push(`negli ultimi 5 secondi scendevi a ${B(n1(L.sinkFin)+" m/s")}`); bitsE.push(`in the last 5 seconds you were sinking at ${B(n1(L.sinkFin)+" m/s")}`); bitsF.push(`dans les 5 dernières secondes tu descendais à ${B(n1(L.sinkFin)+" m/s")}`); }
+    if(L.spd!=null){ bits.push(`a ${B(n0(L.spd)+" km/h")}`); bitsE.push(`at ${B(n0(L.spd)+" km/h")}`); bitsF.push(`à ${B(n0(L.spd)+" km/h")}`); }
+    if(L.dir!=null){ bits.push(`in direzione ${B(dir8(L.dir))}`); bitsE.push(`heading ${B(dir8(L.dir))}`); bitsF.push(`en direction ${B(dir8(L.dir))}`); }
+    if(bits.length){ let wtxt=["","",""];
+      if(L.tail!=null){ if(L.tail<-0.5) wtxt=[` — controvento (${n1(-L.tail)} m/s contro), come si deve.`,` — into the wind (${n1(-L.tail)} m/s headwind), as it should be.`,` — face au vent (${n1(-L.tail)} m/s de face), comme il faut.`];
+        else if(L.tail>0.5) wtxt=[` — con il vento in coda (${n1(L.tail)} m/s): l'atterraggio è più lungo e più veloce rispetto al suolo.`,` — with a tailwind (${n1(L.tail)} m/s): the landing is longer and faster over the ground.`,` — vent arrière (${n1(L.tail)} m/s) : l'atterrissage est plus long et plus rapide par rapport au sol.`];
+        else wtxt=[" — con il vento di traverso."," — with a crosswind."," — vent de travers."]; }
+      S.push([t("nar_land"),LG(`Nell'avvicinamento finale ${bits.join(", ")}${wtxt[0]||"."}`,`On final approach ${bitsE.join(", ")}${wtxt[1]||"."}`,`En approche finale ${bitsF.join(", ")}${wtxt[2]||"."}`)]);
+      if(L.tail!=null&&L.tail>1.5){ neg.push(LG(`Atterraggio con vento in coda (${n1(L.tail)} m/s)`,`Landing with a tailwind (${n1(L.tail)} m/s)`,`Atterrissage vent arrière (${n1(L.tail)} m/s)`)); tips.push(LG("fai l'ultima virata in modo da atterrare controvento","make the final turn so that you land into the wind","fais le dernier virage pour atterrir face au vent")); }
+      else if(L.tail!=null&&L.tail<-0.5) pos.push(LG("Atterraggio controvento","Landing into the wind","Atterrissage face au vent"));
+      if(L.sinkFin!=null&&L.sinkFin>3){ neg.push(LG(`Discesa finale ripida (${n1(L.sinkFin)} m/s)`,`Steep final descent (${n1(L.sinkFin)} m/s)`,`Descente finale raide (${n1(L.sinkFin)} m/s)`)); tips.push(LG("inizia l'avvicinamento un po' più lontano e più basso, con meno aerofreni nel finale","start the approach a little further out and lower, with less airbrake at the end","commence l'approche un peu plus loin et plus bas, avec moins d'aérofreins à la fin")); }
+    } }
+
   // 6 · motore e batteria (il vecchio commento tecnico) + passaggio basso
   const techHtml=tech.map(x=>`<p>${x}</p>`).join("");
   if(techHtml) S.push([t("nar_tech"),null,techHtml]);
-  if(E.spec!=null){ if(E.spec<=120) pos.push(LG(`Salite efficienti (${n0(E.spec)} mAh/100 m)`,`Efficient climbs (${n0(E.spec)} mAh/100 m)`,`Montées efficaces (${n0(E.spec)} mAh/100 m)`)); else if(E.spec>140){ neg.push(LG(`Consumo alto in salita (${n0(E.spec)} mAh/100 m)`,`High climb consumption (${n0(E.spec)} mAh/100 m)`,`Consommation élevée en montée (${n0(E.spec)} mAh/100 m)`)); tips.push(LG("sali con meno gas: costa meno energia per ogni metro","climb with less throttle: it costs less energy per metre","monte avec moins de gaz : ça coûte moins d'énergie par mètre")); } }
+  { const J=specJudge(f,A);
+    if(J&&J.kind==="hist"){ const pc=Math.round((J.r-1)*100);
+      if(J.lvl==="good") pos.push(LG(`Salite più efficienti del tuo solito (${n0(E.spec)} mAh/100 m, di solito ${n0(J.med)})`,`Climbs more efficient than usual (${n0(E.spec)} mAh/100 m, usually ${n0(J.med)})`,`Montées plus efficaces que d'habitude (${n0(E.spec)} mAh/100 m, d'habitude ${n0(J.med)})`));
+      else if(J.lvl==="bad"){ neg.push(LG(`Consumo in salita più alto del solito (+${pc} %: ${n0(E.spec)} mAh/100 m, di solito ${n0(J.med)})`,`Climb consumption higher than usual (+${pc} %: ${n0(E.spec)} mAh/100 m, usually ${n0(J.med)})`,`Consommation en montée plus élevée que d'habitude (+${pc} % : ${n0(E.spec)} mAh/100 m, d'habitude ${n0(J.med)})`)); tips.push(LG("controlla gas, elica e batteria: rispetto ai tuoi voli con questo modello hai speso di più per ogni metro","check throttle, propeller and battery: compared with your flights on this model each metre cost more","contrôle les gaz, l'hélice et la batterie : par rapport à tes vols avec ce modèle chaque mètre a coûté plus")); } }
+    else if(J&&J.kind==="eta"){ const e=Math.round(J.eta*100);
+      if(J.lvl==="good") pos.push(LG(`Salite efficienti (rendimento stimato ${e} %)`,`Efficient climbs (estimated efficiency ${e} %)`,`Montées efficaces (rendement estimé ${e} %)`));
+      else if(J.lvl==="bad"){ neg.push(LG(`Rendimento in salita basso (stimato ${e} %)`,`Low climb efficiency (estimated ${e} %)`,`Rendement en montée faible (estimé ${e} %)`)); tips.push(LG("sali con meno gas: costa meno energia per ogni metro","climb with less throttle: it costs less energy per metre","monte avec moins de gaz : ça coûte moins d'énergie par mètre")); } } }
   if(E.vcell!=null){ if(E.vcell>=3.55) pos.push(LG("Batteria in ottima forma sotto carico","Battery in great shape under load","Batterie en pleine forme sous charge")); else if(E.vcell<3.45){ neg.push(LG(`Tensione bassa sotto carico (${n2(E.vcell)} V/cella)`,`Low voltage under load (${n2(E.vcell)} V/cell)`,`Tension basse sous charge (${n2(E.vcell)} V/élément)`)); tips.push(LG("imposta un allarme di tensione a circa 3,5 V/cella","set a voltage alarm at about 3.5 V/cell","règle une alarme de tension à environ 3,5 V/élément")); } }
   if(E.tesc!=null&&E.tesc>=70){ neg.push(LG(`Regolatore caldo (${n0(E.tesc)} °C)`,`Hot ESC (${n0(E.tesc)} °C)`,`Variateur chaud (${n0(E.tesc)} °C)`)); tips.push(LG("lascia raffreddare il regolatore tra una salita e l'altra","let the ESC cool between climbs","laisse refroidir le variateur entre deux montées")); }
   if(A&&A.radio){ const nc=A.radio.ev.filter(e=>e.lvl==="crit").length; if(nc){ neg.push(LG(`Cali del collegamento radio/alimentazione (${nc})`,`Radio link / supply dropouts (${nc})`,`Pertes de liaison radio / alimentation (${nc})`)); tips.push(LG("controlla antenne, posizione del ricevitore e alimentazione del ricevitore (vedi Radio e alimentazione)","check antennas, receiver position and receiver supply (see Radio & power)","vérifie les antennes, la position du récepteur et son alimentation (voir Radio et alimentation)")); } }
@@ -2031,7 +2139,7 @@ function renderVerdict(f){
 
   // chips
   chips.push({c:"good",t:LG(`${C.length} salit${C.length===1?'a':'e'} a motore`,`${C.length} motor climb${C.length===1?'':'s'}`,`${C.length} montée${C.length===1?'':'s'} moteur`)});
-  if(spec!=null) chips.push({c:spec<120?"good":spec<140?"warn":"crit",t:`${fmt(spec,0)} mAh/100m`});
+  if(spec!=null){ const J=specJudge(f,anaOf(f)); chips.push({c:J&&J.lvl==="good"?"good":J&&J.lvl==="bad"?"crit":J&&J.lvl==="ok"?"warn":"",t:`${fmt(spec,0)} mAh/100m`}); }
   if(minCell!=null) chips.push({c:minCell>=3.55?"good":minCell>=3.45?"warn":"crit",t:`${LG("sag min","min sag","sag min")} ${fmt(minCell,2)} V/${LG("cella","cell","cellule")}`});
   if(tescMax!=null) chips.push({c:tescMax<60?"good":tescMax<75?"warn":"crit",t:`ESC max ${fmt(tescMax,0)} °C`});
   if(capEnd!=null) chips.push({c:"warn",t:`${LG("consumo tot","total used","conso tot")} ${fmt(capEnd,0)} mAh`});
@@ -2853,7 +2961,7 @@ function frameToJson(f,info){
   const m=f.meta||{};
   return {format:"rz-flight",version:1,app:$(".ver").textContent,saved:new Date().toISOString(),
     model:info.model,pack:info.pack,note:info.note,source:info.source,
-    meta:{date:m.dateObj?m.dateObj.toISOString():null,time:m.time||null,dateKnown:!!m.dateKnown},
+    meta:{date:m.dateObj?m.dateObj.toISOString():null,time:m.time||null,dateKnown:!!m.dateKnown,dateEst:!!m.dateEst},
     DT:f.DT,dur:f.dur,summary:flightSummary(f),series};
 }
 function frameFromJson(o){
@@ -2862,7 +2970,7 @@ function frameFromJson(o){
   for(let i=0;i<N;i++) t[i]=+(i*DT).toFixed(2);
   const series={}; for(const k of keys){ const s=o.series[k]; series[k]={unit:s.unit||"",vals:s.vals.map(v=>v==null?NaN:v)}; }
   const m=o.meta||{};
-  const f={t,series,dur:o.dur!=null?o.dur:t[N-1],model:o.model||"",DT,meta:{dateObj:m.date?new Date(m.date):null,time:m.time||null,dateKnown:!!m.dateKnown}};
+  const f={t,series,dur:o.dur!=null?o.dur:t[N-1],model:o.model||"",DT,meta:{dateObj:m.date?new Date(m.date):null,time:m.time||null,dateKnown:!!m.dateKnown,dateEst:!!m.dateEst}};
   computeDerived(f); detectClimbs(f); return f;
 }
 function slug(s){ return String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,30); }
@@ -2912,6 +3020,14 @@ async function archReload(){
   ARCH_PC=out; archBusy=false; archMerge();
 }
 /* voli archiviati sul Google Drive (cartella «RZ Dati / voli», file .rzf.json) */
+/* v1.49 · elenco dei modelli di RZ Dati (modelli.json, lo stesso di RZ Hub e RZ Ballast Archive): peso e nomi per la pagina Modelli */
+async function loadRzModels(){ if(!gdOk()) return;
+  try{ if(!gd.dir) gd.dir=await gdFolder(GD.dir,"root");
+    const fm=await gdFind("modelli.json",gd.dir); if(!fm) return;
+    const j=await (await gdF("/drive/v3/files/"+encodeURIComponent(fm.id)+"?alt=media")).json();
+    RZM=(Array.isArray(j.models)?j.models:[]).filter(m=>m&&!m.deleted&&m.name).map(m=>({id:String(m.id||""),name:String(m.name).slice(0,80),alias:Array.isArray(m.alias)?m.alias.map(String).slice(0,20):[],rtf:+m.rtf||0,area:+m.area||0}));
+    try{ localStorage.setItem("fd_rzm",JSON.stringify(RZM)); }catch(e){}
+    renderArchive(); }catch(e){} }
 async function archReloadDrive(){
   if(!gdOk()){ ARCH_DRV=[]; return archMerge(); }
   archDrvBusy=true; renderArchFolder();
@@ -2925,7 +3041,7 @@ async function archReloadDrive(){
     }
     ARCH_DRV=out;
   }catch(e){ archMsg=t("ar_err")+" (Drive): "+(e.message==="auth"?t("drv_exp"):e.message); }
-  archDrvBusy=false; archMerge();
+  archDrvBusy=false; archMerge(); loadRzModels();
 }
 async function archWrite(name,o){ const h=await archDir.getFileHandle(name,{create:true}); const w=await h.createWritable(); await w.write(JSON.stringify(o)); await w.close(); }
 
@@ -3008,7 +3124,7 @@ function renderArchSave(){
   const uniq=k=>[...new Set(ARCH.map(e=>e[k]).filter(Boolean))].sort();
   { const sb=$("#arScore"); let q=null; if(DATA&&!isDemo){ if(DATA._scoreQ===undefined){ try{ DATA._scoreQ=flightScore(DATA); }catch(e){ DATA._scoreQ=null; } } q=DATA._scoreQ; }
     sb.hidden=!q; if(q) sb.innerHTML=`${t("sc_h2")}: <b>${Math.round(q.score)}</b> /100 · ${scoreLevel(q.score)} <span style="color:var(--muted)">— ${t("sc_saved")}</span>`; }
-  $("#arModels").innerHTML=uniq("model").map(v=>`<option value="${escapeHtml(v)}">`).join("");
+  $("#arModels").innerHTML=[...new Set(uniq("model").concat(RZM.map(m=>m.name)))].sort().map(v=>`<option value="${escapeHtml(v)}">`).join("");
   if(!DATA||isDemo){ ins.forEach(i=>{i.disabled=true;i.value="";}); btn.disabled=true; btn.textContent=t("ar_save"); msg.textContent=t("ar_demo"); archFormFor=null; return; }
   if(archFormFor!==DATA){   // nuovo volo caricato: precompila i campi
     archFormFor=DATA; archMsg="";
@@ -3134,7 +3250,45 @@ function renderTrend(){
   const dir=Math.abs(sl)<(hi-lo)*0.01?t("td_flat"):((sl>0)===(M.good>0)?t("td_better"):t("td_worse"));
   info.textContent=`${L.length} ${t("pk_n").toLowerCase()} · ${t("td_best")}: ${fmt(L[best].v,M.d)} ${M.u} (${archDate(L[best].e)}) · ${t("td_trend")}: ${dir} (${sl>=0?"+":""}${fmt(sl,M.d>1?M.d:2)} ${M.u}/${t("td_perflight")})`;
 }
-function renderArchive(){ renderArchFolder(); renderArchSave(); renderArchFilters(); renderArchList(); renderCompare(); renderTrend(); try{ renderWelcome(); }catch(e){} }
+/* v1.49 · pagina Modelli (voli raggruppati per modello, con i dati di RZ Dati) e i 10 voli migliori di sempre */
+let mdMode="m";
+function renderModels(){
+  const body=$("#mdBody"); if(!body) return;
+  $("#mdTabM").classList.toggle("on",mdMode==="m"); $("#mdTabT").classList.toggle("on",mdMode==="t");
+  const L=typeof ARCH!=="undefined"?ARCH:[];
+  if(mdMode==="t"){
+    const top=L.filter(e=>num(e.sum&&e.sum.score)).sort((a,b)=>b.sum.score-a.sum.score).slice(0,10);
+    if(!top.length){ body.innerHTML=`<p class="empty">${t("md_none")}</p>`; return; }
+    body.innerHTML=`<div class="tablewrap"><table><thead><tr><th>#</th><th>${t("m_date")}</th><th>${t("ar_model")}</th><th>${t("ar_index")}</th><th>${t("m_dur")}</th><th>${t("m_altmax")} m</th><th>${t("m_sink")} m/s</th><th></th></tr></thead><tbody>`+
+      top.map((e,k)=>`<tr><td class="mono">${k+1}</td><td class="mono txt">${archDate(e)}</td><td class="txt">${escapeHtml(e.model||"—")}</td><td class="mono"><b>${Math.round(e.sum.score)}</b></td><td class="mono">${hhmmss(e.sum.dur)}</td><td class="mono">${fmt(e.sum.altMax,0)}</td><td class="mono">${fmt(e.sum.sink,2)}</td><td class="act"><button data-open="${escapeHtml(e.key)}">${t("ar_open")}</button></td></tr>`).join("")+`</tbody></table></div>`;
+    return; }
+  const G=new Map();
+  for(const e of L){ const n=(e.model||"").trim(); if(!n) continue; const k=lowName(n); if(!G.has(k)) G.set(k,{name:n,list:[]}); G.get(k).list.push(e); }
+  for(const m of RZM){ const k=lowName(m.name); if(!G.has(k)&&!(m.alias||[]).some(a=>G.has(lowName(a)))) G.set(k,{name:m.name,list:[]}); }
+  if(!G.size){ body.innerHTML=`<p class="empty">${t("md_none")}</p>`; return; }
+  const cards=[...G.values()].sort((a,b)=>b.list.length-a.list.length||a.name.localeCompare(b.name)).map(g=>{
+    const rz=rzModelFor(g.name)||g.list.map(e=>rzModelFor(e.model)).find(Boolean);
+    const sc=g.list.filter(e=>num(e.sum&&e.sum.score)).sort((a,b)=>(a.ts||0)-(b.ts||0));
+    const best=sc.length?sc.reduce((p,e)=>e.sum.score>p.sum.score?e:p,sc[0]):null, avg=sc.length?sc.reduce((p,e)=>p+e.sum.score,0)/sc.length:null;
+    const last=g.list.slice().sort((a,b)=>(b.ts||0)-(a.ts||0))[0];
+    let setup=""; if(last&&last.f){ try{ setup=setupItems(last.f).map(x=>x.name).join(" · "); }catch(e){} if(last.f.cells&&!/\d\s*S\b/.test(setup)) setup+=(setup?" · ":"")+last.f.cells+"S"; }
+    let sp=""; const vals=sc.slice(-12).map(e=>e.sum.score);
+    if(vals.length>1){ const lo=Math.min(...vals), hi=Math.max(...vals), d=(hi-lo)||1, pts=vals.map((v,i)=>`${(2+i/(vals.length-1)*196).toFixed(0)},${(30-(v-lo)/d*26).toFixed(1)}`);
+      sp=`<svg width="200" height="34" viewBox="0 0 200 34" aria-hidden="true"><polyline points="${pts.join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/></svg>`; }
+    const rzl=rz&&rz.rtf>0?`RTF ${fmt(rz.rtf,0)} g${rz.area>0?` · ${fmt(rz.area,1)} dm² · ${fmt(rz.rtf/rz.area,1)} g/dm²`:""} · RZ Dati`:"";
+    return `<div class="mdc${g.list.length?"":" none"}"><div class="mdn">${escapeHtml(g.name)}</div>${rzl?`<div class="mds">${rzl}</div>`:""}${setup?`<div class="mdset">${t("md_setup")}: ${escapeHtml(setup)}</div>`:""}
+      <div class="mdk"><span><b>${g.list.length}</b> ${g.list.length===1?t("md_flight1"):t("wl_flights")}</span>${best?`<span>${t("md_best")} <b>${Math.round(best.sum.score)}</b></span><span>${t("md_avg")} <b>${fmt(avg,0)}</b></span>`:""}</div>
+      ${sp}${last?`<div class="mdd">${t("md_last")}: ${escapeHtml(archDate(last))}${best?` · ${t("md_bestf")}: ${escapeHtml(archDate(best))}`:""}</div>`:`<div class="mdd">${t("md_noflights")}</div>`}
+      ${g.list.length?`<button class="btn ghost" type="button" data-mdf="${escapeHtml(g.list[0].model)}">${t("md_flights")}</button>`:""}</div>`; });
+  body.innerHTML=`<div class="mdgrid">${cards.join("")}</div>`;
+}
+$("#mdTabM").addEventListener("click",()=>{ mdMode="m"; renderModels(); });
+$("#mdTabT").addEventListener("click",()=>{ mdMode="t"; renderModels(); });
+$("#mdBody").addEventListener("click",e=>{ const o=e.target.closest("button[data-open]"); if(o) return archOpen(o.dataset.open);
+  const b=e.target.closest("button[data-mdf]"); if(b){ archF.model=b.dataset.mdf; renderArchFilters(); renderArchList(); const l=$("#arList"); if(l&&l.scrollIntoView) l.scrollIntoView({behavior:"smooth",block:"start"}); } });
+/* v1.49 · stampa / PDF dell'Analisi volo (il CSS @media print lascia solo questa pagina, su fondo bianco) */
+$("#prBtn").addEventListener("click",()=>window.print());
+function renderArchive(){ renderModels(); renderArchFolder(); renderArchSave(); renderArchFilters(); renderArchList(); renderCompare(); renderTrend(); try{ renderWelcome(); }catch(e){} }
 
 $("#arFolder").addEventListener("click",e=>{ const b=e.target.closest("button[data-ar]"); if(!b) return; const a=b.dataset.ar;
   if(a==="pick") archPick(); else if(a==="reconnect") archReconnect(); else if(a==="dreload"){ archMsg=""; archReloadDrive(); } else if(a==="dconnect"){ gd.after="ar"; gdSave(); gdConnect(); } });
@@ -3288,7 +3442,11 @@ function trackData(f,exag){
   let last=NaN; for(let i=0;i<N;i++){ if(Number.isFinite(hd[i])) last=hd[i]; else hd[i]=last; }
   last=NaN; for(let i=N-1;i>=0;i--){ if(Number.isFinite(hd[i])) last=hd[i]; else hd[i]=last; }
   for(let i=0;i<N;i++) if(!Number.isFinite(hd[i])) hd[i]=0;
-  return {x,y,z,v,hd,gm,bk,hs,cum,lat0,lon0,t:f.t,N,Spos,Sneg,exag,xmn,xmx,ymn,ymx,zmn,zmx,sp:f.series["Speed"]||null,ser:f.series,keys:Object.keys(f.series)};
+  // v1.49 · termiche (colonna con etichetta T1 +1,9) e vento stimato, dall'analisi del volo intero
+  const AN=anaOf(DATA), thm=[];
+  if(AN&&AN.th) AN.th.forEach((h,k)=>{ let sx=0,sy=0,n=0,z0=1e9,z1=-1e9; for(let i=0;i<N;i++) if(f.t[i]>=h.t0&&f.t[i]<=h.t1){ sx+=x[i]; sy+=y[i]; n++; z0=Math.min(z0,z[i]); z1=Math.max(z1,z[i]); }
+    if(n>2) thm.push({k:k+1,cx:sx/n,cy:sy/n,z0,z1,rate:h.rate}); });
+  return {thm,wind:AN&&AN.wind||null,x,y,z,v,hd,gm,bk,hs,cum,lat0,lon0,t:f.t,N,Spos,Sneg,exag,xmn,xmx,ymn,ymx,zmn,zmx,sp:f.series["Speed"]||null,ser:f.series,keys:Object.keys(f.series)};
 }
 /* ---- sfondo mappa gratuito: tasselli Web Mercator (OpenStreetMap / Esri) proiettati sul "pavimento" ----
    Il pavimento è un piano: la proiezione ortografica è lineare, quindi ogni tassello si disegna con una sola trasformazione affine. */
@@ -3378,6 +3536,20 @@ function drawTrack(){
   const s0=P(D.x[0],D.y[0],Z(0)), s1=P(D.x[D.N-1],D.y[D.N-1],Z(D.N-1));
   g.strokeStyle=cssv("--fg"); g.fillStyle=cssv("--bg"); g.lineWidth=2; g.beginPath(); g.arc(s0[0],s0[1],5,0,7); g.fill(); g.stroke();
   g.beginPath(); g.rect(s1[0]-5,s1[1]-5,10,10); g.fill(); g.stroke();
+  // termiche: colonna tratteggiata dal suolo alla quota massima raggiunta, con numero e salita media (v1.49)
+  if(D.thm&&D.thm.length){ const gc=cssv("--good"); g.font='bold 11px system-ui,sans-serif'; g.textAlign="center"; g.textBaseline="bottom";
+    for(const h of D.thm){ const top=P(h.cx,h.cy,(h.z1-D.zmn)*ex), gnd=P(h.cx,h.cy,0);
+      g.strokeStyle=gc; g.globalAlpha=.75; g.setLineDash([4,3]); g.lineWidth=1.5; g.beginPath(); g.moveTo(gnd[0],gnd[1]); g.lineTo(top[0],top[1]); g.stroke(); g.setLineDash([]); g.globalAlpha=1;
+      g.fillStyle=gc; g.beginPath(); g.arc(top[0],top[1],4,0,7); g.fill();
+      g.fillStyle=cssv("--fg"); g.fillText(`T${h.k} +${fmt(h.rate,1)}`,top[0],top[1]-6); } }
+  // vento stimato: freccia nell'angolo in alto a destra, nella direzione in cui soffia (proiettata sul suolo)
+  if(D.wind&&D.wind.ms>0.3){ const c0=P(0,0,0), c1=P(D.wind.vx,D.wind.vy,0); let dx=c1[0]-c0[0], dy=c1[1]-c0[1]; const L=Math.hypot(dx,dy);
+    const ax=W-64, ay=46; g.strokeStyle=cssv("--accent"); g.fillStyle=cssv("--accent"); g.lineWidth=3; g.lineCap="round";
+    if(L>1e-6){ dx/=L; dy/=L; const s0x=ax-dx*20, s0y=ay-dy*20, s1x=ax+dx*20, s1y=ay+dy*20;
+      g.beginPath(); g.moveTo(s0x,s0y); g.lineTo(s1x,s1y); g.stroke();
+      g.beginPath(); g.moveTo(s1x+dx*4,s1y+dy*4); g.lineTo(s1x-dx*8-dy*7,s1y-dy*8+dx*7); g.lineTo(s1x-dx*8+dy*7,s1y-dy*8-dx*7); g.closePath(); g.fill(); }
+    g.font='11px system-ui,sans-serif'; g.textAlign="center"; g.textBaseline="top"; g.fillStyle=cssv("--fg");
+    g.fillText(`${t("an_wind")} ${fmt(D.wind.ms,1)} m/s`,ax,ay+26); g.fillStyle=muted; g.fillText(`${t("from")} ${dir8(D.wind.from)}`,ax,ay+40); }
   // aliante sulla traiettoria: modello 3D (ali, piani di coda, deriva, fusoliera) orientato su rotta, assetto e inclinazione
   const i=Math.max(0,Math.min(D.N-1,Math.round(trIdx))), m=P(D.x[i],D.y[i],Z(i)), fl=P(D.x[i],D.y[i],0);
   g.strokeStyle=cssv("--fg"); g.globalAlpha=.6; g.setLineDash([3,3]); g.lineWidth=1; g.beginPath(); g.moveTo(m[0],m[1]); g.lineTo(fl[0],fl[1]); g.stroke(); g.setLineDash([]); g.globalAlpha=1;
@@ -3530,7 +3702,7 @@ function mergeFrames(fj,fg){
   if(!mj.dateKnown&&mg.dateKnown&&mg.dateObj){ const d=new Date(mg.dateObj); if(mj.time){ const q=mj.time.split(":"); d.setHours(+q[0],+q[1],+q[2]||0); } f.meta={dateObj:d,time:mj.time||mg.time,dateKnown:true}; }
   return {frame:f,al};
 }
-function parseAnyText(txt,name){
+function parseAnyText(txt,name,fileTime){
   let f=null, kind="jeti"; const rz=isRzGpsCsv(txt), nmea=rz||/^\$G[NPLAB]RMC|^\$SMGPS/m.test(txt);
   try{
     if(rz){ kind="nmea"; f=parseRzGps(txt); }
@@ -3541,6 +3713,10 @@ function parseAnyText(txt,name){
   }catch(err){ f=null; }
   if(!f||!altSeries(f)) return null;
   if(!f.meta||(!f.meta.time&&!f.meta.dateKnown)) f.meta=parseFilename(name);
+  // v1.49: senza data nel log (molti log Jeti) si usa la data del file (di solito il giorno del volo), segnata come «stimata»
+  if(f.meta&&!f.meta.dateKnown&&fileTime>0){ const d=new Date(fileTime);
+    if(f.meta.time){ const q=f.meta.time.split(":"); d.setHours(+q[0]||0,+q[1]||0,+q[2]||0,0); }
+    f.meta={dateObj:d,time:f.meta.time||null,dateKnown:true,dateEst:true}; }
   f._src=name; f._kind=kind; return f;
 }
 function showFrame(f,label){ hideWelcome(); focusRange=null; reports=reports.filter(r=>!r.tmp); DATA=f; isDemo=false; $("#fname").textContent=label; renderAll(); }
@@ -3553,7 +3729,7 @@ function tryMerge(f1,f2,label){
 }
 $("#file").addEventListener("change",e=>{
   const files=[...e.target.files].slice(0,2); e.target.value=""; if(!files.length) return;
-  Promise.all(files.map(fl=>new Promise(res=>{ const rd=new FileReader(); rd.onload=()=>res(parseAnyText(String(rd.result),fl.name)); rd.onerror=()=>res(null); rd.readAsText(fl,"latin1"); }))).then(fr=>{
+  Promise.all(files.map(fl=>new Promise(res=>{ const rd=new FileReader(); rd.onload=()=>res(parseAnyText(String(rd.result),fl.name,fl.lastModified)); rd.onerror=()=>res(null); rd.readAsText(fl,"latin1"); }))).then(fr=>{
     const ok=fr.filter(Boolean); if(!ok.length){ alert(t("file_err")); return; }
     if(ok.length===2 && ok[0]._kind!==ok[1]._kind){ tryMerge(ok[0],ok[1],ok.map(x=>x._src).join(" + ")); return; }
     const f=ok[0];
@@ -3620,7 +3796,7 @@ async function drvRefresh(){ drvButtons(); const L=$("#drvList"); L.innerHTML=""
     if(!fl.length){ drvMsg(t("drv_empty")); return; }
     drvMsg(fl.length+" "+t("drv_count"));
     L.innerHTML=fl.map(f=>{ const d=f.modifiedTime?new Date(f.modifiedTime):null, kb=f.size?Math.max(1,Math.round(f.size/1024))+" kB":"";
-      return '<button type="button" class="drvrow" data-id="'+escapeHtml(f.id)+'" data-name="'+escapeHtml(f.name)+'"><span>'+escapeHtml(f.name)+'</span><small>'+(d?d.toLocaleDateString(lang)+" "+d.toLocaleTimeString(lang,{hour:"2-digit",minute:"2-digit"}):"")+" · "+kb+'</small></button>'; }).join("");
+      return '<button type="button" class="drvrow" data-id="'+escapeHtml(f.id)+'" data-name="'+escapeHtml(f.name)+'" data-mod="'+escapeHtml(f.modifiedTime||"")+'"><span>'+escapeHtml(f.name)+'</span><small>'+(d?d.toLocaleDateString(lang)+" "+d.toLocaleTimeString(lang,{hour:"2-digit",minute:"2-digit"}):"")+" · "+kb+'</small></button>'; }).join("");
   }catch(e){ drvFail(e); } }
 function drvFail(e){ if(e.message==="auth"){ drvButtons(); drvMsg(t("drv_exp"),true); } else drvMsg(t("drv_err")+" "+e.message,true); }
 function drvOpen(){ $("#drvOverlay").classList.add("open"); drvRefresh(); }
@@ -3642,7 +3818,7 @@ $("#drvUp").addEventListener("click",async()=>{ if(!lastFiles.length) return;
 $("#drvList").addEventListener("click",async e=>{ const b=e.target.closest(".drvrow"); if(!b) return;
   drvMsg(t("drv_open")+" "+b.dataset.name+"…");
   try{ const buf=await (await gdF("/drive/v3/files/"+encodeURIComponent(b.dataset.id)+"?alt=media")).arrayBuffer();
-    const f=parseAnyText(new TextDecoder("iso-8859-1").decode(buf),b.dataset.name);
+    const f=parseAnyText(new TextDecoder("iso-8859-1").decode(buf),b.dataset.name,b.dataset.mod?Date.parse(b.dataset.mod):0);
     if(!f){ drvMsg(t("file_err"),true); return; }
     lastFiles=[]; $("#drvOverlay").classList.remove("open");
     const cur=DATA&&!isDemo&&DATA._kind&&DATA._kind!=="merged"?DATA:null;

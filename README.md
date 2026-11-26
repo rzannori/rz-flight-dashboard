@@ -4,7 +4,7 @@ Dashboard **single-file HTML** per analizzare i log di volo di veleggiatori radi
 Nessuna dipendenza, nessun build per usarla: è un unico file `.html` che gira **offline** aprendolo in un browser (Chrome/Edge/Firefox/Safari).
 È anche una **PWA**: da iPhone/iPad/Android si installa sulla schermata Home e funziona senza rete.
 
-- Versione corrente: **v1.48**
+- Versione corrente: **v1.49**
 - Online (installabile come app): https://rzannori.github.io/rz-flight-dashboard/
 - File di riferimento: `index.html` (versioni marcate con tag git `vX.Y`)
 - Autore/owner: Roberto (RZ) — progetto personale modellismo
@@ -208,6 +208,14 @@ Nomi trilingui (it/en/fr) in `DERIV_NAMES`; sono distinte nell'UI dal badge **ƒ
 - Limiti: la velocità GPS è **al suolo** (con vento forte i punti si disperdono); la polare è più fedele con planate a velocità
   costante e diverse tra loro, in aria calma. Punti anomali oltre `1,5×` il sink massimo delle fasce non vengono disegnati.
 
+**Novità della v1.49**
+- **Analisi volo:** *vento in quota* stimato dalla **deriva delle termiche** (`analyzeFlight` → `A.wind`: per ogni termica posizione media del primo e dell'ultimo terzo, max 30 s, così i cerchi si compensano; media pesata sulla durata; colonna *Vento* nella tabella delle termiche e paragrafo «Vento stimato»). Gruppo **Atterraggio** (`A.land`): distanza dal punto di lancio, *sink finale* (ultimi 5 s), velocità finale, direzione e componente del vento (controvento / in coda / traverso) con giudizio. Verificato con `esempi/volo-vento-test.nmea` (vento vero 4 m/s da NO → stimato 4,1 m/s da NO).
+- **Consumo in salita giudicato sul modello** (`specJudge`): con ≥ 3 voli dello stesso modello in archivio confronto con il solito (mediana, ±5 % / +15 %); altrimenti, se il modello è in **RZ Dati** con il peso (`RZM`, letto da `RZ Dati/modelli.json` sul Drive, cache `localStorage` `fd_rzm`), **rendimento della salita** = m·g·Δquota / energia (mAh × celle × 3,7 V): ≥ 40 % buono, < 25 % basso; senza nessuno dei due nessun giudizio. Le vecchie soglie fisse 120/140 mAh/100 m (che penalizzavano i modelli grandi come l'ARCUS) non si usano più. L'**indice** mostra la posizione tra i voli dello stesso modello.
+- **Archivio → Modelli:** una scheda per modello (voli, miglior indice, media, andamento, assetto dell'ultimo volo, peso e superficie da RZ Dati; anche i modelli di RZ Dati ancora senza voli) e il bottone **«Migliori 10 voli»** di tutti i modelli. I modelli di RZ Dati compaiono anche tra i suggerimenti del campo Modello.
+- **Traiettoria 3D:** termiche segnate (colonna tratteggiata, «T1 +1,9») e freccia del vento stimato.
+- **Stampa / PDF** dell'Analisi volo (bottone in alto; `@media print` lascia solo quella pagina su fondo bianco).
+- **Data dei log Jeti senza data:** si usa la data del file (o del Drive) come ripiego, mostrata «(data stimata dal file)» (`meta.dateEst`, salvato anche in archivio).
+
 **Archivio (`ar`)** — cartella sul PC (solo Chrome/Edge, File System Access API) e/o Google Drive (vedi sopra)
 - **Cartella**: scelta con `showDirectoryPicker`; l'handle è salvato in IndexedDB (`rzfd` → `kv` → `archDir`) e
   all'avvio si verifica il permesso (`queryPermission`); se serve, pulsante **Riconnetti cartella** (`requestPermission`).
@@ -327,6 +335,8 @@ Il cambio tab mostra/nasconde le sezioni e renderizza su richiesta (`renderView`
 ---
 
 ## 15. Changelog
+
+- **v1.49** — vento in quota dalla deriva delle termiche (anche in Traiettoria 3D con le termiche segnate), analisi dell'atterraggio, consumo giudicato sul modello (voli dello stesso modello o rendimento col peso di RZ Dati) e posizione dell'indice tra i voli del modello, Archivio → Modelli e Migliori 10 voli, Stampa / PDF dell'Analisi, data stimata dal file per i log Jeti senza data. Nuovo esempio `volo-vento-test.nmea` (`genera-volo-vento.py`). Test: 57 controlli.
 
 - **v1.0** — rinomina in "RZ Flight Dashboard", badge versione.
 - **v1.1** — drill-through (KPI cliccabili, brushing/focus, popup salita).
