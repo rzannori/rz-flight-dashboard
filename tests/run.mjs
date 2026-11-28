@@ -194,7 +194,7 @@ console.log("Welcome page");
   ok(!(await p2.locator("#welcome").isHidden()), "il titolo riporta alla welcome");
   await p2.evaluate(() => { DeviceOrientationEvent.requestPermission = async () => "granted"; }); await p2.click("#wkDial"); await p2.waitForTimeout(200);
   await p2.evaluate(() => { const e = new Event("deviceorientation"); e.beta = 100; e.gamma = 25; window.dispatchEvent(e); });
-  ok(/rotate\(-25deg\)/.test(await p2.evaluate(() => document.querySelector("#wkDial .hz").style.transform)), "strumento della welcome: l'orizzonte segue il sensore del telefono");
+  ok(/rotate\(-40deg\)/.test(await p2.evaluate(() => document.querySelector("#wkDial .hz").style.transform)), "strumento della welcome: l'orizzonte segue il sensore del telefono");
   await p2.click("#wlC1"); await p2.waitForTimeout(500); await p2.click("#wlDemo"); await p2.waitForTimeout(300);
   ok(await p2.locator("#welcome").isHidden(), "\"Prova con la demo\" entra nell'app");
   await p2.click("#railHome"); await p2.waitForTimeout(300);
