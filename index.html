@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-L5d1Brk+YlKpdtFwmJc/yhjnXlJft7X0+qaROJjp9Lk='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Wl++/kz2aRJ703pCEYYkZFXDeQcO1MCXOZjUX4dXzrQ='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -721,7 +721,7 @@
   <div class="top">
     <div class="left"></div>
     <div class="center">
-      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v2.0</span></div>
+      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v2.0.8</span></div>
       <div class="crumb" id="crumb"></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
@@ -2900,10 +2900,10 @@ function renderWelcome(){
 }
 function initGyro(){
   const d=$("#wkDial"); if(!d||!("DeviceOrientationEvent" in window)) return;
-  const hz=d.querySelector(".hz"), hint=$("#wkHint"); let on=false;
+  const hz=d.querySelector(".hz"), hint=$("#wkHint"); let on=false, b0=null;
   if(hint&&window.matchMedia&&matchMedia("(pointer:coarse)").matches) hint.hidden=false;
-  const h=e=>{ if(e.beta==null||$("#welcome").hidden) return; const roll=Math.max(-60,Math.min(60,e.gamma||0))*1.6, pit=Math.max(-25,Math.min(25,(e.beta||0)-90)); hz.style.transform="rotate("+(-roll).toFixed(1)+"deg) translateY("+(pit*7).toFixed(1)+"px)"; };
-  const stop=()=>{ window.removeEventListener("deviceorientation",h); d.classList.remove("live"); hz.style.transform=""; on=false; if(hint) hint.hidden=!(window.matchMedia&&matchMedia("(pointer:coarse)").matches); };
+  const h=e=>{ if(e.beta==null||$("#welcome").hidden) return; if(b0===null) b0=e.beta; const roll=Math.max(-60,Math.min(60,e.gamma||0))*1.6, pit=Math.max(-25,Math.min(25,e.beta-b0)); hz.style.transform="rotate("+(-roll).toFixed(1)+"deg) translateY("+(pit*7).toFixed(1)+"px)"; };
+  const stop=()=>{ window.removeEventListener("deviceorientation",h); d.classList.remove("live"); hz.style.transform=""; on=false; b0=null; if(hint) hint.hidden=!(window.matchMedia&&matchMedia("(pointer:coarse)").matches); };
   const go=async()=>{ if(on){ stop(); return; } try{ if(typeof DeviceOrientationEvent.requestPermission==="function"){ const r=await DeviceOrientationEvent.requestPermission(); if(r!=="granted") return; } window.addEventListener("deviceorientation",h); d.classList.add("live"); on=true; if(hint) hint.hidden=true; }catch(e){} };
   d.addEventListener("click",go); d.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
 }
@@ -4182,6 +4182,7 @@ if(/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform==="MacIntel
 // PWA: service worker per l'uso offline (solo se servita via http/https, non da file locale)
 if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
   window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
+  let hadSW=!!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(hadSW&&!sessionStorage.getItem("fd_swr")){ try{ sessionStorage.setItem("fd_swr","1"); }catch(e){} location.reload(); } hadSW=true; });
 }
 { let md="blue"; try{ const v=localStorage.getItem("fd_mode"); if(v==="dark"||v==="light"||v==="blue") md=v; }catch(e){}
   if(md!=="light") document.documentElement.setAttribute("data-theme",md); $("#modeSel").value=md; }
