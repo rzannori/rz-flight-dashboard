@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-n+vm4Qq2l04vFwVb7+Df6YFfa0+Hu33zsBjq+kxXxMs='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oXREKlaafz2pMkWJJ5CvqSNumR7ESKdy7vUFF4S9i1Y='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -662,7 +662,7 @@
     .wrap{padding-left:10px;padding-right:10px;padding-bottom:104px}
     .rail{left:8px;right:8px;top:auto;bottom:8px;width:auto;height:76px;flex-direction:row;align-items:center;justify-content:center;padding:8px 10px;border-radius:28px;overflow-x:auto;overflow-y:hidden}
     .rail:hover,.rail:focus-within,.rail.open,.rail.fly:hover,.rail.fly:focus-within{width:auto}
-    .rail-logo{display:none}#railHome{display:none}
+    .rail-logo{display:none}
     .rail-nav{flex-direction:row;gap:8px;width:auto;padding:0}.rail-bottom{margin:0 0 0 4px}
     .rail .tab,.rail .rbtn{width:auto;height:58px;gap:0}.rail .tl{display:none}
     .kn{width:54px;height:54px}.kn::before{inset:5px}.kn::after{inset:8px}
@@ -684,7 +684,7 @@
   section[data-page="re"][data-cursub="rep"]>[data-sub="rep"],section[data-page="re"][data-cursub="look"]>[data-sub="look"],section[data-page="re"][data-cursub="bk"]>[data-sub="bk"],section[data-page="re"][data-cursub="ph"]>[data-sub="ph"]{display:block}
   section[data-page="re"]:not([hidden]){display:block!important}
   /* cassetto variabili del grafico */
-  .top .setupbtn{display:none!important}
+  .top .setupbtn,#loadMenu,.rail .tab[data-p="ar"]{display:none!important}
   .subhide{display:none!important}
   .vpbtn{margin-left:auto}
   .grlayout.vp-off{grid-template-columns:minmax(0,1fr)}
@@ -722,7 +722,7 @@
   <div class="top">
     <div class="left"></div>
     <div class="center">
-      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v2.0.8</span></div>
+      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v2.0.10</span></div>
       <div class="crumb" id="crumb"></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
@@ -771,7 +771,7 @@
     <button class="tab" role="tab" aria-selected="false" data-p="tr" style="--kc:#2be06a"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span><span class="tl" data-i18n="tab_tr">Traiettoria</span></button>
     <button class="tab" role="tab" aria-selected="false" data-p="ar" style="--kc:#c9a8ff"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M3 7h18v3H3zM5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9M10 14h4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tl" data-i18n="tab_ar">Archivio</span></button>
   </div>
-  <div class="rail-nav rail-bottom"><button class="rbtn" id="railHome" type="button" style="--kc:#2be06a" data-i18n-title="wl_home" title="Home"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tl" data-i18n="home_btn">Home</span></button><button class="rbtn" id="railSetup" type="button" aria-pressed="false" style="--kc:#ffb347"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span><span class="tl" data-i18n="setup">Set up</span></button></div>
+  <div class="rail-nav rail-bottom"><button class="rbtn" id="railSetup" type="button" aria-pressed="false" style="--kc:#ffb347"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span><span class="tl" data-i18n="setup">Set up</span></button></div>
 </nav>
 <div class="flyout" id="flyout" role="menu" aria-hidden="true"><div class="fh" id="flyTitle"></div><div id="flyItems"></div></div>
 
@@ -2978,7 +2978,6 @@ function initRail(){
   document.querySelectorAll(".rail .tab").forEach(tb=>tb.addEventListener("click",()=>onPageChange(tb.dataset.p)));
   $("#railSetup").addEventListener("click",()=>$("#setupBtn").click());
   $("#homeBtn").addEventListener("click",()=>{ closeFlyout(); showWelcome(); });
-  $("#railHome").addEventListener("click",()=>{ closeFlyout(); showWelcome(); });
   const sync=()=>{ const on=$("#setupBtn").classList.contains("active"); $("#railSetup").setAttribute("aria-pressed",on?"true":"false"); if(on){ curPage="re"; renderCrumb(); openFlyout("re"); scheduleFlyClose(3200); } };
   new MutationObserver(sync).observe($("#setupBtn"),{attributes:true,attributeFilter:["class"]}); sync();
   $("#flyItems").addEventListener("click",e=>{ const b=e.target.closest(".fi"); if(!b) return; showSub(curPage,b.dataset.sub); renderFlyout(curPage); closeFlyout(); });
