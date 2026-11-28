@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4K9j6cgp+V2oW45xJuwK32Jdq+Q280G0Z+Po5rvhYes='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5Yt7qhG9R0HmP2/DOnB1MU+zWkgP5Pes5HZjN0uSkos='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -654,6 +654,14 @@
     .scoregrid{grid-template-columns:1fr}.scoredial{margin:0 auto;width:260px;height:260px}
     @media(max-width:480px){.kn{width:42px;height:42px}.kn::before{inset:4px}.kn::after{inset:6px}.kn svg{width:22px;height:22px}.rail .tab,.rail .rbtn{height:46px}.rail-nav{gap:4px}.rail{height:64px;padding:8px 6px}.flyout{bottom:84px}.wrap{padding-bottom:92px}}.scoredial .scorebig{top:78px;font-size:72px}.scoredial .scorelvl{top:166px}
   }
+  section[data-page="re"][data-cursub]>[data-sub]{display:none}
+  section[data-page="re"][data-cursub="rep"]>[data-sub="rep"],section[data-page="re"][data-cursub="look"]>[data-sub="look"],section[data-page="re"][data-cursub="bk"]>[data-sub="bk"],section[data-page="re"][data-cursub="ph"]>[data-sub="ph"]{display:block}
+  section[data-page="re"]:not([hidden]){display:block!important}
+  /* cassetto variabili del grafico */
+  .vpbtn{margin-left:auto}
+  .grlayout.vp-off{grid-template-columns:minmax(0,1fr)}
+  .grlayout.vp-off .varpanel{display:none}
+  .varpanel{animation:vpIn .35s cubic-bezier(.2,.8,.2,1)}@keyframes vpIn{from{opacity:0;transform:translateX(-24px)}}
   @media print{ section[data-page="ju"] [data-sub]{display:block!important}section[data-page="ju"] .anarow[data-sub]{display:grid!important}.rail,.flyout,.crumb{display:none!important}.wrap{padding-left:16px!important} }
 </style>
 
@@ -807,7 +815,7 @@
   <!-- PAGE 2 -->
   <section data-page="gr" hidden>
     <div class="card">
-      <h2><span data-i18n="gr_h2">Grafico selezionabile</span> <span class="tag">REPORT</span>
+      <h2><span data-i18n="gr_h2">Grafico selezionabile</span> <span class="tag">REPORT</span> <button type="button" class="btn ghost vpbtn" id="vpToggle" aria-expanded="true" data-i18n="gr_vp">Variabili</button>
         <span class="resctl"><span data-i18n="detail">Dettaglio</span>
           <select class="resSel" data-det><option value="400" data-i18n="det_low">Basso</option><option value="1000" data-i18n="det_med">Medio</option><option value="1600" selected data-i18n="det_high">Alto</option><option value="4000" data-i18n="det_max">Massimo</option></select>
         </span>
@@ -997,8 +1005,8 @@
   </section>
 
   <!-- PAGE 3 -->
-  <section data-page="re" hidden>
-    <div class="card">
+  <section data-page="re" hidden data-cursub="rep">
+    <div class="card" data-sub="rep">
       <h2><span data-i18n="bld_h2">Costruttore di report</span> <span class="tag">STD</span></h2>
       <div class="row">
         <div class="fieldl">
@@ -1030,7 +1038,7 @@
       <p class="hint" data-i18n-html="bld_hint">I report che crei qui compaiono nel menu della pagina <b>Grafico</b> e restano salvati su questo browser. La lista parte vuota: sei tu a definire i grafici che ti servono.</p>
       <div class="saved" id="savedList"></div>
     </div>
-    <div class="card">
+    <div class="card" data-sub="look">
       <h2><span data-i18n="col_h2">Aspetto dashboard</span> <span class="tag">COLORS</span></h2>
       <p class="hint" style="margin-top:0" data-i18n="col_hint">Personalizza i colori principali: le modifiche si applicano subito e restano salvate su questo browser.</p>
       <div class="row" style="margin-bottom:10px"><div class="fieldl"><label for="modeSel" data-i18n="md_label">Aspetto</label><select id="modeSel" class="resSel"><option value="blue" data-i18n="md_blue">Blu (predefinito)</option><option value="light" data-i18n="md_light">Chiaro (stile RZ)</option><option value="dark" data-i18n="md_dark">Scuro</option></select></div></div>
@@ -1041,7 +1049,7 @@
         <button class="btn ghost" id="themeReset" data-i18n="col_reset">Ripristina colori predefiniti</button>
       </div>
     </div>
-    <div class="card" id="bkCard">
+    <div class="card" data-sub="bk" id="bkCard">
       <h2><span data-i18n="bk_h2">Copia di sicurezza delle impostazioni</span> <span class="tag">BACKUP</span></h2>
       <p class="hint" style="margin-top:0" data-i18n="bk_hint">Le impostazioni (lingua, aspetto, report, interruttori delle fasi, logo) stanno nella memoria di questo browser. Esportale in un file per non perderle (cambio browser o telefono, reinstallazione dell'app) e importale quando servono. I voli non ne fanno parte: restano nei file dell'archivio.</p>
       <div class="row">
@@ -1050,7 +1058,7 @@
       </div>
       <p class="hint" id="bkMsg" role="status"></p>
     </div>
-    <div class="card" id="phCard">
+    <div class="card" data-sub="ph" id="phCard">
       <h2><span data-i18n="pc_h2">Interruttori delle fasi di volo</span> <span class="tag">SW</span></h2>
       <p class="hint" style="margin-top:-4px" data-i18n="pc_hint">Indica quale fase corrisponde a ogni posizione degli interruttori della radio (canali "Comando" dei log Jeti). Le barre colorate nei grafici e i tempi per fase usano queste impostazioni.</p>
       <div class="row" id="phRow"></div>
@@ -1294,6 +1302,7 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  sb_rep:["Costruttore di report","Report builder","Créateur de rapports"], sb_look:["Aspetto","Appearance","Apparence"], sb_bk:["Copia di sicurezza","Backup","Sauvegarde"], sb_ph:["Interruttori fasi","Phase switches","Interrupteurs de phase"], gr_vp:["Variabili","Variables","Variables"],
   sb_idx:["Indice di volo","Flight index","Indice de vol"], sb_story:["Il racconto del volo","The flight story","Le récit du vol"], sb_sum:["Riepilogo dati","Data summary","Récapitulatif"],
   sb_therm:["Termiche e distribuzioni","Thermals and distributions","Thermiques et distributions"], sb_radio:["Radio e alimentazione","Radio & power","Radio et alimentation"],
   sb_phases:["Fasi del volo","Flight phases","Phases du vol"], sb_motor:["Salite a motore","Motor climbs","Montées moteur"],
@@ -2886,9 +2895,9 @@ const SUB_IC={
  ra:'<path d="M5 12a10 10 0 0 1 14 0M8 15a6 6 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="18.5" r="1.6" fill="currentColor"/>',
  ph:'<path d="M3 17h5v-6h5v4h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
  bt:'<rect x="3" y="7" width="16" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M21 10v4M8 10l-2 4h4l-2 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>'};
-const SUBS={ju:{title:"tab_ju",items:[{id:"idx",ic:"ix",l:"sb_idx"},{id:"story",ic:"tx",l:"sb_story"},{id:"sum",ic:"ov",l:"sb_sum"},{id:"therm",ic:"th",l:"sb_therm"},{id:"radio",ic:"ra",l:"sb_radio"},{id:"phases",ic:"ph",l:"sb_phases"},{id:"motor",ic:"bt",l:"sb_motor"}]}};
+const SUBS={ju:{title:"tab_ju",items:[{id:"idx",ic:"ix",l:"sb_idx"},{id:"story",ic:"tx",l:"sb_story"},{id:"sum",ic:"ov",l:"sb_sum"},{id:"therm",ic:"th",l:"sb_therm"},{id:"radio",ic:"ra",l:"sb_radio"},{id:"phases",ic:"ph",l:"sb_phases"},{id:"motor",ic:"bt",l:"sb_motor"}]},re:{title:"setup",items:[{id:"rep",ic:"ov",l:"sb_rep"},{id:"look",ic:"th",l:"sb_look"},{id:"bk",ic:"tx",l:"sb_bk"},{id:"ph",ic:"ph",l:"sb_ph"}]}};
 let curPage="ov", flyTimer=0;
-const subCur={ju:"idx"};
+const subCur={ju:"idx",re:"rep"};
 function pageLabel(p){ return t(p==="re"?"setup":"tab_"+p); }
 function renderCrumb(){
   const el=$("#crumb"); if(!el) return; let tx=pageLabel(curPage);
@@ -2925,12 +2934,13 @@ function initRail(){
   const rail=$("#rail"); if(!rail) return;
   document.querySelectorAll(".rail .tab").forEach(tb=>tb.addEventListener("click",()=>onPageChange(tb.dataset.p)));
   $("#railSetup").addEventListener("click",()=>$("#setupBtn").click());
-  const sync=()=>{ const on=$("#setupBtn").classList.contains("active"); $("#railSetup").setAttribute("aria-pressed",on?"true":"false"); if(on){ curPage="re"; closeFlyout(); renderCrumb(); } };
+  const sync=()=>{ const on=$("#setupBtn").classList.contains("active"); $("#railSetup").setAttribute("aria-pressed",on?"true":"false"); if(on){ curPage="re"; renderCrumb(); openFlyout("re"); scheduleFlyClose(3200); } };
   new MutationObserver(sync).observe($("#setupBtn"),{attributes:true,attributeFilter:["class"]}); sync();
   $("#flyItems").addEventListener("click",e=>{ const b=e.target.closest(".fi"); if(!b) return; showSub(curPage,b.dataset.sub); renderFlyout(curPage); closeFlyout(); });
   for(const el of [$("#flyout"),rail]){ el.addEventListener("mouseenter",()=>{ if($("#flyout").classList.contains("open")) clearTimeout(flyTimer); }); el.addEventListener("mouseleave",()=>{ if($("#flyout").classList.contains("open")) scheduleFlyClose(1400); }); }
   document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeFlyout(); });
-  document.addEventListener("click",e=>{ if(!e.target.closest("#flyout,#rail")) closeFlyout(); });
+  document.addEventListener("click",e=>{ if(!e.target.closest("#flyout,#rail,#setupBtn")) closeFlyout(); });
+  const vt=$("#vpToggle"); if(vt){ const lay=document.querySelector(".grlayout"); vt.addEventListener("click",()=>{ const off=lay.classList.toggle("vp-off"); vt.setAttribute("aria-expanded",off?"false":"true"); setTimeout(()=>{ try{ renderView(); }catch(e){} },380); }); }
   renderCrumb();
 }
 function renderPhaseCfg(){
