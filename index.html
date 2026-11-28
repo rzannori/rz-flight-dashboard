@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gNvA/onTM5TWng8s01G77avxCLi2/jTwPetnAgOVNbM='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4K9j6cgp+V2oW45xJuwK32Jdq+Q280G0Z+Po5rvhYes='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -556,6 +556,23 @@
 
   .wl-dial{position:fixed;right:clamp(24px,9vw,170px);top:clamp(90px,12vh,170px);width:clamp(210px,min(29vw,33vh),430px);height:auto;aspect-ratio:1;z-index:2;pointer-events:none;filter:drop-shadow(0 22px 32px rgba(0,0,0,.55))}
   @media(max-width:860px){.wl-dial{width:128px;right:18px;top:96px}}
+
+  /* v2.0: welcome "cabina" – ingresso a cascata, schede 3D, quadrante che respira (solo se le animazioni sono attive) */
+  .wl-card{box-shadow:0 8px 0 rgba(4,14,26,.75),0 18px 30px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.14);transition:transform .18s,box-shadow .18s,border-color .18s}
+  .wl-card:hover,.wl-card:focus-visible{transform:translateY(-5px) rotateX(3deg);box-shadow:0 13px 0 rgba(4,14,26,.75),0 26px 38px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.2)}
+  .wl-card:active{transform:translateY(4px);box-shadow:0 3px 0 rgba(4,14,26,.75),0 6px 12px rgba(0,0,0,.4)}
+  .wl-ic{box-shadow:0 4px 0 rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.35)}
+  #welcome.intro .wl-top{animation:wlDown .6s cubic-bezier(.2,.8,.2,1) both}
+  #welcome.intro .wl-hero>*{animation:wlRise .7s cubic-bezier(.2,.8,.2,1) both}
+  #welcome.intro .wl-hero>:nth-child(2){animation-delay:.12s}#welcome.intro .wl-hero>:nth-child(3){animation-delay:.24s}
+  #welcome.intro .wl-card{animation:wlPop .7s cubic-bezier(.2,.9,.25,1.15) both}
+  #welcome.intro .wl-card.c1{animation-delay:.35s}#welcome.intro .wl-card.c2{animation-delay:.5s}#welcome.intro .wl-card.c3{animation-delay:.65s}
+  #welcome.intro .wl-dial{animation:wlDial 1.1s cubic-bezier(.2,.8,.2,1) .15s both,wlFloat 6s ease-in-out 1.3s infinite}
+  @keyframes wlDown{from{opacity:0;transform:translateY(-30px)}}
+  @keyframes wlRise{from{opacity:0;transform:translateY(26px)}}
+  @keyframes wlPop{from{opacity:0;transform:translateY(60px) scale(.94)}}
+  @keyframes wlDial{from{opacity:0;transform:rotate(-70deg) scale(.6)}}
+  @keyframes wlFloat{50%{transform:translateY(-9px) rotate(1.5deg)}}
 
   /* ---- animazioni ---- */
   @keyframes rise{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
@@ -2814,8 +2831,9 @@ function bkImport(file){
 }
 /* ---------- welcome page ---------- */
 function welcomeOn(){ try{ return localStorage.getItem("fd_welcome")!=="0"; }catch(e){ return true; } }
+function introWelcome(){ const w=$("#welcome"); if(!w) return; w.classList.remove("intro"); if(animOn()){ void w.offsetWidth; w.classList.add("intro"); } }
 function hideWelcome(){ const w=$("#welcome"); if(!w||w.hidden) return; w.hidden=true; document.body.style.overflow=""; }
-function showWelcome(){ const w=$("#welcome"); if(!w) return; renderWelcome(); w.hidden=false; document.body.style.overflow="hidden"; w.scrollTop=0; }
+function showWelcome(){ const w=$("#welcome"); if(!w) return; renderWelcome(); introWelcome(); w.hidden=false; document.body.style.overflow="hidden"; w.scrollTop=0; }
 function goArchive(model){ hideWelcome(); if(model!==undefined){ archF.model=model; } const tb=document.querySelector('.tab[data-p="ar"]'); if(tb) tb.click(); renderArchive(); }
 function renderWelcome(){
   if(!$("#welcome")) return;
@@ -2856,7 +2874,7 @@ function initWelcome(){
   const t0=document.querySelector(".apptitle"); if(t0){ t0.title=t("wl_home"); t0.setAttribute("role","button"); t0.tabIndex=0; t0.addEventListener("click",showWelcome); t0.addEventListener("keydown",e=>{ if(e.key==="Enter") showWelcome(); }); }
   const ca=$("#animOn"); ca.checked=animOn(); ca.addEventListener("change",()=>{ try{ localStorage.setItem("fd_anim",ca.checked?"1":"0"); }catch(e){} });
   const cb=$("#wlShow"); cb.checked=welcomeOn(); cb.addEventListener("change",()=>{ try{ localStorage.setItem("fd_welcome",cb.checked?"1":"0"); }catch(e){} });
-  if(welcomeOn()){ renderWelcome(); document.body.style.overflow="hidden"; } else { w.hidden=true; }
+  if(welcomeOn()){ renderWelcome(); introWelcome(); document.body.style.overflow="hidden"; } else { w.hidden=true; }
 }
 /* ---------- v2.0: binario laterale, sottomenu a scomparsa, briciole di pane ---------- */
 const SUB_IC={
