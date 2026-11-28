@@ -2,7 +2,7 @@
    Strategia "stale-while-revalidate": risponde subito dalla cache e intanto
    scarica la versione aggiornata, che sarà usata all'apertura successiva.
    Cambiare CACHE a ogni versione per eliminare i file vecchi. */
-const CACHE = "rz-fd-v2.0.10";
+const CACHE = "rz-fd-v2.0.11";
 const SHELL = [
   "./",
   "./index.html",
@@ -10,7 +10,8 @@ const SHELL = [
   "./icons/apple-touch-icon.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./icons/favicon-32.png"
+  "./icons/favicon-32.png",
+  "./pilot.png"
 ];
 
 self.addEventListener("install", e => {

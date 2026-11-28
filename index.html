@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oXREKlaafz2pMkWJJ5CvqSNumR7ESKdy7vUFF4S9i1Y='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3DC2Q6bpnKEJqscvSx//JGgQDS8f9si6RQxKhpJlfVk='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -502,7 +502,7 @@
   .wk-stage{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;min-height:360px}
   .wk-side{display:flex;flex-direction:column;gap:clamp(18px,6vh,60px);align-items:center}
   .wk-mid{display:flex;flex-direction:column;align-items:center;gap:12px}
-  .wk-dial{width:clamp(220px,min(34vw,52vh),480px);height:auto;aspect-ratio:1;filter:drop-shadow(0 24px 30px rgba(0,0,0,.6))}
+  .wk-pilot{width:clamp(240px,min(46vw,70vh),640px);height:auto;filter:drop-shadow(0 18px 26px rgba(0,0,0,.55));user-select:none;pointer-events:none}
   .wkw.on{z-index:30}
   .wkw{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px}
   .wk{--kc:#2be06a;position:relative;width:clamp(76px,10vw,128px);aspect-ratio:1;border-radius:50%;border:0;padding:0;cursor:pointer;color:var(--kc);background:conic-gradient(from 210deg,#f3f8ff,#6c8199 18%,#b5c6d9 40%,#f3f8ff 55%,#566b82 78%,#d5e3f2);box-shadow:0 10px 0 #0a1420,0 20px 26px rgba(0,0,0,.6),inset 0 2px 2px rgba(255,255,255,.7);transition:transform .16s,box-shadow .16s,filter .3s,opacity .3s}
@@ -526,7 +526,10 @@
   .wl-stat{display:flex;align-items:flex-end;gap:14px}.wl-stat div{font-size:12px;color:#8db1de}.wl-stat b{display:block;font-size:22px;color:#fff}
   .wl-chips{display:flex;flex-direction:column;gap:8px;align-items:inherit}
   .wl-chip{padding:9px 16px;border-radius:99px;border:1px solid #0a1420;background:linear-gradient(#456b94,#1d3d60);color:#fff;font-weight:800;font-size:13px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 0 #0a1420,0 8px 12px rgba(0,0,0,.4);white-space:nowrap}
-  .wk-hint{font-size:12px;color:#8db1de;text-align:center}.wk-hint[hidden]{display:none}.wk-dial{cursor:pointer;outline:none}.wk-dial .hz{transform-origin:200px 200px;transition:transform .08s linear}.wk-dial.live .hz{animation:none!important}
+    .wk-logo{width:auto;height:44px;border:0;background:none;padding:0;min-width:0;display:flex;align-items:center}.wk-logo img{height:44px;width:auto;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+  .wk-pill{white-space:nowrap}.wl-foot{padding-left:130px}
+  .wk-setup{position:fixed;left:clamp(14px,2.4vw,40px);bottom:14px;z-index:5;flex-direction:row;gap:10px}.wk-setup .wk{width:54px}.wk-setup .wkl{font-size:11px}
+  .wk-stage .wk-side.l .wkw .wfan{left:calc(100% + 6px)}
   .wl-last{display:flex;align-items:center;gap:10px;background:rgba(8,20,34,.78);backdrop-filter:blur(8px);border:1px solid rgba(88,180,255,.4);border-radius:99px;padding:8px 16px;color:#cfe3ff;font-size:14px;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.4)}
   .wl-last[hidden]{display:none}.wl-last:hover{border-color:#58b4ff}.wl-last b{color:#fff}.wl-last .sc{background:#19b956;color:#fff;font-weight:800;border-radius:10px;padding:1px 9px}
   .wl-foot{margin-top:10px;display:flex;justify-content:space-between;font-size:12px;color:#a9c8ec}
@@ -536,30 +539,29 @@
   #welcome.intro .wk-top{animation:wkDown .6s cubic-bezier(.2,.8,.2,1) both}
   #welcome.intro .wk-title{animation:wkRise .8s cubic-bezier(.2,.8,.2,1) .1s both}
   #welcome.intro .wk-sub{animation:wkRise .8s cubic-bezier(.2,.8,.2,1) .25s both}
-  #welcome.intro .wk-dial{animation:wkDial 1.1s cubic-bezier(.2,.8,.2,1) .2s both}
-  #welcome.intro .wk-dial .hz{animation:wkTilt 7s ease-in-out 1.3s infinite;transform-origin:200px 200px}
+  #welcome.intro .wk-pilot{animation:wkDial 1.1s cubic-bezier(.2,.8,.2,1) .2s both,wkFloat 7s ease-in-out 1.3s infinite}
   #welcome.intro .wkw{animation:wkPop .7s cubic-bezier(.2,.9,.25,1.2) backwards}
   #welcome.intro .wkw{animation-delay:calc(.45s + var(--d,0)*.12s)}
   #welcome.intro .wk-led{animation:wkLed 3s ease-in-out infinite alternate}
   @keyframes wkDown{from{opacity:0;transform:translateY(-30px)}}
   @keyframes wkRise{from{opacity:0;transform:translateY(-24px) scale(.96)}}
-  @keyframes wkDial{from{opacity:0;transform:rotate(-80deg) scale(.55)}}
-  @keyframes wkTilt{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(6deg) translateY(5px)}}
+  @keyframes wkDial{from{opacity:0;transform:translateX(60px) scale(.9)}}
+  @keyframes wkFloat{50%{transform:translateY(-8px)}}
   @keyframes wkPop{from{opacity:0;transform:translateY(50px) scale(.7)}}
   @keyframes wkLed{from{--lv:35%}to{--lv:92%}}
   @property --lv{syntax:"<percentage>";inherits:false;initial-value:70%}
   @media(max-width:860px){
     .wk-brand,.wk-top .wl-ver{display:none}
-    .wk-in{padding:10px 12px}
-    .wk-stage{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr auto;gap:10px;align-content:stretch}
-    .wk-mid{grid-column:1/-1;grid-row:1;justify-content:center}.wk-dial{width:min(70vw,38vh)}
+    .wk-in{padding:10px 12px 84px}.wk-setup{left:12px;bottom:12px}.wk-logo{height:38px}.wk-logo img{height:38px}
+    .wk-stage{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:1fr auto;gap:10px;align-content:stretch}
+    .wk-mid{grid-column:1/-1;grid-row:1;justify-content:center}.wk-pilot{width:min(88vw,44vh)}
     .wk-side{display:contents}
     .wk-led{display:none}
     .wk{width:62px}.wkl{font-size:9px;letter-spacing:.12em}
     .wfan,.wkw.l .wfan,.wkw.r .wfan{position:fixed;left:10px;right:10px;top:auto;bottom:160px;transform:none;max-width:none;width:auto;align-items:stretch;padding:14px;border-radius:24px;background:linear-gradient(135deg,rgba(28,74,120,.97),rgba(11,37,64,.98));border:1px solid rgba(120,180,240,.4);box-shadow:0 20px 40px rgba(0,0,0,.6);transform:translateY(30px);opacity:0;transition:opacity .25s,transform .3s}
     .wkw.on .wfan{opacity:1;transform:none}
     .wfan>*,.wkw.r .wfan>*{transform:none;opacity:1;transition:none}.wp{white-space:normal}
-    .wl-chips{align-items:stretch}.wl-foot{justify-content:center;text-align:center}.wl-foot #wlVer2{display:none}
+    .wl-chips{align-items:stretch}.wl-foot{justify-content:center;text-align:center;padding-left:0}.wl-foot #wlVer2{display:none}
   }
   @media(prefers-reduced-motion:reduce){.wk,.wp{transition:none}}
   .apptitle{cursor:pointer}
@@ -685,12 +687,21 @@
   section[data-page="re"]:not([hidden]){display:block!important}
   /* cassetto variabili del grafico */
   .top .setupbtn,#loadMenu,.rail .tab[data-p="ar"]{display:none!important}
+  /* banner del modello su tutte le pagine (2/3 della versione precedente) */
+  .flighthead{padding:12px 14px;margin-bottom:12px;gap:4px 11px;border-left-width:3px}
+  .flighthead:empty{display:none}
+  .fh-model{font-size:clamp(1.35rem,4.3vw,1.87rem)}.fh-dev{font-size:.64rem;margin-top:4px;gap:3px 15px}.fh-r{font-size:.52rem}.fh-date{font-size:.67rem}.fh-demo{font-size:.45rem;padding:1px 6px}
+  .acc-h{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:9px 16px 9px 10px;margin:0 0 12px;border-radius:30px;cursor:pointer;color:#fff;font:800 15px -apple-system,system-ui,"Segoe UI",sans-serif;border:1px solid #0a1420;background:linear-gradient(#5d7390,#2c3d52 48%,#1f2e40 52%,#33465c);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 4px 0 #0a1420,0 8px 12px rgba(0,0,0,.35);transition:filter .15s,transform .12s,box-shadow .12s}
+  .acc-h[hidden]{display:none}.acc-h:hover{filter:brightness(1.14)}.acc-h:active{transform:translateY(3px);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 1px 0 #0a1420}
+  .acc-h .fic{width:34px;height:34px;border-radius:50%;background:rgba(11,26,43,.55);display:flex;align-items:center;justify-content:center;flex:none;color:#58b4ff}
+  .acc-h .acc-t{flex:1}.acc-h .acc-c{font-size:16px;transition:transform .25s;opacity:.85}
+  .acc-h.open{background:linear-gradient(#3fe283,#14a74f)}.acc-h.open .fic{color:#fff}.acc-h.open .acc-c{transform:rotate(180deg)}
   .subhide{display:none!important}
   .vpbtn{margin-left:auto}
   .grlayout.vp-off{grid-template-columns:minmax(0,1fr)}
   .grlayout.vp-off .varpanel{display:none}
   .varpanel{animation:vpIn .35s cubic-bezier(.2,.8,.2,1)}@keyframes vpIn{from{opacity:0;transform:translateX(-24px)}}
-  @media print{ section[data-page="ju"] [data-sub]{display:block!important}section[data-page="ju"] .anarow[data-sub]{display:grid!important}.rail,.flyout,.crumb{display:none!important}.wrap{padding-left:16px!important} }
+  @media print{ section[data-page="ju"] [data-sub]{display:block!important}section[data-page="ju"] .anarow[data-sub]{display:grid!important}.rail,.flyout,.crumb,.acc-h{display:none!important}.wrap{padding-left:16px!important} }
 </style>
 
 <div id="nojs" style="margin:16px;padding:14px 16px;font:14px system-ui,-apple-system,sans-serif;color:#eef3f9;background:#242931;border:1px solid #3a434f;border-radius:10px;line-height:1.5">
@@ -701,20 +712,17 @@
 <section id="welcome" aria-label="Welcome">
   <div class="wk-bg"></div><div class="wk-grid"></div><div class="wk-led l"></div><div class="wk-led r"></div>
   <div class="wk-in">
-    <div class="wk-top"><svg class="rzmark" width="38" height="38" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><b class="wk-brand">Flight Dashboard</b><span class="wl-ver" id="wlVer"></span><span class="wk-sp"></span>
+    <div class="wk-top"><div class="wk-logo logo" id="wkLogo"></div><b class="wk-brand">RZ Flight Dashboard</b><span class="wl-ver" id="wlVer"></span><span class="wk-sp"></span>
       <span class="wk-flags"><button class="flag" id="wlIt" aria-label="Italiano" title="Italiano"><svg viewBox="0 0 3 2" preserveAspectRatio="none"><rect width="1" height="2" x="0" fill="#009246"/><rect width="1" height="2" x="1" fill="#f1f2f1"/><rect width="1" height="2" x="2" fill="#ce2b37"/></svg></button><button class="flag" id="wlEn" aria-label="English" title="English"><svg viewBox="0 0 60 30" preserveAspectRatio="none"><rect width="60" height="30" fill="#012169"/><path d="M0 0l60 30M60 0L0 30" stroke="#fff" stroke-width="6"/><path d="M0 0l60 30M60 0L0 30" stroke="#C8102E" stroke-width="2.4"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"/><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"/></svg></button><button class="flag" id="wlFr" aria-label="Français" title="Français"><svg viewBox="0 0 3 2" preserveAspectRatio="none"><rect width="1" height="2" x="0" fill="#0055A4"/><rect width="1" height="2" x="1" fill="#f1f2f1"/><rect width="1" height="2" x="2" fill="#EF4135"/></svg></button></span>
       <button class="wk-pill" id="wlSkip" type="button" data-i18n="wl_skip">Vai all'app</button></div>
-    <h1 class="wk-title">Flight Dashboard</h1>
+    <h1 class="wk-title">RZ Flight Dashboard</h1>
     <div class="wk-sub" data-i18n="wl_tag">Analisi dei log di volo · Jeti · GPS</div>
     <div class="wk-stage" id="wkStage">
-      <div class="wk-side l"><div class="wkw l" style="--d:0"><button class="wk" id="wlC1" type="button" style="--kc:#2be06a" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="wkl" data-i18n="wl_k1">Leggi dati</span><div class="wfan" role="menu"><button class="wp go" id="wlChoose" type="button" style="--i:0" role="menuitem"><i></i><span data-i18n="wl_choose">Dal computer</span></button><button class="wp" id="wlDrive" type="button" style="--i:1;--pc:#58b4ff" role="menuitem"><i></i><span data-i18n="wl_drive">Da Google Drive</span></button><button class="wp" id="wlDemo" type="button" style="--i:2;--pc:#ffd24a" role="menuitem"><i></i><span data-i18n="wl_demo">Prova la demo</span></button><div class="wnote" style="--i:3" data-i18n="wl_read_p">Log Jeti, NMEA o CSV del GPS RZ</div></div></div><div class="wkw l" style="--d:1"><button class="wk" id="wlC2" type="button" style="--kc:#58b4ff" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10l7 3 3 7z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg></button><span class="wkl" data-i18n="wl_k2">Modelli</span><div class="wfan" role="menu"><div class="wnote" style="--i:0" id="wlModelsP"></div><div class="wl-chips" id="wlChips" style="--i:1"></div><button class="wp" id="wlModels" type="button" style="--i:2;--pc:#58b4ff" role="menuitem"><i></i><span data-i18n="wl_models_open">Apri i modelli</span></button></div></div></div>
-      <div class="wk-mid"><svg class="wk-dial" id="wkDial" viewBox="0 0 400 400" role="button" tabindex="0" aria-label="Orizzonte artificiale"><defs><linearGradient id="kmet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b5c6d9"/><stop offset=".25" stop-color="#f3f8ff"/><stop offset=".5" stop-color="#6c8199"/><stop offset=".8" stop-color="#d5e3f2"/><stop offset="1" stop-color="#7d92a9"/></linearGradient>
-<linearGradient id="ksky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a2a55"/><stop offset=".6" stop-color="#2f78c0"/><stop offset="1" stop-color="#bfe3ff"/></linearGradient><linearGradient id="kgnd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14304d"/><stop offset="1" stop-color="#050c16"/></linearGradient><clipPath id="kclip"><circle cx="200" cy="200" r="148"/></clipPath></defs>
-<circle cx="200" cy="200" r="196" fill="url(#kmet)" stroke="#1d2b3b" stroke-width="3"/><circle cx="200" cy="200" r="178" fill="#08121f" stroke="#0a1420" stroke-width="3"/><line x1="200.0" y1="30.0" x2="200.0" y2="44.0" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="214.8" y1="30.6" x2="214.2" y2="37.6" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="229.5" y1="32.6" x2="228.3" y2="39.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="244.0" y1="35.8" x2="242.2" y2="42.6" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="258.1" y1="40.3" x2="255.7" y2="46.8" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="271.8" y1="45.9" x2="268.9" y2="52.3" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="285.0" y1="52.8" x2="278.0" y2="64.9" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="297.5" y1="60.7" x2="293.5" y2="66.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="309.3" y1="69.8" x2="304.8" y2="75.1" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="320.2" y1="79.8" x2="315.3" y2="84.7" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="330.2" y1="90.7" x2="324.9" y2="95.2" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="339.3" y1="102.5" x2="333.5" y2="106.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="347.2" y1="115.0" x2="335.1" y2="122.0" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="354.1" y1="128.2" x2="347.7" y2="131.1" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="359.7" y1="141.9" x2="353.2" y2="144.3" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="364.2" y1="156.0" x2="357.4" y2="157.8" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="367.4" y1="170.5" x2="360.5" y2="171.7" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="369.4" y1="185.2" x2="362.4" y2="185.8" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="370.0" y1="200.0" x2="356.0" y2="200.0" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="369.4" y1="214.8" x2="362.4" y2="214.2" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="367.4" y1="229.5" x2="360.5" y2="228.3" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="364.2" y1="244.0" x2="357.4" y2="242.2" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="359.7" y1="258.1" x2="353.2" y2="255.7" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="354.1" y1="271.8" x2="347.7" y2="268.9" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="347.2" y1="285.0" x2="335.1" y2="278.0" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="339.3" y1="297.5" x2="333.5" y2="293.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="330.2" y1="309.3" x2="324.9" y2="304.8" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="320.2" y1="320.2" x2="315.3" y2="315.3" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="309.3" y1="330.2" x2="304.8" y2="324.9" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="297.5" y1="339.3" x2="293.5" y2="333.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="285.0" y1="347.2" x2="278.0" y2="335.1" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="271.8" y1="354.1" x2="268.9" y2="347.7" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="258.1" y1="359.7" x2="255.7" y2="353.2" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="244.0" y1="364.2" x2="242.2" y2="357.4" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="229.5" y1="367.4" x2="228.3" y2="360.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="214.8" y1="369.4" x2="214.2" y2="362.4" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="200.0" y1="370.0" x2="200.0" y2="356.0" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="185.2" y1="369.4" x2="185.8" y2="362.4" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="170.5" y1="367.4" x2="171.7" y2="360.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="156.0" y1="364.2" x2="157.8" y2="357.4" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="141.9" y1="359.7" x2="144.3" y2="353.2" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="128.2" y1="354.1" x2="131.1" y2="347.7" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="115.0" y1="347.2" x2="122.0" y2="335.1" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="102.5" y1="339.3" x2="106.5" y2="333.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="90.7" y1="330.2" x2="95.2" y2="324.9" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="79.8" y1="320.2" x2="84.7" y2="315.3" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="69.8" y1="309.3" x2="75.1" y2="304.8" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="60.7" y1="297.5" x2="66.5" y2="293.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="52.8" y1="285.0" x2="64.9" y2="278.0" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="45.9" y1="271.8" x2="52.3" y2="268.9" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="40.3" y1="258.1" x2="46.8" y2="255.7" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="35.8" y1="244.0" x2="42.6" y2="242.2" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="32.6" y1="229.5" x2="39.5" y2="228.3" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="30.6" y1="214.8" x2="37.6" y2="214.2" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="30.0" y1="200.0" x2="44.0" y2="200.0" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="30.6" y1="185.2" x2="37.6" y2="185.8" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="32.6" y1="170.5" x2="39.5" y2="171.7" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="35.8" y1="156.0" x2="42.6" y2="157.8" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="40.3" y1="141.9" x2="46.8" y2="144.3" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="45.9" y1="128.2" x2="52.3" y2="131.1" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="52.8" y1="115.0" x2="64.9" y2="122.0" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="60.7" y1="102.5" x2="66.5" y2="106.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="69.8" y1="90.7" x2="75.1" y2="95.2" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="79.8" y1="79.8" x2="84.7" y2="84.7" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="90.7" y1="69.8" x2="95.2" y2="75.1" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="102.5" y1="60.7" x2="106.5" y2="66.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="115.0" y1="52.8" x2="122.0" y2="64.9" stroke="#58b4ff" stroke-opacity="0.95" stroke-width="2"/><line x1="128.2" y1="45.9" x2="131.1" y2="52.3" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="141.9" y1="40.3" x2="144.3" y2="46.8" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="156.0" y1="35.8" x2="157.8" y2="42.6" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="170.5" y1="32.6" x2="171.7" y2="39.5" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/><line x1="185.2" y1="30.6" x2="185.8" y2="37.6" stroke="#58b4ff" stroke-opacity="0.5" stroke-width="1"/>
-<g clip-path="url(#kclip)"><g class="hz"><rect x="-100" y="-100" width="600" height="300" fill="url(#ksky)"/><rect x="-100" y="200" width="600" height="300" fill="url(#kgnd)"/><line x1="60" y1="203" x2="340" y2="203" stroke="#58b4ff" stroke-opacity="0.32"/><line x1="60" y1="210" x2="340" y2="210" stroke="#58b4ff" stroke-opacity="0.29"/><line x1="60" y1="223" x2="340" y2="223" stroke="#58b4ff" stroke-opacity="0.26"/><line x1="60" y1="242" x2="340" y2="242" stroke="#58b4ff" stroke-opacity="0.23"/><line x1="60" y1="265" x2="340" y2="265" stroke="#58b4ff" stroke-opacity="0.20"/><line x1="60" y1="294" x2="340" y2="294" stroke="#58b4ff" stroke-opacity="0.17"/><line x1="100" y1="201" x2="-750" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="110" y1="201" x2="-655" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="120" y1="201" x2="-560" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="130" y1="201" x2="-465" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="140" y1="201" x2="-370" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="150" y1="201" x2="-275" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="160" y1="201" x2="-180" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="170" y1="201" x2="-85" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="180" y1="201" x2="10" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="190" y1="201" x2="105" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="200" y1="201" x2="200" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="210" y1="201" x2="295" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="220" y1="201" x2="390" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="230" y1="201" x2="485" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="240" y1="201" x2="580" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="250" y1="201" x2="675" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="260" y1="201" x2="770" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="270" y1="201" x2="865" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="280" y1="201" x2="960" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="290" y1="201" x2="1055" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="300" y1="201" x2="1150" y2="330" stroke="#58b4ff" stroke-opacity=".22"/><line x1="-100" y1="200" x2="500" y2="200" stroke="#fff" stroke-width="2.5"/><line x1="178" y1="140" x2="222" y2="140" stroke="#fff" stroke-width="2" opacity=".8"/><line x1="166" y1="160" x2="234" y2="160" stroke="#fff" stroke-width="2" opacity=".8"/><line x1="178" y1="180" x2="222" y2="180" stroke="#fff" stroke-width="2" opacity=".8"/><line x1="178" y1="220" x2="222" y2="220" stroke="#fff" stroke-width="2" opacity=".8"/><line x1="166" y1="240" x2="234" y2="240" stroke="#fff" stroke-width="2" opacity=".8"/><line x1="178" y1="260" x2="222" y2="260" stroke="#fff" stroke-width="2" opacity=".8"/></g></g>
-<g stroke="#2be06a" stroke-width="6" stroke-linecap="round" fill="none"><path d="M110 200h52l18 20M290 200h-52l-18 20"/></g><circle cx="200" cy="200" r="7" fill="#fff"/></svg><div class="wk-hint" id="wkHint" data-i18n="wl_gyro" hidden></div><div class="wl-last" id="wlLast" hidden></div></div>
-      <div class="wk-side r"><div class="wkw r" style="--d:2"><button class="wk" id="wlC3" type="button" style="--kc:#b78bff" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v4H3zM5 9v10h14V9M10 13h4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="wkl" data-i18n="wl_k3">Voli salvati</span><div class="wfan" role="menu"><div class="wnote" style="--i:0" id="wlArchP"></div><div class="wl-stat" id="wlStat" style="--i:1"></div><button class="wp" id="wlArch" type="button" style="--i:2;--pc:#b78bff" role="menuitem"><i></i><span data-i18n="wl_arch_open">Apri l'archivio</span></button></div></div><div class="wkw r" style="--d:3"><button class="wk" id="wlSetup" type="button" style="--kc:#ffb347" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button><span class="wkl" data-i18n="setup">Set up</span></div></div>
+      <div class="wk-side l"><div class="wkw l" style="--d:0"><button class="wk" id="wlC1" type="button" style="--kc:#2be06a" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="wkl" data-i18n="wl_k1">Leggi dati</span><div class="wfan" role="menu"><button class="wp go" id="wlChoose" type="button" style="--i:0" role="menuitem"><i></i><span data-i18n="wl_choose">Dal computer</span></button><button class="wp" id="wlDrive" type="button" style="--i:1;--pc:#58b4ff" role="menuitem"><i></i><span data-i18n="wl_drive">Da Google Drive</span></button><button class="wp" id="wlDemo" type="button" style="--i:2;--pc:#ffd24a" role="menuitem"><i></i><span data-i18n="wl_demo">Prova la demo</span></button><div class="wnote" style="--i:3" data-i18n="wl_read_p">Log Jeti, NMEA o CSV del GPS RZ</div></div></div></div>
+      <div class="wk-mid"><img class="wk-pilot" src="pilot.png" alt="" width="800" height="674" draggable="false"><div class="wl-last" id="wlLast" hidden></div></div>
+      <div class="wk-side r"><div class="wkw r" style="--d:1"><button class="wk" id="wlC2" type="button" style="--kc:#b78bff" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v4H3zM5 9v10h14V9M10 13h4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="wkl" data-i18n="wl_k2">Archivio</span><div class="wfan" role="menu"><button class="wp go" id="wlArch" type="button" style="--i:0;" role="menuitem"><i></i><span data-i18n="wl_arch_all">Tutti i voli salvati</span></button><div class="wnote" style="--i:1" id="wlModelsP"></div><div class="wl-chips" id="wlChips" style="--i:2"></div><div class="wl-stat" id="wlStat" style="--i:3"></div></div></div></div>
     </div>
+    <div class="wkw wk-setup" style="--d:2"><button class="wk" id="wlSetup" type="button" style="--kc:#ffb347" aria-label="Set up"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button><span class="wkl" data-i18n="setup">Set up</span></div>
     <div class="wl-foot"><span data-i18n="wl_foot">I tuoi dati non lasciano questo computer · Nessun account</span><span id="wlVer2"></span></div>
   </div>
 </section>
@@ -722,7 +730,7 @@
   <div class="top">
     <div class="left"></div>
     <div class="center">
-      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v2.0.10</span></div>
+      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>RZ Flight Dashboard</span> <span class="ver">v2.0.11</span></div>
       <div class="crumb" id="crumb"></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
@@ -759,6 +767,7 @@
       <span class="fname" id="fname"></span>
     </div>
   </div>
+  <div class="flighthead" id="flightHead"></div>
 
   <nav class="rail" id="rail" aria-label="Navigazione">
   <div class="rail-logo"><div class="logo" id="logo" data-i18n-title="logo_title"></div><input type="file" id="logoFile" accept="image/*" style="display:none"></div>
@@ -773,11 +782,9 @@
   </div>
   <div class="rail-nav rail-bottom"><button class="rbtn" id="railSetup" type="button" aria-pressed="false" style="--kc:#ffb347"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span><span class="tl" data-i18n="setup">Set up</span></button></div>
 </nav>
-<div class="flyout" id="flyout" role="menu" aria-hidden="true"><div class="fh" id="flyTitle"></div><div id="flyItems"></div></div>
 
   <!-- PAGE 1 -->
   <section data-page="ov">
-    <div class="flighthead" id="flightHead"></div>
     <div class="kpis" id="kpis"></div>
     <div class="card" style="margin-top:16px">
       <h2><span data-i18n="ov_h2">Quota &amp; salite a motore</span> <span class="tag">ALT / IBAT</span>
@@ -1338,7 +1345,7 @@ const T_AN={
   sb_phases:["Fasi del volo","Flight phases","Phases du vol"], sb_motor:["Salite a motore","Motor climbs","Montées moteur"],
   an_on:["Animazioni (grafici e numeri)","Animations (charts and numbers)","Animations (graphiques et chiffres)"],
   home_btn:["Home","Home","Accueil"], wl_gyro:["Tocca il quadrante per usare il sensore del telefono","Tap the dial to use the phone sensor","Touchez le cadran pour utiliser le capteur"],
-  wl_tag:["Analisi dei log di volo · Jeti · GPS","Flight-log analysis · Jeti · GPS","Analyse des logs de vol · Jeti · GPS"], wl_k1:["Leggi dati","Read data","Lire"], wl_k2:["Modelli","Models","Modèles"], wl_k3:["Voli salvati","Saved flights","Vols"],
+  wl_tag:["Analisi dei log di volo · Jeti · GPS","Flight-log analysis · Jeti · GPS","Analyse des logs de vol · Jeti · GPS"], wl_k1:["Leggi dati","Read data","Lire"], wl_k2:["Archivio","Archive","Archives"], wl_arch_all:["Tutti i voli salvati","All saved flights","Tous les vols"], wl_k3:["Voli salvati","Saved flights","Vols"],
   wl_eyebrow:["Benvenuto","Welcome","Bienvenue"], wl_title:["Analizza<br>i tuoi voli","Analyse<br>your flights","Analysez<br>vos vols"],
   wl_sub:["Log Jeti, GPS e archivio in un solo posto. Funziona anche senza internet; i voli li salvi dove vuoi: sul PC o su Google Drive.","Jeti logs, GPS and archive in one place. Works offline too; save your flights where you like: on the PC or on Google Drive.","Logs Jeti, GPS et archive au même endroit. Fonctionne aussi hors ligne ; enregistrez vos vols où vous voulez : sur le PC ou sur Google Drive."],
   wl_read_h:["Apri un volo","Open a flight","Ouvrir un vol"], wl_read_p:["Log Jeti, file NMEA dell'SM GPS o CSV del GPS RZ: il formato viene riconosciuto in automatico.","Load a Jeti log, an SM GPS NMEA file or an RZ GPS CSV: the format is recognised automatically.","Chargez un log Jeti, un fichier NMEA du SM GPS ou un CSV du GPS RZ : le format est reconnu automatiquement."],
@@ -1494,7 +1501,7 @@ function setLang(l){
   document.documentElement.lang=lang;
   const fi=$("#flagIt"), fe=$("#flagEn"), fr=$("#flagFr");
   if(fi) fi.classList.toggle("active",lang==="it"); if(fe) fe.classList.toggle("active",lang==="en"); if(fr) fr.classList.toggle("active",lang==="fr");
-  applyI18n(); try{ renderWelcome(); renderCrumb(); if($("#flyout").classList.contains("open")) renderFlyout(curPage); }catch(e){}
+  applyI18n(); try{ renderWelcome(); renderCrumb(); }catch(e){}
   if(typeof DATA!=="undefined" && DATA){ renderFlightHead(DATA); renderKpis(VF()); renderVerdict(DATA); renderMain(); refreshReportSel(); refreshBuilder(); renderTable(); renderThemeControls(); }
   if(typeof ARCH!=="undefined"){ renderArchive(); renderPolar(); renderTrack(); }
 }
@@ -2879,7 +2886,7 @@ function showWelcome(){ const w=$("#welcome"); if(!w) return; renderWelcome(); i
 function goArchive(model){ hideWelcome(); if(model!==undefined){ archF.model=model; } const tb=document.querySelector('.tab[data-p="ar"]'); if(tb) tb.click(); showSub("ar",model?"ls":subCur.ar); renderArchive(); }
 function renderWelcome(){
   if(!$("#welcome")) return;
-  const ver=$(".ver").textContent; $("#wlVer").textContent=ver; $("#wlVer2").textContent="Flight Dashboard · "+ver;
+  const ver=$(".ver").textContent; $("#wlVer").textContent=ver; $("#wlVer2").textContent="RZ Flight Dashboard · "+ver; $("#wkLogo").innerHTML=$("#logo").innerHTML;
   $("#wlIt").classList.toggle("active",lang==="it"); $("#wlEn").classList.toggle("active",lang==="en"); $("#wlFr").classList.toggle("active",lang==="fr");
   const L=(typeof ARCH!=="undefined")?ARCH:[], connected=(ARCH_OK&&archDir&&archPerm==="granted")||gdOk();
   // modelli
@@ -2890,34 +2897,24 @@ function renderWelcome(){
   // voli salvati
   const scored=L.filter(e=>num(e.sum&&e.sum.score)).sort((a,b)=>(a.ts||0)-(b.ts||0));
   if(L.length){
-    const best=bestFlight(); $("#wlArchP").textContent=t("wl_arch_p");
+    const best=bestFlight();
     const vals=scored.slice(-12).map(e=>e.sum.score); let sp="";
     if(vals.length>1){ const lo=Math.min(...vals), hi=Math.max(...vals), sc=(hi-lo)||1, pts=vals.map((v,i)=>`${(2+i/(vals.length-1)*146).toFixed(0)},${(34-(v-lo)/sc*28).toFixed(1)}`);
       sp=`<svg width="150" height="40" viewBox="0 0 150 40" aria-hidden="true"><polyline points="${pts.join(" ")}" fill="none" stroke="#3ddc8a" stroke-width="2.5" stroke-linejoin="round"/><circle cx="${pts[pts.length-1].split(",")[0]}" cy="${pts[pts.length-1].split(",")[1]}" r="3.5" fill="#3ddc8a"/></svg>`; }
     $("#wlStat").innerHTML=`<div><b>${L.length}</b>${t("wl_flights")}</div>${best?`<div><b>${Math.round(best.sum.score)}</b>${t("wl_best")}</div>`:""}<div>${sp}</div>`;
-  } else { $("#wlArchP").textContent=connected?t("wl_arch_empty"):t("wl_arch_nofolder"); $("#wlStat").innerHTML=""; }
+  } else { $("#wlModelsP").textContent=connected?t("wl_arch_empty"):t("wl_arch_nofolder"); $("#wlStat").innerHTML=""; }
   // riprendi
   const last=L.slice().sort((a,b)=>(b.ts||0)-(a.ts||0))[0], lw=$("#wlLast");
   lw.hidden=!last; if(last){ lw.dataset.key=last.key; lw.innerHTML=`<span>↻</span><span>${t("wl_resume")}: <b>${escapeHtml(last.model||last.file)}</b> · ${escapeHtml(archDate(last))}</span>${num(last.sum&&last.sum.score)?`<span class="sc">${Math.round(last.sum.score)}</span>`:""}`; }
-}
-function initGyro(){
-  const d=$("#wkDial"); if(!d||!("DeviceOrientationEvent" in window)) return;
-  const hz=d.querySelector(".hz"), hint=$("#wkHint"); let on=false, b0=null;
-  if(hint&&window.matchMedia&&matchMedia("(pointer:coarse)").matches) hint.hidden=false;
-  const h=e=>{ if(e.beta==null||$("#welcome").hidden) return; if(b0===null) b0=e.beta; const roll=Math.max(-60,Math.min(60,e.gamma||0))*1.6, pit=Math.max(-25,Math.min(25,e.beta-b0)); hz.style.transform="rotate("+(-roll).toFixed(1)+"deg) translateY("+(pit*7).toFixed(1)+"px)"; };
-  const stop=()=>{ window.removeEventListener("deviceorientation",h); d.classList.remove("live"); hz.style.transform=""; on=false; b0=null; if(hint) hint.hidden=!(window.matchMedia&&matchMedia("(pointer:coarse)").matches); };
-  const go=async()=>{ if(on){ stop(); return; } try{ if(typeof DeviceOrientationEvent.requestPermission==="function"){ const r=await DeviceOrientationEvent.requestPermission(); if(r!=="granted") return; } window.addEventListener("deviceorientation",h); d.classList.add("live"); on=true; if(hint) hint.hidden=true; }catch(e){} };
-  d.addEventListener("click",go); d.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
 }
 function initWelcome(){
   const w=$("#welcome"); if(!w) return;
   const act=(id,fn)=>{ const el=$(id); el.addEventListener("click",e=>{ e.stopPropagation(); fn(e); }); };
   act("#wlSkip",hideWelcome); act("#wlSetup",()=>{ hideWelcome(); $("#setupBtn").click(); });
   act("#wlChoose",()=>{ $("#file").click(); }); act("#wlDrive",()=>{ hideWelcome(); drvOpen(); }); act("#wlDemo",()=>{ hideWelcome(); $("#demoBtn").click(); });
-  act("#wlModels",()=>goArchive("")); act("#wlArch",()=>goArchive(""));
-  initGyro();
+  act("#wlArch",()=>goArchive(""));
   const stage=$("#wkStage"), closeFans=()=>{ stage.classList.remove("open"); stage.querySelectorAll(".wkw.on").forEach(x=>{ x.classList.remove("on"); x.querySelector(".wk").setAttribute("aria-expanded","false"); }); };
-  for(const id of ["#wlC1","#wlC2","#wlC3"]) $(id).addEventListener("click",e=>{ e.stopPropagation(); const w=e.currentTarget.closest(".wkw"), was=w.classList.contains("on"); closeFans(); if(!was){ w.classList.add("on"); stage.classList.add("open"); e.currentTarget.setAttribute("aria-expanded","true"); } });
+  for(const id of ["#wlC1","#wlC2"]) $(id).addEventListener("click",e=>{ e.stopPropagation(); const w=e.currentTarget.closest(".wkw"), was=w.classList.contains("on"); closeFans(); if(!was){ w.classList.add("on"); stage.classList.add("open"); e.currentTarget.setAttribute("aria-expanded","true"); } });
   w.addEventListener("click",e=>{ if(!e.target.closest(".wkw")) closeFans(); });
   $("#wlChips").addEventListener("click",e=>{ const b=e.target.closest("[data-model]"); if(!b) return; e.stopPropagation(); goArchive(b.dataset.model); });
   $("#wlLast").addEventListener("click",()=>{ const f=$("#wlLast").dataset.key; if(f){ hideWelcome(); archOpen(f); } });
@@ -2938,54 +2935,48 @@ const SUB_IC={
  ph:'<path d="M3 17h5v-6h5v4h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
  bt:'<rect x="3" y="7" width="16" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M21 10v4M8 10l-2 4h4l-2 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>'};
 const SUBS={ju:{title:"tab_ju",items:[{id:"idx",ic:"ix",l:"sb_idx"},{id:"story",ic:"tx",l:"sb_story"},{id:"sum",ic:"ov",l:"sb_sum"},{id:"therm",ic:"th",l:"sb_therm"},{id:"radio",ic:"ra",l:"sb_radio"},{id:"phases",ic:"ph",l:"sb_phases"},{id:"motor",ic:"bt",l:"sb_motor"}]},re:{title:"setup",items:[{id:"rep",ic:"ov",l:"sb_rep"},{id:"look",ic:"th",l:"sb_look"},{id:"bk",ic:"tx",l:"sb_bk"},{id:"ph",ic:"ph",l:"sb_ph"}]},ar:{title:"tab_ar",items:[{id:"ls",ic:"tx",l:"sb_ls"},{id:"md",ic:"bt",l:"sb_md"},{id:"fold",ic:"ov",l:"sb_fold"},{id:"cmp",ic:"ix",l:"sb_cmp"},{id:"td",ic:"th",l:"sb_td"}]}};
-let curPage="ov", flyTimer=0;
+let curPage="ov";
 const subCur={ju:"idx",re:"rep",ar:"ls"};
 function pageLabel(p){ return t(p==="re"?"setup":"tab_"+p); }
-function renderCrumb(){
-  const el=$("#crumb"); if(!el) return; let tx=pageLabel(curPage);
-  const cfg=SUBS[curPage]; if(cfg){ const it=cfg.items.find(x=>x.id===subCur[curPage]); if(it) tx+=" › "+t(it.l); }
-  el.textContent=tx;
+function renderCrumb(){ const el=$("#crumb"); if(el) el.textContent=pageLabel(curPage); }
+function subAvailable(page,id){ if(page==="ju"&&id==="radio"){ const c=$("#radioCard"); return !!c&&!c.hidden; } if(page==="ar"&&(id==="cmp"||id==="td")){ const c=$(id==="cmp"?"#cmpCard":"#tdCard"); return !!c&&!c.hidden; } return true; }
+/* v2.0: sezioni come "finestre" a fisarmonica: una sola aperta alla volta */
+function buildAcc(){
+  for(const page of Object.keys(SUBS)){
+    const sec=document.querySelector(`section[data-page="${page}"]`); if(!sec) continue;
+    for(const it of SUBS[page].items){
+      const els=[...sec.querySelectorAll(`:scope>[data-sub="${it.id}"]`)]; if(!els.length) continue;
+      const h=document.createElement("button"); h.type="button"; h.className="acc-h"; h.dataset.acc=it.id; h.setAttribute("aria-expanded","false");
+      h.innerHTML=`<span class="fic"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">${SUB_IC[it.ic]||""}</svg></span><span class="acc-t" data-i18n="${it.l}">${t(it.l)}</span><span class="acc-c" aria-hidden="true">▾</span>`;
+      sec.appendChild(h); els.forEach(e=>sec.appendChild(e));
+    }
+    sec.addEventListener("click",e=>{ const h=e.target.closest(".acc-h"); if(!h||h.parentNode!==sec) return; const id=h.dataset.acc; showSub(page,subCur[page]===id?"":id); if(subCur[page]===id) h.scrollIntoView({block:"start",behavior:animOn()?"smooth":"auto"}); });
+    new MutationObserver(syncAcc).observe(sec,{attributes:true,attributeFilter:["hidden"],subtree:true,childList:false});
+    showSub(page,subCur[page]);
+  }
+  syncAcc();
 }
-function subAvailable(page,id){ if(page==="ar"&&(id==="cmp"||id==="td")){ const c=$(id==="cmp"?"#cmpCard":"#tdCard"); return !!c&&!c.hidden; } if(page==="ju"&&id==="radio"){ const c=$("#radioCard"); return !!c&&!c.hidden; } return true; }
-function renderFlyout(page){
-  const cfg=SUBS[page], fly=$("#flyout"); if(!cfg) return false;
-  $("#flyTitle").textContent=t(cfg.title);
-  const items=cfg.items.filter(x=>subAvailable(page,x.id));
-  $("#flyItems").innerHTML=items.map((x,i)=>`<button type="button" class="fi${subCur[page]===x.id?" on":""}" role="menuitem" data-sub="${x.id}" style="--n:${i}"><span class="fic"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">${SUB_IC[x.ic]}</svg></span><span>${t(x.l)}</span></button>`).join("");
-  return true;
-}
-function openFlyout(page){
-  const fly=$("#flyout"); if(!renderFlyout(page)) return closeFlyout();
-  const tb=document.querySelector(`.rail .tab[data-p="${page}"]`); const r0=tb?tb.getBoundingClientRect():null;
-  if(r0&&window.innerWidth>860){ const h=fly.offsetHeight||400; fly.style.top=Math.max(12,Math.min(window.innerHeight-h-12,r0.top-24))+"px"; }
-  fly.classList.add("open"); $("#rail").classList.add("fly"); fly.setAttribute("aria-hidden","false"); clearTimeout(flyTimer);
-}
-function closeFlyout(){ const fly=$("#flyout"); if(!fly) return; fly.classList.remove("open"); const rl=$("#rail"); if(rl) rl.classList.remove("fly"); fly.setAttribute("aria-hidden","true"); clearTimeout(flyTimer); }
-function scheduleFlyClose(ms){ clearTimeout(flyTimer); flyTimer=setTimeout(closeFlyout,ms||2200); }
+function syncAcc(){ document.querySelectorAll(".acc-h").forEach(h=>{ const pg=h.closest("section").dataset.page, hid=!subAvailable(pg,h.dataset.acc); if(h.hidden!==hid) h.hidden=hid; }); }
 function showSub(page,id){
   const sec=document.querySelector(`section[data-page="${page}"]`); if(!sec) return;
-  subCur[page]=id; sec.dataset.cursub=id; renderCrumb();
+  subCur[page]=id; sec.dataset.cursub=id;
   if(page==="ar") sec.querySelectorAll(":scope>[data-sub]").forEach(c=>c.classList.toggle("subhide",c.dataset.sub!==id));
-  const card=sec.querySelector(`[data-sub="${id}"]`); if(card&&animOn()){ card.style.animation="none"; void card.offsetWidth; card.style.animation="rise .55s cubic-bezier(.2,.8,.2,1) both"; }
+  sec.querySelectorAll(":scope>.acc-h").forEach(h=>{ const on=h.dataset.acc===id; h.classList.toggle("open",on); h.setAttribute("aria-expanded",on?"true":"false"); });
+  const card=id?sec.querySelector(`:scope>[data-sub="${id}"]`):null; if(card&&animOn()){ card.style.animation="none"; void card.offsetWidth; card.style.animation="rise .5s cubic-bezier(.2,.8,.2,1) both"; }
   if(page==="ju"&&id==="idx") playScore();
 }
-function onPageChange(p){
-  curPage=p; renderCrumb();
-  if(SUBS[p]){ openFlyout(p); scheduleFlyClose(3200); } else closeFlyout();
-}
+function railCollapse(){ const r=$("#rail"); if(!r) return; r.classList.add("fly"); const ae=document.activeElement; if(ae&&r.contains(ae)) ae.blur(); }
+function onPageChange(p){ curPage=p; renderCrumb(); railCollapse(); }
 function initRail(){
   const rail=$("#rail"); if(!rail) return;
   document.querySelectorAll(".rail .tab").forEach(tb=>tb.addEventListener("click",()=>onPageChange(tb.dataset.p)));
+  rail.addEventListener("mouseleave",()=>rail.classList.remove("fly"));
   $("#railSetup").addEventListener("click",()=>$("#setupBtn").click());
-  $("#homeBtn").addEventListener("click",()=>{ closeFlyout(); showWelcome(); });
-  const sync=()=>{ const on=$("#setupBtn").classList.contains("active"); $("#railSetup").setAttribute("aria-pressed",on?"true":"false"); if(on){ curPage="re"; renderCrumb(); openFlyout("re"); scheduleFlyClose(3200); } };
+  $("#homeBtn").addEventListener("click",showWelcome);
+  const sync=()=>{ const on=$("#setupBtn").classList.contains("active"); $("#railSetup").setAttribute("aria-pressed",on?"true":"false"); if(on){ curPage="re"; renderCrumb(); railCollapse(); } };
   new MutationObserver(sync).observe($("#setupBtn"),{attributes:true,attributeFilter:["class"]}); sync();
-  $("#flyItems").addEventListener("click",e=>{ const b=e.target.closest(".fi"); if(!b) return; showSub(curPage,b.dataset.sub); renderFlyout(curPage); closeFlyout(); });
-  for(const el of [$("#flyout"),rail]){ el.addEventListener("mouseenter",()=>{ if($("#flyout").classList.contains("open")) clearTimeout(flyTimer); }); el.addEventListener("mouseleave",()=>{ if($("#flyout").classList.contains("open")) scheduleFlyClose(1400); }); }
-  document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeFlyout(); });
-  document.addEventListener("click",e=>{ if(!e.target.closest("#flyout,#rail,#setupBtn")) closeFlyout(); });
   const vt=$("#vpToggle"); if(vt){ const lay=document.querySelector(".grlayout"); vt.addEventListener("click",()=>{ const off=lay.classList.toggle("vp-off"); vt.setAttribute("aria-expanded",off?"false":"true"); setTimeout(()=>{ try{ renderView(); }catch(e){} },380); }); }
-  showSub("ar","ls");
+  buildAcc();
   renderCrumb();
 }
 function renderPhaseCfg(){
