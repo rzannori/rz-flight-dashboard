@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5Yt7qhG9R0HmP2/DOnB1MU+zWkgP5Pes5HZjN0uSkos='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-M+8yXiEhvi3I+0TmU9cccEN9x1fBQ0UBWr+/PLn6/0o='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -658,6 +658,7 @@
   section[data-page="re"][data-cursub="rep"]>[data-sub="rep"],section[data-page="re"][data-cursub="look"]>[data-sub="look"],section[data-page="re"][data-cursub="bk"]>[data-sub="bk"],section[data-page="re"][data-cursub="ph"]>[data-sub="ph"]{display:block}
   section[data-page="re"]:not([hidden]){display:block!important}
   /* cassetto variabili del grafico */
+  .subhide{display:none!important}
   .vpbtn{margin-left:auto}
   .grlayout.vp-off{grid-template-columns:minmax(0,1fr)}
   .grlayout.vp-off .varpanel{display:none}
@@ -950,11 +951,11 @@
 
   <!-- PAGE: ARCHIVIO (cartella sul PC, File System Access API) -->
   <section data-page="ar" hidden>
-    <div class="card">
+    <div class="card" data-sub="fold">
       <h2><span data-i18n="ar_h2">Archivio voli</span></h2>
       <div class="arfolder" id="arFolder"></div>
     </div>
-    <div class="card" id="arSaveCard">
+    <div class="card" data-sub="fold" id="arSaveCard">
       <h2><span data-i18n="ar_save_h">Salva il volo corrente</span></h2>
       <div class="scorebest" id="arScore" style="margin-bottom:10px" hidden></div>
       <div class="row">
@@ -966,13 +967,13 @@
       <datalist id="arModels"></datalist>
       <p class="hint" id="arMsg"></p>
     </div>
-    <div class="card" id="mdCard">
+    <div class="card" data-sub="md" id="mdCard">
       <h2><span data-i18n="md_h2">Modelli</span> <span class="tag">MODELS</span>
         <span class="resctl mdtabs"><button class="btn ghost on" id="mdTabM" type="button" data-i18n="md_models">Modelli</button><button class="btn ghost" id="mdTabT" type="button" data-i18n="md_top">Migliori 10 voli</button></span>
       </h2>
       <div id="mdBody"></div>
     </div>
-    <div class="card">
+    <div class="card" data-sub="ls">
       <h2><span data-i18n="ar_list_h">Voli in archivio</span>
         <span class="resctl"><span data-i18n="ar_model">Modello</span><select id="arFModel" class="resSel"></select></span>
       </h2>
@@ -980,7 +981,7 @@
       <div class="scorebest" id="arBest" style="margin-bottom:10px"></div>
       <div class="tablewrap" id="arList"></div>
     </div>
-    <div class="card" id="cmpCard" hidden>
+    <div class="card" data-sub="cmp" id="cmpCard" hidden>
       <h2><span data-i18n="cmp_h2">Confronto voli</span> <span class="tag">COMPARE</span></h2>
       <div class="row" style="margin-bottom:12px">
         <div class="fieldl"><label for="cmpVar" data-i18n="cmp_var">Variabile</label><select id="cmpVar"></select></div>
@@ -995,7 +996,7 @@
       <div class="scroll-x" id="cmpTable" style="margin-top:14px"></div>
       <p class="hint" data-i18n="best_note">In verde il valore migliore di ogni riga.</p>
     </div>
-    <div class="card" id="tdCard" hidden>
+    <div class="card" data-sub="td" id="tdCard" hidden>
       <h2><span data-i18n="td_h2">Andamento nel tempo</span> <span class="tag">TREND</span>
         <span class="resctl"><span data-i18n="ar_model">Modello</span><select id="tdModel" class="resSel"></select>
           <span data-i18n="td_metric">Misura</span><select id="tdMetric" class="resSel"></select></span></h2>
@@ -1302,6 +1303,7 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  sb_ls:["Voli salvati","Saved flights","Vols enregistrés"], sb_md:["Modelli","Models","Modèles"], sb_fold:["Cartella e salvataggio","Folder & saving","Dossier et enregistrement"], sb_cmp:["Confronto voli","Flight comparison","Comparaison"], sb_td:["Andamento nel tempo","Trend over time","Évolution"],
   sb_rep:["Costruttore di report","Report builder","Créateur de rapports"], sb_look:["Aspetto","Appearance","Apparence"], sb_bk:["Copia di sicurezza","Backup","Sauvegarde"], sb_ph:["Interruttori fasi","Phase switches","Interrupteurs de phase"], gr_vp:["Variabili","Variables","Variables"],
   sb_idx:["Indice di volo","Flight index","Indice de vol"], sb_story:["Il racconto del volo","The flight story","Le récit du vol"], sb_sum:["Riepilogo dati","Data summary","Récapitulatif"],
   sb_therm:["Termiche e distribuzioni","Thermals and distributions","Thermiques et distributions"], sb_radio:["Radio e alimentazione","Radio & power","Radio et alimentation"],
@@ -2844,7 +2846,7 @@ function welcomeOn(){ try{ return localStorage.getItem("fd_welcome")!=="0"; }cat
 function introWelcome(){ const w=$("#welcome"); if(!w) return; w.classList.remove("intro"); if(animOn()){ void w.offsetWidth; w.classList.add("intro"); } }
 function hideWelcome(){ const w=$("#welcome"); if(!w||w.hidden) return; w.hidden=true; document.body.style.overflow=""; }
 function showWelcome(){ const w=$("#welcome"); if(!w) return; renderWelcome(); introWelcome(); w.hidden=false; document.body.style.overflow="hidden"; w.scrollTop=0; }
-function goArchive(model){ hideWelcome(); if(model!==undefined){ archF.model=model; } const tb=document.querySelector('.tab[data-p="ar"]'); if(tb) tb.click(); renderArchive(); }
+function goArchive(model){ hideWelcome(); if(model!==undefined){ archF.model=model; } const tb=document.querySelector('.tab[data-p="ar"]'); if(tb) tb.click(); showSub("ar",model?"ls":subCur.ar); renderArchive(); }
 function renderWelcome(){
   if(!$("#welcome")) return;
   const ver=$(".ver").textContent; $("#wlVer").textContent=ver; $("#wlVer2").textContent="Flight Dashboard · "+ver;
@@ -2895,16 +2897,16 @@ const SUB_IC={
  ra:'<path d="M5 12a10 10 0 0 1 14 0M8 15a6 6 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="18.5" r="1.6" fill="currentColor"/>',
  ph:'<path d="M3 17h5v-6h5v4h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
  bt:'<rect x="3" y="7" width="16" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M21 10v4M8 10l-2 4h4l-2 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>'};
-const SUBS={ju:{title:"tab_ju",items:[{id:"idx",ic:"ix",l:"sb_idx"},{id:"story",ic:"tx",l:"sb_story"},{id:"sum",ic:"ov",l:"sb_sum"},{id:"therm",ic:"th",l:"sb_therm"},{id:"radio",ic:"ra",l:"sb_radio"},{id:"phases",ic:"ph",l:"sb_phases"},{id:"motor",ic:"bt",l:"sb_motor"}]},re:{title:"setup",items:[{id:"rep",ic:"ov",l:"sb_rep"},{id:"look",ic:"th",l:"sb_look"},{id:"bk",ic:"tx",l:"sb_bk"},{id:"ph",ic:"ph",l:"sb_ph"}]}};
+const SUBS={ju:{title:"tab_ju",items:[{id:"idx",ic:"ix",l:"sb_idx"},{id:"story",ic:"tx",l:"sb_story"},{id:"sum",ic:"ov",l:"sb_sum"},{id:"therm",ic:"th",l:"sb_therm"},{id:"radio",ic:"ra",l:"sb_radio"},{id:"phases",ic:"ph",l:"sb_phases"},{id:"motor",ic:"bt",l:"sb_motor"}]},re:{title:"setup",items:[{id:"rep",ic:"ov",l:"sb_rep"},{id:"look",ic:"th",l:"sb_look"},{id:"bk",ic:"tx",l:"sb_bk"},{id:"ph",ic:"ph",l:"sb_ph"}]},ar:{title:"tab_ar",items:[{id:"ls",ic:"tx",l:"sb_ls"},{id:"md",ic:"bt",l:"sb_md"},{id:"fold",ic:"ov",l:"sb_fold"},{id:"cmp",ic:"ix",l:"sb_cmp"},{id:"td",ic:"th",l:"sb_td"}]}};
 let curPage="ov", flyTimer=0;
-const subCur={ju:"idx",re:"rep"};
+const subCur={ju:"idx",re:"rep",ar:"ls"};
 function pageLabel(p){ return t(p==="re"?"setup":"tab_"+p); }
 function renderCrumb(){
   const el=$("#crumb"); if(!el) return; let tx=pageLabel(curPage);
   const cfg=SUBS[curPage]; if(cfg){ const it=cfg.items.find(x=>x.id===subCur[curPage]); if(it) tx+=" › "+t(it.l); }
   el.textContent=tx;
 }
-function subAvailable(page,id){ if(page==="ju"&&id==="radio"){ const c=$("#radioCard"); return !!c&&!c.hidden; } return true; }
+function subAvailable(page,id){ if(page==="ar"&&(id==="cmp"||id==="td")){ const c=$(id==="cmp"?"#cmpCard":"#tdCard"); return !!c&&!c.hidden; } if(page==="ju"&&id==="radio"){ const c=$("#radioCard"); return !!c&&!c.hidden; } return true; }
 function renderFlyout(page){
   const cfg=SUBS[page], fly=$("#flyout"); if(!cfg) return false;
   $("#flyTitle").textContent=t(cfg.title);
@@ -2923,6 +2925,7 @@ function scheduleFlyClose(ms){ clearTimeout(flyTimer); flyTimer=setTimeout(close
 function showSub(page,id){
   const sec=document.querySelector(`section[data-page="${page}"]`); if(!sec) return;
   subCur[page]=id; sec.dataset.cursub=id; renderCrumb();
+  if(page==="ar") sec.querySelectorAll(":scope>[data-sub]").forEach(c=>c.classList.toggle("subhide",c.dataset.sub!==id));
   const card=sec.querySelector(`[data-sub="${id}"]`); if(card&&animOn()){ card.style.animation="none"; void card.offsetWidth; card.style.animation="rise .55s cubic-bezier(.2,.8,.2,1) both"; }
   if(page==="ju"&&id==="idx") playScore();
 }
@@ -2941,6 +2944,7 @@ function initRail(){
   document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeFlyout(); });
   document.addEventListener("click",e=>{ if(!e.target.closest("#flyout,#rail,#setupBtn")) closeFlyout(); });
   const vt=$("#vpToggle"); if(vt){ const lay=document.querySelector(".grlayout"); vt.addEventListener("click",()=>{ const off=lay.classList.toggle("vp-off"); vt.setAttribute("aria-expanded",off?"false":"true"); setTimeout(()=>{ try{ renderView(); }catch(e){} },380); }); }
+  showSub("ar","ls");
   renderCrumb();
 }
 function renderPhaseCfg(){

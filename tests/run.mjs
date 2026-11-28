@@ -20,6 +20,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? "  ok   " : "  FAIL ") + 
   const h = "sha256-" + crypto.createHash("sha256").update(sc, "utf8").digest("base64");
   console.log("CSP"); ok(html.includes("'" + h + "'"), "hash dello script aggiornato (se fallisce: python3 tools/csp.py)"); }
 const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1400, height: 1000 } });
+const sub = async (pg, page, id) => { await pg.evaluate(p => document.querySelector(`.rail .tab[data-p="${p}"]`).click(), page); await pg.waitForTimeout(150); await pg.click(`.fi[data-sub="${id}"]`); await pg.waitForTimeout(250); };
 const errs = []; p.on("pageerror", e => errs.push(e.message)); p.on("dialog", d => { errs.push("dialog: " + d.message().slice(0, 50)); d.accept(); });
 const fresh = async () => { await p.goto(url); await p.waitForTimeout(400); };
 const load = async files => { await p.setInputFiles("#file", files); await p.waitForTimeout(1500); };
@@ -100,16 +101,18 @@ console.log("Archivio (senza cartella)");
 await p.evaluate(t => { window.__rz.addFlight(t, "2026-10-01_a.log", "Prova"); window.__rz.addFlight(t, "2026-10-02_b.log", "Prova"); }, jeti);
 await p.click('.tab[data-p="ar"]'); await p.waitForTimeout(500);
 ok(/(Miglior volo registrato|Best recorded flight): \d+/.test(await text("#arBest")), "miglior volo registrato mostrato");
+await sub(p,"ar","td");
 ok(!(await p.locator("#tdCard").isHidden()), "grafico andamento visibile con 2 voli");
 
 console.log("v1.49: modelli, migliori 10, consumo sul modello");
+await sub(p,"ar","md");
 ok(/Prova/.test(await text("#mdBody")) && /2 (voli|flights)/.test(await text("#mdBody")), "pagina Modelli: scheda del modello con 2 voli");
 await p.click("#mdTabT"); await p.waitForTimeout(200);
 ok((await p.locator("#mdBody tbody tr").count()) === 2 && /Prova/.test(await text("#mdBody")), "Migliori 10 voli: tabella con i voli in archivio");
 await p.evaluate(t => { window.__rz.addFlight(t, "2026-10-03_c.log", "Prova"); window.__rz.addFlight(t, "2026-10-04_d.log", "Prova"); }, jeti);
 await p.click("#mdTabM"); await p.waitForTimeout(200);
 await p.click('.tab[data-p="ar"]'); await p.waitForTimeout(300);
-await p.locator("#arList button[data-open]").first().click(); await p.waitForTimeout(800);
+await sub(p,"ar","ls"); await p.locator("#arList button[data-open]").first().click(); await p.waitForTimeout(800);
 await p.click('.tab[data-p="ju"]'); await p.waitForTimeout(500);
 ok(/voli dello stesso modello|flights with this model|vols de ce modèle/.test(await text("#scoreBody")), "indice: posizione tra i voli dello stesso modello");
 
@@ -251,7 +254,7 @@ console.log("Google Drive (Drive finto)");
   ok((await p3.locator(".drvrow").count()) === 2, "Drive: elenco aggiornato dopo il salvataggio");
   // archivio sul Drive: salva (solo Drive), ricarica, elimina
   await p3.click("#drvClose"); await p3.click('.tab[data-p="ar"]'); await p3.waitForTimeout(500);
-  if (await p3.isChecked("#arToPc")) await p3.uncheck("#arToPc");
+  await sub(p3,"ar","fold"); if (await p3.isChecked("#arToPc")) await p3.uncheck("#arToPc");
   await p3.check("#arToDrv"); await p3.fill("#arModel", "Prova Drive"); await p3.click("#arSave"); await p3.waitForTimeout(1500);
   const rzf = Object.values(files).filter(f => f.name.endsWith(".rzf.json") && f.parents.length);
   ok(rzf.length === 1 && JSON.parse(rzf[0].data.toString("utf8")).model === "Prova Drive", "Archivio: volo salvato sul Drive (.rzf.json con il modello)");
@@ -259,7 +262,7 @@ console.log("Google Drive (Drive finto)");
   await p3.reload(); await p3.waitForTimeout(800); await p3.click('.tab[data-p="ar"]'); await p3.waitForTimeout(1500);
   ok(/Prova Drive/.test(await p3.textContent("#arList")) && /RZ Dati \/ voli · 1/.test(await p3.textContent("#arFolder")), "Archivio: dopo il riavvio i voli del Drive si rileggono da soli");
   p3.removeAllListeners("dialog"); p3.on("dialog", d => d.accept());
-  await p3.click("#arList button[data-del]"); await p3.waitForTimeout(1000);
+  await sub(p3,"ar","ls"); await p3.click("#arList button[data-del]"); await p3.waitForTimeout(1000);
   ok(rzf[0].parents.length === 0 && (await p3.locator("#arList td.where").count()) === 0, "Archivio: Elimina sposta il volo nel cestino del Drive");
   ok(((await p3.evaluate(() => window.__v || [])).length === 0) && e3.length === 0, "Drive: nessun errore né violazione CSP" + (e3.length ? ": " + e3.join("|") : ""));
   await c3.close(); }
