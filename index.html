@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-jgKWdMs8xmYJi8c6qNBeq3OVa9tNydbezCerx0WuyFM='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gNvA/onTM5TWng8s01G77avxCLi2/jTwPetnAgOVNbM='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -571,6 +571,72 @@
   .varpanel .varlist{flex:1 1 100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1px 12px;max-height:260px}
   .varpanel .vpopts{flex:0 1 260px}.varpanel #liveName{flex:1 1 200px;width:auto}.varpanel .vpbtns{flex:0 1 auto;flex-wrap:nowrap}.varpanel>.hint{flex:1 1 100%}
   @media(max-width:900px){ .varpanel .varlist{max-height:220px} }
+
+  /* ============ v2.0: binario laterale, sottomenu e pomelli 3D ============ */
+  :root{--rail-w:104px}
+  @media(min-width:861px){ .wrap{padding-left:calc(var(--rail-w) + 22px)} }
+  .top{grid-template-columns:minmax(0,1fr) auto}.top .left{display:none}.top .center{text-align:left}
+  .crumb{font:800 12px -apple-system,system-ui,"Segoe UI",sans-serif;letter-spacing:4px;text-transform:uppercase;color:#9fc0e6;margin-top:6px;min-height:14px}
+  .rail{position:fixed;left:12px;top:12px;bottom:12px;width:84px;z-index:150;display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 0 14px;border-radius:30px;
+    background:linear-gradient(180deg,rgba(28,74,120,.92),rgba(10,30,52,.95));border:1.5px solid #26507a;box-shadow:0 10px 30px rgba(0,0,0,.45);overflow:hidden;
+    transition:width .24s cubic-bezier(.2,.8,.2,1)}
+  .rail:hover,.rail:focus-within,.rail.open{width:236px}
+  .rail.fly:hover,.rail.fly:focus-within{width:84px}.rail.fly:hover .tl,.rail.fly:focus-within .tl{opacity:0;transform:translateX(-10px)}
+  .rail-logo{width:100%;display:flex;justify-content:center;padding:2px 8px 8px}
+  .rail .logo.dflt{width:68px;max-width:none;height:auto;padding:0;overflow:visible}
+  .rail .logo img.d3{max-height:none;width:68px;height:auto}
+  .rail .logo:not(.dflt){height:30px;min-width:60px;max-width:68px;font-size:.55rem}
+  .rail-nav{display:flex;flex-direction:column;gap:12px;width:100%;padding:0 12px}.rail-bottom{margin-top:auto}
+  .rail .tab,.rail .rbtn{display:flex;align-items:center;gap:16px;width:100%;height:60px;padding:0;border:0;background:none;box-shadow:none;transform:none;border-radius:40px;color:#e9f4ff;text-shadow:none;filter:none;cursor:pointer;font-family:inherit}
+  .rail .tab:hover,.rail .rbtn:hover{filter:none}
+  .rail .tab[aria-selected=true]{background:none;box-shadow:none;transform:none;color:#fff;text-shadow:none;border:0}
+  .kn{flex:none;width:60px;height:60px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;color:var(--kc,#58b4ff);
+    background:linear-gradient(135deg,#b5c6d9,#f3f8ff 22%,#6c8199 50%,#d7e3f0 78%,#4a5d73);box-shadow:0 0 0 2px #0a1420,0 9px 14px rgba(0,0,0,.5);transition:transform .14s,box-shadow .14s}
+  .kn::before{content:"";position:absolute;inset:6px;border-radius:50%;background:#0a1626}
+  .kn::after{content:"";position:absolute;inset:9px;border-radius:50%;background:radial-gradient(circle at 35% 25%,#8fa9c5,#2b3d52 45%,#0c1724);box-shadow:inset 0 -2px 4px rgba(0,0,0,.5)}
+  .kn svg{position:relative;z-index:2}
+  .kn .led{position:absolute;top:-2px;left:50%;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:#173a26;z-index:3;transition:background .15s,box-shadow .15s}
+  .rail .tab:hover .kn,.rail .rbtn:hover .kn{transform:translateY(-2px) scale(1.07)}
+  .rail .tab:active .kn,.rail .rbtn:active .kn{transform:translateY(3px) scale(.95)}
+  .rail .tab[aria-selected=true] .kn,.rail .rbtn[aria-pressed=true] .kn{transform:translateY(2px) scale(.97);box-shadow:0 0 0 2px #0a1420,0 0 24px 5px color-mix(in srgb,var(--kc) 65%,transparent),0 4px 8px rgba(0,0,0,.5)}
+  .rail .tab[aria-selected=true] .led,.rail .rbtn[aria-pressed=true] .led{background:var(--kc);box-shadow:0 0 10px 3px var(--kc)}
+  .rail .tl{opacity:0;transform:translateX(-10px);white-space:nowrap;transition:opacity .16s,transform .22s;font:800 13px -apple-system,system-ui,"Segoe UI",sans-serif;letter-spacing:2px;text-transform:uppercase;text-align:left}
+  .rail:hover .tl,.rail:focus-within .tl,.rail.open .tl{opacity:1;transform:none}
+  .rail .tab:focus-visible,.rail .rbtn:focus-visible{outline:2px solid var(--kc);outline-offset:2px}
+  .flyout{position:fixed;left:112px;top:150px;z-index:160;width:340px;padding:16px 16px 10px;border-radius:26px;background:linear-gradient(135deg,rgba(28,74,120,.95),rgba(11,37,64,.97));
+    border:2px solid rgba(159,212,255,.6);box-shadow:0 18px 44px rgba(0,0,0,.55);backdrop-filter:blur(10px);visibility:hidden;opacity:0;transform:translateX(-18px) scale(.97);
+    transition:opacity .2s,transform .26s cubic-bezier(.2,.8,.2,1),visibility 0s .26s}
+  .flyout.open{visibility:visible;opacity:1;transform:none;transition:opacity .2s,transform .26s cubic-bezier(.2,.8,.2,1),visibility 0s}
+  .flyout .fh{font:900 17px -apple-system,system-ui,"Segoe UI",sans-serif;letter-spacing:4px;color:#fff;margin:2px 6px 12px;text-transform:uppercase}
+  .fi{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:9px 14px 9px 10px;margin-bottom:10px;border-radius:30px;cursor:pointer;color:#fff;font:800 15px -apple-system,system-ui,"Segoe UI",sans-serif;
+    background:linear-gradient(#5d7390,#2c3d52 48%,#1f2e40 52%,#33465c);border:1px solid #0a1420;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 0 #0a1420,0 8px 12px rgba(0,0,0,.4);transition:transform .08s,box-shadow .08s,filter .12s}
+  .fi:hover{filter:brightness(1.14)}.fi:active{transform:translateY(3px);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 1px 0 #0a1420}
+  .fi.on{background:linear-gradient(#3fe283,#14a74f);color:#fff}
+  .fi .fic{width:34px;height:34px;border-radius:50%;background:rgba(11,26,43,.55);display:flex;align-items:center;justify-content:center;flex:none;color:#58b4ff}.fi.on .fic{color:#fff}
+  .fi{opacity:0;transform:translateX(-14px)}.flyout.open .fi{opacity:1;transform:none;transition:opacity .24s,transform .28s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--n,0)*45ms)}
+  section[data-page="ju"][data-cursub] [data-sub]{display:none}
+  section[data-page="ju"][data-cursub="idx"] [data-sub="idx"],section[data-page="ju"][data-cursub="story"] [data-sub="story"],section[data-page="ju"][data-cursub="sum"] [data-sub="sum"],
+  section[data-page="ju"][data-cursub="radio"] [data-sub="radio"],section[data-page="ju"][data-cursub="phases"] [data-sub="phases"],section[data-page="ju"][data-cursub="motor"] [data-sub="motor"]{display:block}
+  section[data-page="ju"][data-cursub="therm"] [data-sub="therm"]{display:grid}
+  section[data-page="ju"] [data-sub][hidden]{display:none!important}
+  .scoredial{position:relative;width:300px;height:300px;flex:none}.scoredial svg{width:100%;height:100%;display:block}
+  .scoredial .scorebig{position:absolute;left:0;right:0;top:92px;text-align:center;font-size:84px;line-height:1}.scoredial .scorelvl{position:absolute;left:0;right:0;top:188px;text-align:center}
+  .sdarc{transition:stroke-dasharray 1.2s cubic-bezier(.2,.8,.2,1)}
+  .scoregrid{grid-template-columns:auto minmax(0,1fr);gap:18px 36px}
+  @media(max-width:860px){
+    .wrap{padding-bottom:104px}
+    .rail{left:8px;right:8px;top:auto;bottom:8px;width:auto;height:76px;flex-direction:row;align-items:center;justify-content:center;padding:8px 10px;border-radius:28px;overflow-x:auto;overflow-y:hidden}
+    .rail:hover,.rail:focus-within,.rail.open{width:auto}
+    .rail-logo{position:fixed;top:12px;left:12px;width:auto;padding:0;z-index:151}.rail-logo .logo.dflt,.rail .logo img.d3{width:64px}
+    .rail-nav{flex-direction:row;gap:8px;width:auto;padding:0}.rail-bottom{margin:0 0 0 4px}
+    .rail .tab,.rail .rbtn{width:auto;height:58px;gap:0}.rail .tl{display:none}
+    .kn{width:54px;height:54px}.kn::before{inset:5px}.kn::after{inset:8px}
+    .flyout{left:8px;right:8px;width:auto;top:auto!important;bottom:96px}
+    .top{padding-left:92px}
+    .scoregrid{grid-template-columns:1fr}.scoredial{margin:0 auto;width:260px;height:260px}
+    @media(max-width:480px){.kn{width:42px;height:42px}.kn::before{inset:4px}.kn::after{inset:6px}.kn svg{width:22px;height:22px}.rail .tab,.rail .rbtn{height:46px}.rail-nav{gap:4px}.rail{height:64px;padding:8px 6px}.flyout{bottom:84px}.wrap{padding-bottom:92px}}.scoredial .scorebig{top:78px;font-size:72px}.scoredial .scorelvl{top:166px}
+  }
+  @media print{ section[data-page="ju"] [data-sub]{display:block!important}section[data-page="ju"] .anarow[data-sub]{display:grid!important}.rail,.flyout,.crumb{display:none!important}.wrap{padding-left:16px!important} }
 </style>
 
 <div id="nojs" style="margin:16px;padding:14px 16px;font:14px system-ui,-apple-system,sans-serif;color:#eef3f9;background:#242931;border:1px solid #3a434f;border-radius:10px;line-height:1.5">
@@ -600,12 +666,10 @@
 </section>
 <div class="wrap">
   <div class="top">
-    <div class="left">
-      <div class="logo" id="logo" data-i18n-title="logo_title"></div>
-      <input type="file" id="logoFile" accept="image/*" style="display:none">
-    </div>
+    <div class="left"></div>
     <div class="center">
-      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v1.51</span></div>
+      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>Flight Dashboard</span> <span class="ver">v2.0</span></div>
+      <div class="crumb" id="crumb"></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
     <div class="right">
@@ -641,15 +705,20 @@
     </div>
   </div>
 
-  <div class="tabs" role="tablist">
-    <button class="tab" role="tab" aria-selected="true"  data-p="ov" data-i18n="tab_ov">Panoramica</button>
-    <button class="tab" role="tab" aria-selected="false" data-p="ju" data-i18n="tab_ju">Analisi volo</button>
-    <button class="tab" role="tab" aria-selected="false" data-p="gr" data-i18n="tab_gr">Grafico</button>
-    <button class="tab" role="tab" aria-selected="false" data-p="tb" data-i18n="tab_tb">Tabella</button>
-    <button class="tab" role="tab" aria-selected="false" data-p="po" data-i18n="tab_po">Polare</button>
-    <button class="tab" role="tab" aria-selected="false" data-p="tr" data-i18n="tab_tr">Traiettoria</button>
-    <button class="tab" role="tab" aria-selected="false" data-p="ar" data-i18n="tab_ar">Archivio</button>
+  <nav class="rail" id="rail" aria-label="Navigazione">
+  <div class="rail-logo"><div class="logo" id="logo" data-i18n-title="logo_title"></div><input type="file" id="logoFile" accept="image/*" style="display:none"></div>
+  <div class="rail-nav" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-p="ov" style="--kc:#2be06a"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="5" rx="2" fill="currentColor"/><rect x="13" y="10" width="8" height="11" rx="2" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor"/></svg></span><span class="tl" data-i18n="tab_ov">Panoramica</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-p="ju" style="--kc:#58b4ff"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M22 20V8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg></span><span class="tl" data-i18n="tab_ju">Analisi volo</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-p="gr" style="--kc:#58b4ff"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M3 17l5-6 4 3 5-8 4 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span class="tl" data-i18n="tab_gr">Grafico</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-p="tb" style="--kc:#58b4ff"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3 10h18M9 4v16M15 4v16" stroke="currentColor" stroke-width="2"/></svg></span><span class="tl" data-i18n="tab_tb">Tabella</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-p="po" style="--kc:#c9a8ff"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M3 6c3 12 15 12 18 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="7" cy="14" r="1.4" fill="currentColor"/><circle cx="12" cy="17" r="1.4" fill="currentColor"/><circle cx="17" cy="14" r="1.4" fill="currentColor"/></svg></span><span class="tl" data-i18n="tab_po">Polare</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-p="tr" style="--kc:#2be06a"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span><span class="tl" data-i18n="tab_tr">Traiettoria</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-p="ar" style="--kc:#c9a8ff"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M3 7h18v3H3zM5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9M10 14h4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tl" data-i18n="tab_ar">Archivio</span></button>
   </div>
+  <div class="rail-nav rail-bottom"><button class="rbtn" id="railSetup" type="button" aria-pressed="false" style="--kc:#ffb347"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span><span class="tl" data-i18n="setup">Set up</span></button></div>
+</nav>
+<div class="flyout" id="flyout" role="menu" aria-hidden="true"><div class="fh" id="flyTitle"></div><div id="flyItems"></div></div>
 
   <!-- PAGE 1 -->
   <section data-page="ov">
@@ -673,33 +742,33 @@
   </section>
 
   <!-- PAGE: GIUDIZIO -->
-  <section data-page="ju" hidden>
+  <section data-page="ju" hidden data-cursub="idx">
     <div class="prbar"><button class="btn ghost" id="prBtn" type="button"><span aria-hidden="true">🖨</span> <span data-i18n="pr_btn">Stampa / PDF</span></button></div>
-    <div class="card" id="scoreCard">
+    <div class="card" id="scoreCard" data-sub="idx">
       <h2><span data-i18n="sc_h2">Indice di volo</span> <span class="tag">RANK</span></h2>
       <div id="scoreBody"></div>
     </div>
-    <div class="card verdict">
+    <div class="card verdict" data-sub="story">
       <h2><span data-i18n="ju_h2">Analisi</span> <span class="tag">AUTO</span></h2>
       <div class="chips" id="chips"></div>
       <div id="verdictText" class="narr"></div>
       <div id="anaVerdict"></div>
     </div>
-    <div class="card">
+    <div class="card" data-sub="sum">
       <h2><span data-i18n="an_sec_summary">Riepilogo dati</span> <span class="tag">DATA</span></h2>
       <div id="anaTiles" class="agroups"></div>
     </div>
-    <div class="card" id="radioCard" hidden>
+    <div class="card" id="radioCard" hidden data-sub="radio">
       <h2><span data-i18n="rd_h2">Radio e alimentazione</span> <span class="tag">LINK</span></h2>
       <div class="agrid" id="radioTiles"></div>
       <div class="scroll-x" id="radioEv"></div>
       <p class="hint" data-i18n="rd_hint"></p>
     </div>
-    <div class="card">
+    <div class="card" data-sub="phases">
       <h2><span data-i18n="an_sec_phases">Fasi del volo</span> <span class="tag">TIMELINE</span></h2>
       <div id="anaPhases"></div>
     </div>
-    <div class="anarow">
+    <div class="anarow" data-sub="therm">
       <div class="card">
         <h2><span data-i18n="an_sec_thermals">Termiche rilevate</span> <span class="tag">THERMALS</span></h2>
         <div class="scroll-x" id="thermWrap"></div>
@@ -711,7 +780,7 @@
         <div id="histVario"></div>
       </div>
     </div>
-    <div class="card">
+    <div class="card" data-sub="motor">
       <h2><span data-i18n="an_sec_climbs">Salite a motore</span> <span class="tag">MOTOR</span></h2>
       <div class="scroll-x" id="climbTableWrap"></div>
     </div>
@@ -1207,6 +1276,9 @@ const T_GR={
   gr_live_hint:["Le scelte restano in \"● Live\" (ricordate anche al prossimo avvio); \"Salva come report\" le conserva nell'elenco.","Your picks stay in \"● Live\" (remembered next time too); \"Save as report\" keeps them in the list.","Vos choix restent dans « ● Live » (mémorisés aussi) ; « Enregistrer en rapport » les conserve dans la liste."]
 };
 const T_AN={
+  sb_idx:["Indice di volo","Flight index","Indice de vol"], sb_story:["Il racconto del volo","The flight story","Le récit du vol"], sb_sum:["Riepilogo dati","Data summary","Récapitulatif"],
+  sb_therm:["Termiche e distribuzioni","Thermals and distributions","Thermiques et distributions"], sb_radio:["Radio e alimentazione","Radio & power","Radio et alimentation"],
+  sb_phases:["Fasi del volo","Flight phases","Phases du vol"], sb_motor:["Salite a motore","Motor climbs","Montées moteur"],
   an_on:["Animazioni (grafici e numeri)","Animations (charts and numbers)","Animations (graphiques et chiffres)"],
   wl_eyebrow:["Benvenuto","Welcome","Bienvenue"], wl_title:["Analizza<br>i tuoi voli","Analyse<br>your flights","Analysez<br>vos vols"],
   wl_sub:["Log Jeti, GPS e archivio in un solo posto. Funziona anche senza internet; i voli li salvi dove vuoi: sul PC o su Google Drive.","Jeti logs, GPS and archive in one place. Works offline too; save your flights where you like: on the PC or on Google Drive.","Logs Jeti, GPS et archive au même endroit. Fonctionne aussi hors ligne ; enregistrez vos vols où vous voulez : sur le PC ou sur Google Drive."],
@@ -1363,7 +1435,7 @@ function setLang(l){
   document.documentElement.lang=lang;
   const fi=$("#flagIt"), fe=$("#flagEn"), fr=$("#flagFr");
   if(fi) fi.classList.toggle("active",lang==="it"); if(fe) fe.classList.toggle("active",lang==="en"); if(fr) fr.classList.toggle("active",lang==="fr");
-  applyI18n(); try{ renderWelcome(); }catch(e){}
+  applyI18n(); try{ renderWelcome(); renderCrumb(); if($("#flyout").classList.contains("open")) renderFlyout(curPage); }catch(e){}
   if(typeof DATA!=="undefined" && DATA){ renderFlightHead(DATA); renderKpis(VF()); renderVerdict(DATA); renderMain(); refreshReportSel(); refreshBuilder(); renderTable(); renderThemeControls(); }
   if(typeof ARCH!=="undefined"){ renderArchive(); renderPolar(); renderTrack(); }
 }
@@ -1936,7 +2008,8 @@ function renderScore(f){
   { const mod=modelOf(f), L=(typeof ARCH!=="undefined"?ARCH:[]).filter(e=>e.key!==f._arch&&mod&&lowName(e.model)===lowName(mod)&&num(e.sum&&e.sum.score)).map(e=>e.sum.score);
     if(L.length>=2){ const rank=L.filter(v=>v>q.score).length+1, avg=L.reduce((p,v)=>p+v,0)/L.length;
       best+=`<div class="scorebest">${t("sc_rank").replace("{m}",escapeHtml(mod)).replace("{r}",rank).replace("{n}",L.length+1).replace("{a}",fmt(avg,0))}</div>`; } }
-  body.innerHTML=`<div class="scoregrid"><div><div class="scorebig">${cur}<small> /100</small></div><div class="scorelvl">${scoreLevel(q.score)}</div></div>
+  const L0=2*Math.PI*118*0.75, dial=`<div class="scoredial"><svg viewBox="0 0 320 320" aria-hidden="true"><defs><linearGradient id="sdm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b5c6d9"/><stop offset=".22" stop-color="#f3f8ff"/><stop offset=".5" stop-color="#6c8199"/><stop offset=".78" stop-color="#d7e3f0"/><stop offset="1" stop-color="#4a5d73"/></linearGradient></defs><circle cx="160" cy="160" r="152" fill="url(#sdm)" stroke="#1d2b3b" stroke-width="3"/><circle cx="160" cy="160" r="134" fill="#08111c" stroke="#000" stroke-opacity=".6" stroke-width="3"/><path d="M${160+118*Math.cos(Math.PI*0.75)},${160+118*Math.sin(Math.PI*0.75)} A118,118 0 1 1 ${160+118*Math.cos(Math.PI*0.25)},${160+118*Math.sin(Math.PI*0.25)}" fill="none" stroke="#13314f" stroke-width="18" stroke-linecap="round"/><path class="sdarc" data-len="${L0.toFixed(1)}" data-val="${cur}" d="M${160+118*Math.cos(Math.PI*0.75)},${160+118*Math.sin(Math.PI*0.75)} A118,118 0 1 1 ${160+118*Math.cos(Math.PI*0.25)},${160+118*Math.sin(Math.PI*0.25)}" fill="none" stroke="#2be06a" stroke-width="18" stroke-linecap="round" stroke-dasharray="${(L0*cur/100).toFixed(1)} ${(L0+40).toFixed(1)}"/></svg><div class="scorebig">${cur}<small> /100</small></div><div class="scorelvl">${scoreLevel(q.score)}</div></div>`;
+  body.innerHTML=`<div class="scoregrid">${dial}
     <div class="scorebars">${rows}</div>${best}
     ${q.hasTh?"":`<div class="scorenote">⚠ ${t("sc_noth")}</div>`}
     <div class="scorenote">${t(q.hasTh?"sc_note_th":"sc_note_no")}</div></div>`;
@@ -2256,6 +2329,7 @@ function playEnter(sec){
 function playScore(){
   if(!animOn()) return; const sb=$("#scoreBody"); if(!sb) return;
   sb.querySelectorAll(".sbfill").forEach((b,i)=>{ const w=b.dataset.w||b.style.width; b.dataset.w=w; b.style.transition="none"; b.style.width="0%"; void b.offsetWidth; b.style.transition="width 1s cubic-bezier(.2,.8,.2,1) "+(0.25+i*0.12)+"s"; b.style.width=w; });
+  const arc=sb.querySelector(".sdarc"); if(arc){ const L=+arc.dataset.len, v=+arc.dataset.val; arc.style.transition="none"; arc.setAttribute("stroke-dasharray","0 "+(L+40)); void arc.getBoundingClientRect(); arc.style.transition=""; arc.setAttribute("stroke-dasharray",(L*v/100).toFixed(1)+" "+(L+40).toFixed(1)); }
   countUp(sb.querySelector(".scorebig"),1100,150);
 }
 function drawSpark(canvas, ys, color, opts){
@@ -2783,6 +2857,62 @@ function initWelcome(){
   const ca=$("#animOn"); ca.checked=animOn(); ca.addEventListener("change",()=>{ try{ localStorage.setItem("fd_anim",ca.checked?"1":"0"); }catch(e){} });
   const cb=$("#wlShow"); cb.checked=welcomeOn(); cb.addEventListener("change",()=>{ try{ localStorage.setItem("fd_welcome",cb.checked?"1":"0"); }catch(e){} });
   if(welcomeOn()){ renderWelcome(); document.body.style.overflow="hidden"; } else { w.hidden=true; }
+}
+/* ---------- v2.0: binario laterale, sottomenu a scomparsa, briciole di pane ---------- */
+const SUB_IC={
+ ix:'<circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 13l4-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+ tx:'<path d="M5 6h14M5 11h14M5 16h9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+ ov:'<rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="5" rx="2" fill="currentColor"/><rect x="13" y="10" width="8" height="11" rx="2" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor"/>',
+ th:'<path d="M12 21c-3-3-5-5.5-5-9a5 5 0 0 1 10 0c0 3.5-2 6-5 9z" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="12" r="2" fill="currentColor"/>',
+ ra:'<path d="M5 12a10 10 0 0 1 14 0M8 15a6 6 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="18.5" r="1.6" fill="currentColor"/>',
+ ph:'<path d="M3 17h5v-6h5v4h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+ bt:'<rect x="3" y="7" width="16" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M21 10v4M8 10l-2 4h4l-2 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>'};
+const SUBS={ju:{title:"tab_ju",items:[{id:"idx",ic:"ix",l:"sb_idx"},{id:"story",ic:"tx",l:"sb_story"},{id:"sum",ic:"ov",l:"sb_sum"},{id:"therm",ic:"th",l:"sb_therm"},{id:"radio",ic:"ra",l:"sb_radio"},{id:"phases",ic:"ph",l:"sb_phases"},{id:"motor",ic:"bt",l:"sb_motor"}]}};
+let curPage="ov", flyTimer=0;
+const subCur={ju:"idx"};
+function pageLabel(p){ return t(p==="re"?"setup":"tab_"+p); }
+function renderCrumb(){
+  const el=$("#crumb"); if(!el) return; let tx=pageLabel(curPage);
+  const cfg=SUBS[curPage]; if(cfg){ const it=cfg.items.find(x=>x.id===subCur[curPage]); if(it) tx+=" › "+t(it.l); }
+  el.textContent=tx;
+}
+function subAvailable(page,id){ if(page==="ju"&&id==="radio"){ const c=$("#radioCard"); return !!c&&!c.hidden; } return true; }
+function renderFlyout(page){
+  const cfg=SUBS[page], fly=$("#flyout"); if(!cfg) return false;
+  $("#flyTitle").textContent=t(cfg.title);
+  const items=cfg.items.filter(x=>subAvailable(page,x.id));
+  $("#flyItems").innerHTML=items.map((x,i)=>`<button type="button" class="fi${subCur[page]===x.id?" on":""}" role="menuitem" data-sub="${x.id}" style="--n:${i}"><span class="fic"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">${SUB_IC[x.ic]}</svg></span><span>${t(x.l)}</span></button>`).join("");
+  return true;
+}
+function openFlyout(page){
+  const fly=$("#flyout"); if(!renderFlyout(page)) return closeFlyout();
+  const tb=document.querySelector(`.rail .tab[data-p="${page}"]`); const r0=tb?tb.getBoundingClientRect():null;
+  if(r0&&window.innerWidth>860){ const h=fly.offsetHeight||400; fly.style.top=Math.max(12,Math.min(window.innerHeight-h-12,r0.top-24))+"px"; }
+  fly.classList.add("open"); $("#rail").classList.add("fly"); fly.setAttribute("aria-hidden","false"); clearTimeout(flyTimer);
+}
+function closeFlyout(){ const fly=$("#flyout"); if(!fly) return; fly.classList.remove("open"); const rl=$("#rail"); if(rl) rl.classList.remove("fly"); fly.setAttribute("aria-hidden","true"); clearTimeout(flyTimer); }
+function scheduleFlyClose(ms){ clearTimeout(flyTimer); flyTimer=setTimeout(closeFlyout,ms||2200); }
+function showSub(page,id){
+  const sec=document.querySelector(`section[data-page="${page}"]`); if(!sec) return;
+  subCur[page]=id; sec.dataset.cursub=id; renderCrumb();
+  const card=sec.querySelector(`[data-sub="${id}"]`); if(card&&animOn()){ card.style.animation="none"; void card.offsetWidth; card.style.animation="rise .55s cubic-bezier(.2,.8,.2,1) both"; }
+  if(page==="ju"&&id==="idx") playScore();
+}
+function onPageChange(p){
+  curPage=p; renderCrumb();
+  if(SUBS[p]){ openFlyout(p); scheduleFlyClose(3200); } else closeFlyout();
+}
+function initRail(){
+  const rail=$("#rail"); if(!rail) return;
+  document.querySelectorAll(".rail .tab").forEach(tb=>tb.addEventListener("click",()=>onPageChange(tb.dataset.p)));
+  $("#railSetup").addEventListener("click",()=>$("#setupBtn").click());
+  const sync=()=>{ const on=$("#setupBtn").classList.contains("active"); $("#railSetup").setAttribute("aria-pressed",on?"true":"false"); if(on){ curPage="re"; closeFlyout(); renderCrumb(); } };
+  new MutationObserver(sync).observe($("#setupBtn"),{attributes:true,attributeFilter:["class"]}); sync();
+  $("#flyItems").addEventListener("click",e=>{ const b=e.target.closest(".fi"); if(!b) return; showSub(curPage,b.dataset.sub); renderFlyout(curPage); closeFlyout(); });
+  for(const el of [$("#flyout"),rail]){ el.addEventListener("mouseenter",()=>{ if($("#flyout").classList.contains("open")) clearTimeout(flyTimer); }); el.addEventListener("mouseleave",()=>{ if($("#flyout").classList.contains("open")) scheduleFlyClose(1400); }); }
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeFlyout(); });
+  document.addEventListener("click",e=>{ if(!e.target.closest("#flyout,#rail")) closeFlyout(); });
+  renderCrumb();
 }
 function renderPhaseCfg(){
   const row=$("#phRow"); if(!row) return;
@@ -3989,6 +4119,7 @@ DATA=makeDemo(); isDemo=true; renderAll();
 setLang(lang);
 attachHover("cmpChart","tipCmp");
 initWelcome();
+initRail();
 archInit();
 // re-render once layout is fully settled (helps mobile canvas sizing)
 window.addEventListener("load",()=>{ if(DATA){ try{ renderKpis(VF()); renderMain(); renderView(); }catch(e){} } });
