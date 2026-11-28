@@ -68,14 +68,14 @@ await load([E("volo-completo-test.log"), E("volo-completo-rzgps.csv")]);
 ok(/uniti/.test(await text("#fname")), "unione Jeti + GPS RZ");
 
 console.log("Interruttori impostabili");
-await p.click("#setupBtn"); await p.waitForTimeout(300);
+await p.click("#railSetup"); await p.waitForTimeout(300);
 ok(await p.locator("#phRow select").count() === 6, "impostazioni interruttori presenti");
 
 console.log("Esporta / importa impostazioni");
 await fresh();
 await p.evaluate(() => { localStorage.setItem("fd_mode", "light"); localStorage.setItem("fd_lang", "en");
   localStorage.setItem("jeti_reports", JSON.stringify([{ name: "Mio report", x: "__t__", y: ["Rel. altit", "Vario"], type: "line", colors: ["#112233", null] }])); });
-await p.reload(); await p.waitForTimeout(500); await p.click("#setupBtn"); await p.waitForTimeout(300); await p.click('.fi[data-sub="bk"]'); await p.waitForTimeout(300);
+await p.reload(); await p.waitForTimeout(500); await p.click("#railSetup"); await p.waitForTimeout(300); await p.click('.fi[data-sub="bk"]'); await p.waitForTimeout(300);
 const [dl] = await Promise.all([p.waitForEvent("download"), p.click("#bkExport")]);
 const exp = JSON.parse(fs.readFileSync(await dl.path(), "utf8"));
 ok(exp.format === "rz-flight-settings" && exp.data.mode === "light" && exp.data.reports.length === 1 && exp.data.lang === "en", "esportazione: file con impostazioni e report");
@@ -92,7 +92,7 @@ ok(st.lang === "en" && st.map === null && st.logo === null, "importazione: lingu
 ok(st.mode === "dark" && st.theme === '{"--accent":"#ff0000"}', "importazione: aspetto valido applicato, colore non valido scartato");
 ok(st.rep.length === 1 && st.rep[0].type === "line" && st.rep[0].colors[0] === "#00ff00", "importazione: report malformati scartati, quello valido tenuto");
 ok(st.ph.low === 2 && st.ph.bOn === 4 && st.ph.a === "Comando Sa", "importazione: interruttori con valori fuori scala corretti");
-await p.click("#setupBtn"); await p.waitForTimeout(400);
+await p.click("#railSetup"); await p.waitForTimeout(400);
 ok((await p.evaluate(() => window.__pwn || 0)) === 0, "importazione: nome di report con codice non eseguito");
 fs.unlinkSync(tmp);
 
@@ -150,7 +150,7 @@ console.log("Animazioni");
   ok(/407/.test(fin) && /15:16/.test(fin), "KPI: i valori finali sono esatti (" + fin + ")");
   await p3.click('.tab[data-p="ju"]'); await p3.waitForTimeout(2600);
   ok(/^7\d$/.test(await p3.evaluate(() => document.querySelector(".scorebig").firstChild.nodeValue.trim())), "indice di volo: valore finale esatto dopo l'animazione");
-  await p3.click("#setupBtn"); await p3.waitForTimeout(200); await p3.click('.fi[data-sub="look"]'); await p3.uncheck("#animOn"); await p3.click('.tab[data-p="ov"]'); await p3.waitForTimeout(150);
+  await p3.click("#railSetup"); await p3.waitForTimeout(200); await p3.click('.fi[data-sub="look"]'); await p3.uncheck("#animOn"); await p3.click('.tab[data-p="ov"]'); await p3.waitForTimeout(150);
   ok(!/^0/.test(await p3.evaluate(() => document.querySelector("#kpis .val").firstChild.nodeValue)), "animazioni disattivate: valori subito finali");
   ok(e3.length === 0, "animazioni: nessun errore" + (e3.length ? ": " + e3.join("|") : ""));
   await p3.close(); }
