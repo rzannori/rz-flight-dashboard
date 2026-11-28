@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3DC2Q6bpnKEJqscvSx//JGgQDS8f9si6RQxKhpJlfVk='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-82vnI2KSjXlWSZNY0GcfmDdDooH4LhYDyN4qio7DE/A='; style-src 'unsafe-inline'; img-src 'self' data: https://tile.openstreetmap.org https://server.arcgisonline.com; connect-src 'self' https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RZ Flight Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -664,7 +664,7 @@
     .wrap{padding-left:10px;padding-right:10px;padding-bottom:104px}
     .rail{left:8px;right:8px;top:auto;bottom:8px;width:auto;height:76px;flex-direction:row;align-items:center;justify-content:center;padding:8px 10px;border-radius:28px;overflow-x:auto;overflow-y:hidden}
     .rail:hover,.rail:focus-within,.rail.open,.rail.fly:hover,.rail.fly:focus-within{width:auto}
-    .rail-logo{display:none}
+    .rail-logo,.rail-home{display:none}
     .rail-nav{flex-direction:row;gap:8px;width:auto;padding:0}.rail-bottom{margin:0 0 0 4px}
     .rail .tab,.rail .rbtn{width:auto;height:58px;gap:0}.rail .tl{display:none}
     .kn{width:54px;height:54px}.kn::before{inset:5px}.kn::after{inset:8px}
@@ -691,6 +691,8 @@
   .flighthead{padding:12px 14px;margin-bottom:12px;gap:4px 11px;border-left-width:3px}
   .flighthead:empty{display:none}
   .fh-model{font-size:clamp(1.35rem,4.3vw,1.87rem)}.fh-dev{font-size:.64rem;margin-top:4px;gap:3px 15px}.fh-r{font-size:.52rem}.fh-date{font-size:.67rem}.fh-demo{font-size:.45rem;padding:1px 6px}
+  .rail-home{margin-bottom:14px;padding-bottom:16px;border-bottom:1px solid rgba(120,180,240,.3)}
+  @media(min-width:861px){#homeBtn{display:none!important}}
   .acc-h{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:9px 16px 9px 10px;margin:0 0 12px;border-radius:30px;cursor:pointer;color:#fff;font:800 15px -apple-system,system-ui,"Segoe UI",sans-serif;border:1px solid #0a1420;background:linear-gradient(#5d7390,#2c3d52 48%,#1f2e40 52%,#33465c);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 4px 0 #0a1420,0 8px 12px rgba(0,0,0,.35);transition:filter .15s,transform .12s,box-shadow .12s}
   .acc-h[hidden]{display:none}.acc-h:hover{filter:brightness(1.14)}.acc-h:active{transform:translateY(3px);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 1px 0 #0a1420}
   .acc-h .fic{width:34px;height:34px;border-radius:50%;background:rgba(11,26,43,.55);display:flex;align-items:center;justify-content:center;flex:none;color:#58b4ff}
@@ -730,7 +732,7 @@
   <div class="top">
     <div class="left"></div>
     <div class="center">
-      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>RZ Flight Dashboard</span> <span class="ver">v2.0.11</span></div>
+      <div class="apptitle"><svg class="rzmark" width="40" height="40" viewBox="0 0 400 400" aria-hidden="true"><use href="#rzI"/></svg><span>RZ Flight Dashboard</span> <span class="ver">v2.0.12</span></div>
       <div class="crumb" id="crumb"></div>
       <div class="appsub" id="modelLine" data-i18n="tagline">analisi log di volo</div>
     </div>
@@ -771,6 +773,7 @@
 
   <nav class="rail" id="rail" aria-label="Navigazione">
   <div class="rail-logo"><div class="logo" id="logo" data-i18n-title="logo_title"></div><input type="file" id="logoFile" accept="image/*" style="display:none"></div>
+  <div class="rail-nav rail-home"><button class="rbtn" id="railHome" type="button" style="--kc:#2be06a" data-i18n-title="wl_home" title="Home"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tl" data-i18n="home_btn">Home</span></button></div>
   <div class="rail-nav" role="tablist">
     <button class="tab" role="tab" aria-selected="true" data-p="ov" style="--kc:#2be06a"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="5" rx="2" fill="currentColor"/><rect x="13" y="10" width="8" height="11" rx="2" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor"/></svg></span><span class="tl" data-i18n="tab_ov">Panoramica</span></button>
     <button class="tab" role="tab" aria-selected="false" data-p="ju" style="--kc:#58b4ff"><span class="kn"><i class="led"></i><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M22 20V8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg></span><span class="tl" data-i18n="tab_ju">Analisi volo</span></button>
@@ -2972,7 +2975,7 @@ function initRail(){
   document.querySelectorAll(".rail .tab").forEach(tb=>tb.addEventListener("click",()=>onPageChange(tb.dataset.p)));
   rail.addEventListener("mouseleave",()=>rail.classList.remove("fly"));
   $("#railSetup").addEventListener("click",()=>$("#setupBtn").click());
-  $("#homeBtn").addEventListener("click",showWelcome);
+  $("#homeBtn").addEventListener("click",showWelcome); $("#railHome").addEventListener("click",showWelcome);
   const sync=()=>{ const on=$("#setupBtn").classList.contains("active"); $("#railSetup").setAttribute("aria-pressed",on?"true":"false"); if(on){ curPage="re"; renderCrumb(); railCollapse(); } };
   new MutationObserver(sync).observe($("#setupBtn"),{attributes:true,attributeFilter:["class"]}); sync();
   const vt=$("#vpToggle"); if(vt){ const lay=document.querySelector(".grlayout"); vt.addEventListener("click",()=>{ const off=lay.classList.toggle("vp-off"); vt.setAttribute("aria-expanded",off?"false":"true"); setTimeout(()=>{ try{ renderView(); }catch(e){} },380); }); }

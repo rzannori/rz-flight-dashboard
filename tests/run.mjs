@@ -193,7 +193,7 @@ console.log("Welcome page");
   ok(!(await p2.locator("#welcome").isHidden()), "il titolo riporta alla welcome");
   await p2.click("#wlC1"); await p2.waitForTimeout(500); await p2.click("#wlDemo"); await p2.waitForTimeout(300);
   ok(await p2.locator("#welcome").isHidden(), "\"Prova con la demo\" entra nell'app");
-  await p2.click("#homeBtn"); await p2.waitForTimeout(300);
+  await p2.click("#railHome"); await p2.waitForTimeout(300);
   ok(!(await p2.locator("#welcome").isHidden()), "pulsante Home: riporta alla pagina iniziale");
   await p2.click("#wlSkip"); await p2.waitForTimeout(200);
   await p2.evaluate(() => document.querySelector(".apptitle").click()); await p2.click("#wlSetup"); await p2.waitForTimeout(300); await sub(p2,"re","look");
